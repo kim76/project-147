@@ -147,7 +147,7 @@ namespace Project147.UnityPresentation.Debug
             towers.Add(new RuntimeTower(coordinate, new TowerState(towerDefinition)));
             CreateTowerObject(coordinate);
             RebuildTiles();
-            ShowPlacementPreview(coordinate);
+            HidePlacementPreviewIfAny();
         }
 
         public void ShowPlacementPreview(GridCoordinate coordinate)
@@ -165,6 +165,7 @@ namespace Project147.UnityPresentation.Debug
             placementPreview.transform.localPosition = ToWorldPosition(coordinate, 0.18f);
             placementPreviewLine.startColor = colour;
             placementPreviewLine.endColor = colour;
+            SetPreviewMaterialColour(colour);
             placementPreview.SetActive(true);
         }
 
@@ -575,6 +576,26 @@ namespace Project147.UnityPresentation.Debug
             placementPreviewLine.material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
             BuildPlacementPreviewCircle();
             placementPreview.SetActive(false);
+        }
+
+        private void SetPreviewMaterialColour(Color colour)
+        {
+            if (placementPreviewLine.material == null)
+            {
+                return;
+            }
+
+            placementPreviewLine.material.color = colour;
+
+            if (placementPreviewLine.material.HasProperty("_BaseColor"))
+            {
+                placementPreviewLine.material.SetColor("_BaseColor", colour);
+            }
+
+            if (placementPreviewLine.material.HasProperty("_Color"))
+            {
+                placementPreviewLine.material.SetColor("_Color", colour);
+            }
         }
 
         private void BuildPlacementPreviewCircle()

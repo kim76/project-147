@@ -1,0 +1,624 @@
+using System.Collections.Generic;
+using Project147.GameCore.Combat;
+using Project147.GameCore.Grid;
+using Project147.GameCore.Level;
+using UnityEngine;
+
+namespace Project147.UnityPresentation.Debug
+{
+    public sealed class DebugGridSceneController : MonoBehaviour
+    {
+        [SerializeField]
+        private int width = 8;
+
+        [SerializeField]
+        private int height = 5;
+
+        [SerializeField]
+        private Vector2Int spawn = new Vector2Int(0, 2);
+
+        [SerializeField]
+        private Vector2Int goal = new Vector2Int(7, 2);
+
+        [SerializeField]
+        private Vector2Int[] blockedCells =
+        {
+            new Vector2Int(2, 1),
+            new Vector2Int(2, 2),
+            new Vector2Int(2, 3),
+            new Vector2Int(5, 1),
+            new Vector2Int(5, 2),
+            new Vector2Int(5, 3)
+        };
+
+        [SerializeField]
+        private float cellSize = 1.1f;
+
+        [SerializeField]
+        private float tileHeight = 0.12f;
+
+        [SerializeField]
+        private Material openCellMaterial;
+
+        [SerializeField]
+        private Material blockedCellMaterial;
+
+        [SerializeField]
+        private Material pathCellMaterial;
+
+        [SerializeField]
+        private Material spawnCellMaterial;
+
+        [SerializeField]
+        private Material goalCellMaterial;
+
+        [SerializeField]
+        private Material towerCellMaterial;
+
+        [SerializeField]
+        private Material alienMaterial;
+
+        [SerializeField]
+        private float alienSpeedCellsPerSecond = 1.6f;
+
+        [SerializeField]
+        private int startingCurrency = 150;
+
+        [SerializeField]
+        private int baseHealth = 10;
+
+        [SerializeField]
+        private int totalWaves = 5;
+
+        [SerializeField]
+        private float secondsBetweenSpawns = 0.8f;
+
+        private readonly List<GameObject> tileObjects = new List<GameObject>();
+        private readonly List<GameObject> towerObjects = new List<GameObject>();
+        private readonly List<RuntimeTower> towers = new List<RuntimeTower>();
+        private readonly List<RuntimeAlien> activeAliens = new List<RuntimeAlien>();
+        private readonly HashSet<GridCoordinate> placedTowers = new HashSet<GridCoordinate>();
+
+        private readonly GridPathfinder pathfinder = new GridPathfinder();
+        private readonly TowerTargetSelector targetSelector = new TowerTargetSelector();
+        private TowerPlacementValidator placementValidator;
+        private AttackResolver attackResolver;
+        private TowerDefinition towerDefinition;
+        private AlienDefinition alienDefinition;
+        private BaseState currentBase;
+        private CurrencyWallet wallet;
+        private bool waveActive;
+        private bool won;
+        private bool lost;
+        private int completedWaves;
+        private int remainingSpawns;
+        private float spawnTimer;
+
+        private void Start()
+        {
+            InitialiseRules();
+            ResetSlice();
+        }
+
+        private void Update()
+        {
+            if (won || lost)
+            {
+                return;
+            }
+
+            UpdateWaveSpawning(Time.deltaTime);
+            UpdateAliens(Time.deltaTime);
+            UpdateTowers(Time.deltaTime);
+            CompleteWaveIfReady();
+        }
+
+        public void TryPlaceTower(GridCoordinate coordinate)
+        {
+            if (waveActive || won || lost)
+            {
+                UnityEngine.Debug.Log("Towers can only be placed between waves in this first slice.");
+                return;
+            }
+
+            if (!wallet.CanSpend(towerDefinition.Cost))
+            {
+                UnityEngine.Debug.Log("Not enough scrap for tower.");
+                return;
+            }
+
+            var bounds = new GridBounds(width, height);
+            var grid = CreateGrid(bounds);
+            var start = ToGridCoordinate(spawn);
+            var end = ToGridCoordinate(goal);
+            var result = placementValidator.ValidatePlacement(grid, coordinate, start, end);
+
+            if (!result.IsValid)
+            {
+                UnityEngine.Debug.Log($"Cannot place tower at {coordinate}: {result.FailureReason}.");
+                return;
+            }
+
+            wallet = wallet.Spend(towerDefinition.Cost);
+            placedTowers.Add(coordinate);
+            towers.Add(new RuntimeTower(coordinate, new TowerState(towerDefinition)));
+            CreateTowerObject(coordinate);
+            RebuildTiles();
+        }
+
+        [ContextMenu("Restart First Slice")]
+        private void ResetSlice()
+        {
+            ClearActors();
+            ClearTiles();
+            placedTowers.Clear();
+            towers.Clear();
+            currentBase = new BaseState(baseHealth);
+            wallet = new CurrencyWallet(startingCurrency);
+            waveActive = false;
+            won = false;
+            lost = false;
+            completedWaves = 0;
+            remainingSpawns = 0;
+            spawnTimer = 0;
+            RebuildTiles();
+        }
+
+        private void InitialiseRules()
+        {
+            placementValidator = new TowerPlacementValidator(pathfinder);
+            attackResolver = new AttackResolver(new DamageResolver());
+            towerDefinition = new TowerDefinition(
+                "debug-railgun",
+                50,
+                2.35f,
+                1.25f,
+                24,
+                DamageType.Kinetic,
+                TowerTargetingMode.First);
+            alienDefinition = new AlienDefinition(
+                "debug-runner",
+                60,
+                alienSpeedCellsPerSecond,
+                15,
+                new Dictionary<DamageType, float>());
+        }
+
+        private void StartNextWave()
+        {
+            if (waveActive || won || lost || completedWaves >= totalWaves)
+            {
+                return;
+            }
+
+            waveActive = true;
+            remainingSpawns = 4 + completedWaves * 2;
+            spawnTimer = 0;
+        }
+
+        private void UpdateWaveSpawning(float deltaSeconds)
+        {
+            if (!waveActive || remainingSpawns <= 0)
+            {
+                return;
+            }
+
+            spawnTimer -= deltaSeconds;
+
+            if (spawnTimer > 0)
+            {
+                return;
+            }
+
+            SpawnAlien();
+            remainingSpawns--;
+            spawnTimer = secondsBetweenSpawns;
+        }
+
+        private void SpawnAlien()
+        {
+            var bounds = new GridBounds(width, height);
+            var path = pathfinder.FindShortestPath(CreateGrid(bounds), ToGridCoordinate(spawn), ToGridCoordinate(goal));
+
+            if (path.Count == 0)
+            {
+                UnityEngine.Debug.Log("No path exists for alien spawn.");
+                return;
+            }
+
+            var alienObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            alienObject.name = "Debug Alien";
+            alienObject.transform.SetParent(transform, false);
+            alienObject.transform.localScale = new Vector3(0.45f, 0.45f, 0.45f);
+            alienObject.transform.localPosition = ToWorldPosition(path[0], 0.35f);
+
+            var renderer = alienObject.GetComponent<Renderer>();
+
+            if (renderer != null && alienMaterial != null)
+            {
+                renderer.sharedMaterial = alienMaterial;
+            }
+
+            activeAliens.Add(new RuntimeAlien(alienObject, new AlienState(alienDefinition), path));
+        }
+
+        private void UpdateAliens(float deltaSeconds)
+        {
+            for (var index = activeAliens.Count - 1; index >= 0; index--)
+            {
+                var alien = activeAliens[index];
+
+                if (!alien.State.IsAlive)
+                {
+                    Destroy(alien.GameObject);
+                    activeAliens.RemoveAt(index);
+                    wallet = wallet.Add(alien.State.Definition.Reward);
+                    continue;
+                }
+
+                if (MoveAlien(alien, deltaSeconds))
+                {
+                    currentBase = currentBase.ApplyLeakDamage(1);
+                    Destroy(alien.GameObject);
+                    activeAliens.RemoveAt(index);
+
+                    if (currentBase.IsDestroyed)
+                    {
+                        lost = true;
+                        waveActive = false;
+                    }
+                }
+            }
+        }
+
+        private bool MoveAlien(RuntimeAlien alien, float deltaSeconds)
+        {
+            if (alien.NextPathIndex >= alien.Path.Count)
+            {
+                return true;
+            }
+
+            var target = ToWorldPosition(alien.Path[alien.NextPathIndex], 0.35f);
+            var speed = alien.State.Definition.SpeedCellsPerSecond * cellSize;
+            alien.GameObject.transform.localPosition = Vector3.MoveTowards(
+                alien.GameObject.transform.localPosition,
+                target,
+                speed * deltaSeconds);
+
+            if (Vector3.Distance(alien.GameObject.transform.localPosition, target) <= 0.001f)
+            {
+                alien.NextPathIndex++;
+                alien.PathProgress = alien.NextPathIndex;
+            }
+
+            return alien.NextPathIndex >= alien.Path.Count;
+        }
+
+        private void UpdateTowers(float deltaSeconds)
+        {
+            for (var towerIndex = 0; towerIndex < towers.Count; towerIndex++)
+            {
+                var tower = towers[towerIndex];
+                tower.State = tower.State.Tick(deltaSeconds);
+
+                if (!tower.State.CanFire)
+                {
+                    continue;
+                }
+
+                var candidates = BuildTargetCandidates(tower);
+                var selected = targetSelector.SelectTarget(candidates, tower.State.Definition.DefaultTargetingMode);
+
+                if (!selected.HasValue)
+                {
+                    continue;
+                }
+
+                var alien = FindRuntimeAlien(selected.Value.Alien);
+
+                if (alien == null)
+                {
+                    continue;
+                }
+
+                var attack = attackResolver.Resolve(tower.State.Definition, alien.State);
+                alien.State = attack.Target;
+                tower.State = tower.State.MarkFired();
+            }
+        }
+
+        private List<TargetCandidate> BuildTargetCandidates(RuntimeTower tower)
+        {
+            var candidates = new List<TargetCandidate>();
+            var towerPosition = ToWorldPosition(tower.Coordinate, 0.35f);
+
+            foreach (var alien in activeAliens)
+            {
+                if (!alien.State.IsAlive)
+                {
+                    continue;
+                }
+
+                var distance = Vector3.Distance(towerPosition, alien.GameObject.transform.localPosition) / cellSize;
+
+                if (distance <= tower.State.Definition.Range)
+                {
+                    candidates.Add(new TargetCandidate(alien.State, alien.PathProgress, distance));
+                }
+            }
+
+            return candidates;
+        }
+
+        private RuntimeAlien FindRuntimeAlien(AlienState state)
+        {
+            foreach (var alien in activeAliens)
+            {
+                if (ReferenceEquals(alien.State, state))
+                {
+                    return alien;
+                }
+            }
+
+            return null;
+        }
+
+        private void CompleteWaveIfReady()
+        {
+            if (!waveActive || remainingSpawns > 0 || activeAliens.Count > 0 || lost)
+            {
+                return;
+            }
+
+            completedWaves++;
+            wallet = wallet.Add(25);
+            waveActive = false;
+
+            if (completedWaves >= totalWaves)
+            {
+                won = true;
+            }
+        }
+
+        private void RebuildTiles()
+        {
+            ClearTiles();
+
+            var bounds = new GridBounds(width, height);
+            var grid = CreateGrid(bounds);
+            var start = ToGridCoordinate(spawn);
+            var end = ToGridCoordinate(goal);
+            var shortestPath = pathfinder.FindShortestPath(grid, start, end);
+            var path = new HashSet<GridCoordinate>(shortestPath);
+
+            foreach (var coordinate in bounds.Coordinates())
+            {
+                var material = SelectMaterial(grid, coordinate, path, start, end);
+                CreateTile(coordinate, material);
+            }
+        }
+
+        private Material SelectMaterial(
+            TacticalGrid grid,
+            GridCoordinate coordinate,
+            ISet<GridCoordinate> path,
+            GridCoordinate start,
+            GridCoordinate end)
+        {
+            if (coordinate == start)
+            {
+                return spawnCellMaterial;
+            }
+
+            if (coordinate == end)
+            {
+                return goalCellMaterial;
+            }
+
+            if (placedTowers.Contains(coordinate))
+            {
+                return towerCellMaterial;
+            }
+
+            if (grid.IsBlocked(coordinate))
+            {
+                return blockedCellMaterial;
+            }
+
+            if (path.Contains(coordinate))
+            {
+                return pathCellMaterial;
+            }
+
+            return openCellMaterial;
+        }
+
+        private void CreateTile(GridCoordinate coordinate, Material material)
+        {
+            var tile = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            tile.name = $"Cell_{coordinate.Column}_{coordinate.Row}";
+            tile.transform.SetParent(transform, false);
+            tile.transform.localPosition = ToWorldPosition(coordinate, 0);
+            tile.transform.localScale = new Vector3(1, tileHeight, 1);
+
+            var renderer = tile.GetComponent<Renderer>();
+
+            if (renderer != null && material != null)
+            {
+                renderer.sharedMaterial = material;
+            }
+
+            var cellView = tile.AddComponent<DebugGridCellView>();
+            cellView.Initialise(this, coordinate);
+            tileObjects.Add(tile);
+        }
+
+        private void CreateTowerObject(GridCoordinate coordinate)
+        {
+            var tower = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            tower.name = $"Debug Tower {coordinate}";
+            tower.transform.SetParent(transform, false);
+            tower.transform.localPosition = ToWorldPosition(coordinate, 0.45f);
+            tower.transform.localScale = new Vector3(0.45f, 0.65f, 0.45f);
+
+            var renderer = tower.GetComponent<Renderer>();
+
+            if (renderer != null && towerCellMaterial != null)
+            {
+                renderer.sharedMaterial = towerCellMaterial;
+            }
+
+            towerObjects.Add(tower);
+        }
+
+        private TacticalGrid CreateGrid(GridBounds bounds)
+        {
+            var blocked = new List<GridCoordinate>(ToGridCoordinates(blockedCells));
+            blocked.AddRange(placedTowers);
+            return new TacticalGrid(bounds, blocked);
+        }
+
+        private void ClearActors()
+        {
+            foreach (var alien in activeAliens)
+            {
+                if (alien.GameObject != null)
+                {
+                    Destroy(alien.GameObject);
+                }
+            }
+
+            foreach (var tower in towerObjects)
+            {
+                if (tower != null)
+                {
+                    Destroy(tower);
+                }
+            }
+
+            activeAliens.Clear();
+            towerObjects.Clear();
+        }
+
+        private void ClearTiles()
+        {
+            for (var index = tileObjects.Count - 1; index >= 0; index--)
+            {
+                var tile = tileObjects[index];
+
+                if (tile == null)
+                {
+                    continue;
+                }
+
+                if (Application.isPlaying)
+                {
+                    Destroy(tile);
+                }
+                else
+                {
+                    DestroyImmediate(tile);
+                }
+            }
+
+            tileObjects.Clear();
+        }
+
+        private void OnGUI()
+        {
+            if (currentBase == null || wallet == null || towerDefinition == null)
+            {
+                return;
+            }
+
+            const int left = 16;
+            var top = 16;
+            GUI.Box(new Rect(left, top, 280, 178), "Project 147 First Slice");
+            top += 28;
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Scrap: {wallet.Balance}  Tower cost: {towerDefinition.Cost}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Wave: {completedWaves}/{totalWaves}  Active aliens: {activeAliens.Count}");
+            top += 30;
+
+            if (!waveActive && !won && !lost && GUI.Button(new Rect(left + 12, top, 120, 28), "Start Wave"))
+            {
+                StartNextWave();
+            }
+
+            if (GUI.Button(new Rect(left + 144, top, 120, 28), "Restart"))
+            {
+                ResetSlice();
+            }
+
+            top += 34;
+
+            var status = waveActive ? "Wave running" : "Place towers, then start wave";
+
+            if (won)
+            {
+                status = "Victory";
+            }
+            else if (lost)
+            {
+                status = "Defeat";
+            }
+
+            GUI.Label(new Rect(left + 12, top, 260, 24), status);
+        }
+
+        private Vector3 ToWorldPosition(GridCoordinate coordinate, float y)
+        {
+            return new Vector3(coordinate.Column * cellSize, y, coordinate.Row * cellSize);
+        }
+
+        private static IEnumerable<GridCoordinate> ToGridCoordinates(IEnumerable<Vector2Int> coordinates)
+        {
+            foreach (var coordinate in coordinates)
+            {
+                yield return ToGridCoordinate(coordinate);
+            }
+        }
+
+        private static GridCoordinate ToGridCoordinate(Vector2Int coordinate)
+        {
+            return new GridCoordinate(coordinate.x, coordinate.y);
+        }
+
+        private sealed class RuntimeTower
+        {
+            public RuntimeTower(GridCoordinate coordinate, TowerState state)
+            {
+                Coordinate = coordinate;
+                State = state;
+            }
+
+            public GridCoordinate Coordinate { get; }
+
+            public TowerState State { get; set; }
+        }
+
+        private sealed class RuntimeAlien
+        {
+            public RuntimeAlien(GameObject gameObject, AlienState state, IReadOnlyList<GridCoordinate> path)
+            {
+                GameObject = gameObject;
+                State = state;
+                Path = path;
+                NextPathIndex = 1;
+                PathProgress = 0;
+            }
+
+            public GameObject GameObject { get; }
+
+            public AlienState State { get; set; }
+
+            public IReadOnlyList<GridCoordinate> Path { get; }
+
+            public int NextPathIndex { get; set; }
+
+            public float PathProgress { get; set; }
+        }
+    }
+}

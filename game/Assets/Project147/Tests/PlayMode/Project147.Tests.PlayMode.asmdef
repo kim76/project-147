@@ -1,0 +1,23 @@
+{
+  "name": "Project147.Tests.PlayMode",
+  "rootNamespace": "Project147.Tests.PlayMode",
+  "references": [
+    "Project147.GameCore",
+    "Project147.GameData",
+    "Project147.PlatformServices",
+    "Project147.UnityPresentation"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "noEngineReferences": false
+}
+

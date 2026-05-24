@@ -1,0 +1,17 @@
+{
+  "name": "Project147.GameData",
+  "rootNamespace": "Project147.GameData",
+  "references": [
+    "Project147.GameCore"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}
+

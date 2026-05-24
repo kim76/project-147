@@ -1,0 +1,19 @@
+{
+  "name": "Project147.UnityPresentation.Editor",
+  "rootNamespace": "Project147.UnityPresentation.Editor",
+  "references": [
+    "Project147.UnityPresentation"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
+

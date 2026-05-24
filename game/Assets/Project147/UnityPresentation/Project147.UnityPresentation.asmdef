@@ -1,0 +1,19 @@
+{
+  "name": "Project147.UnityPresentation",
+  "rootNamespace": "Project147.UnityPresentation",
+  "references": [
+    "Project147.GameCore",
+    "Project147.GameData",
+    "Project147.PlatformServices"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
+

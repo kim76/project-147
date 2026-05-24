@@ -1,0 +1,24 @@
+{
+  "name": "Project147.Tests.EditMode",
+  "rootNamespace": "Project147.Tests.EditMode",
+  "references": [
+    "Project147.GameCore",
+    "Project147.GameData",
+    "Project147.PlatformServices"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "noEngineReferences": false
+}
+

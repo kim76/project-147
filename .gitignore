@@ -6,6 +6,9 @@
 [Bb]uilds/
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+[Aa]sset[Ss]tore[Tt]ools/
 
 # Unity crash and memory files
 sysinfo.txt
@@ -40,6 +43,7 @@ sysinfo.txt
 *.aab
 *.ipa
 *.xcarchive
+*.unitypackage
 
 # Logs
 *.log

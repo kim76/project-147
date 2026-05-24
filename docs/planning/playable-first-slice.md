@@ -11,6 +11,7 @@ It is not the MVP and it is not final art. It is a playable test bed for the rul
 - Player places towers between waves.
 - Hovering a cell previews tower range and whether placement is valid.
 - Towers cost scrap.
+- Clicking an existing tower between waves upgrades it if enough scrap is available.
 - Placement is rejected if it blocks all paths.
 - Player starts waves manually.
 - Aliens spawn, follow the current path and damage the base if they reach the goal.
@@ -28,7 +29,7 @@ It is not the MVP and it is not final art. It is a playable test bed for the rul
 4. Press Play.
 5. Place towers by clicking open cells.
 6. Press `Start Wave` in the debug HUD.
-7. Continue placing towers between waves.
+7. Continue placing or upgrading towers between waves.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -40,16 +41,16 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Blue: calculated path.
 - Red: placed tower.
 - Purple: alien.
-- Green range ring: valid tower placement preview.
-- Red range ring: invalid or unaffordable tower placement preview.
+- Green range ring: valid tower placement or affordable tower upgrade preview.
+- Red range ring: invalid, unaffordable or max-level tower preview.
 
 ## Deliberate Limits
 
 - Towers can only be placed between waves.
+- Towers can only be upgraded between waves.
 - There is one tower type.
 - There is one alien type.
 - First-slice tuning is in one debug config asset, not final production content data.
-- There are no upgrades yet.
 - There is no polished UI.
 - There is no save system.
 - There is no mobile touch polish.

@@ -25,6 +25,7 @@ These tickets are intentionally small. Each should leave the project in a better
 - First-slice tuning moved into `DebugFirstSliceConfig` data asset.
 - Combat now supports deterministic crit and dodge rolls for future tower and alien upgrades.
 - Wave definition and spawn scheduling moved into tested GameCore level models.
+- Tower upgrade definitions added with tested damage, fire-rate, range and crit stat changes.
 - Unity Test Runner confirmed available through `Window > General > Test Runner`.
 - Command-line test run not attempted while the Unity project is open in the editor.
 

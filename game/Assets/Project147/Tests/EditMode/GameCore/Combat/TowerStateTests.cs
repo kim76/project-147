@@ -14,6 +14,7 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             var state = new TowerState(definition);
 
             Assert.That(state.Definition, Is.SameAs(definition));
+            Assert.That(state.Level, Is.EqualTo(1));
             Assert.That(state.SecondsUntilReady, Is.EqualTo(0));
             Assert.That(state.CanFire, Is.True);
         }
@@ -63,6 +64,28 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.Throws<ArgumentOutOfRangeException>(() => state.Tick(-1));
         }
 
+        [Test]
+        public void Upgrade_WhenUpgradeDefinitionIsNull_Throws()
+        {
+            var state = new TowerState(CreateTower(fireRatePerSecond: 2));
+
+            Assert.Throws<ArgumentNullException>(() => state.Upgrade(null));
+        }
+
+        [Test]
+        public void Upgrade_AppliesUpgradeAndIncrementsLevel()
+        {
+            var state = new TowerState(CreateTower(fireRatePerSecond: 2)).MarkFired();
+            var upgrade = new TowerUpgradeDefinition("railgun-damage-1", 75, 1.5f, 1.25f, 0, 0, 0);
+
+            var result = state.Upgrade(upgrade);
+
+            Assert.That(result.Level, Is.EqualTo(2));
+            Assert.That(result.Definition.Damage, Is.EqualTo(15));
+            Assert.That(result.Definition.FireRatePerSecond, Is.EqualTo(2.5f));
+            Assert.That(result.SecondsUntilReady, Is.EqualTo(state.SecondsUntilReady));
+        }
+
         private static TowerDefinition CreateTower(float fireRatePerSecond)
         {
             return new TowerDefinition(
@@ -76,4 +99,3 @@ namespace Project147.Tests.EditMode.GameCore.Combat
         }
     }
 }
-

@@ -57,6 +57,31 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private TowerTargetingMode towerTargetingMode = TowerTargetingMode.First;
 
+        [Header("Tower Upgrade")]
+        [SerializeField]
+        private int maxTowerLevel = 3;
+
+        [SerializeField]
+        private string towerUpgradeId = "debug-railgun-upgrade";
+
+        [SerializeField]
+        private int towerUpgradeCost = 75;
+
+        [SerializeField]
+        private float towerUpgradeDamageMultiplier = 1.35f;
+
+        [SerializeField]
+        private float towerUpgradeFireRateMultiplier = 1.15f;
+
+        [SerializeField]
+        private float towerUpgradeRangeBonus = 0.2f;
+
+        [SerializeField]
+        private float towerUpgradeCriticalChanceBonus = 0.05f;
+
+        [SerializeField]
+        private float towerUpgradeCriticalDamageMultiplierBonus = 0.15f;
+
         [Header("Alien")]
         [SerializeField]
         private string alienId = "debug-runner";
@@ -108,6 +133,11 @@ namespace Project147.GameData.Debug
             get { return waveClearScrapReward; }
         }
 
+        public int MaxTowerLevel
+        {
+            get { return maxTowerLevel; }
+        }
+
         public WaveDefinition CreateWaveDefinition(int completedWaves)
         {
             if (completedWaves < 0)
@@ -133,6 +163,18 @@ namespace Project147.GameData.Debug
                 towerTargetingMode,
                 towerCriticalChance,
                 towerCriticalDamageMultiplier);
+        }
+
+        public TowerUpgradeDefinition CreateTowerUpgradeDefinition()
+        {
+            return new TowerUpgradeDefinition(
+                towerUpgradeId,
+                towerUpgradeCost,
+                towerUpgradeDamageMultiplier,
+                towerUpgradeFireRateMultiplier,
+                towerUpgradeRangeBonus,
+                towerUpgradeCriticalChanceBonus,
+                towerUpgradeCriticalDamageMultiplierBonus);
         }
 
         public AlienDefinition CreateAlienDefinition()

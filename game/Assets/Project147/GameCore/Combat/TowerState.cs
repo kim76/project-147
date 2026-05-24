@@ -5,13 +5,18 @@ namespace Project147.GameCore.Combat
     public sealed class TowerState
     {
         public TowerState(TowerDefinition definition)
-            : this(definition, 0)
+            : this(definition, 1, 0)
         {
         }
 
-        private TowerState(TowerDefinition definition, float secondsUntilReady)
+        private TowerState(TowerDefinition definition, int level, float secondsUntilReady)
         {
             Definition = definition ?? throw new ArgumentNullException(nameof(definition));
+
+            if (level <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(level), "Tower level must be greater than zero.");
+            }
 
             if (secondsUntilReady < 0)
             {
@@ -20,10 +25,13 @@ namespace Project147.GameCore.Combat
                     "Seconds until ready cannot be negative.");
             }
 
+            Level = level;
             SecondsUntilReady = secondsUntilReady;
         }
 
         public TowerDefinition Definition { get; }
+
+        public int Level { get; }
 
         public float SecondsUntilReady { get; }
 
@@ -39,12 +47,22 @@ namespace Project147.GameCore.Combat
                 throw new ArgumentOutOfRangeException(nameof(deltaSeconds), "Delta seconds cannot be negative.");
             }
 
-            return new TowerState(Definition, Math.Max(0, SecondsUntilReady - deltaSeconds));
+            return new TowerState(Definition, Level, Math.Max(0, SecondsUntilReady - deltaSeconds));
         }
 
         public TowerState MarkFired()
         {
-            return new TowerState(Definition, SecondsPerShot());
+            return new TowerState(Definition, Level, SecondsPerShot());
+        }
+
+        public TowerState Upgrade(TowerUpgradeDefinition upgrade)
+        {
+            if (upgrade == null)
+            {
+                throw new ArgumentNullException(nameof(upgrade));
+            }
+
+            return new TowerState(upgrade.ApplyTo(Definition), Level + 1, SecondsUntilReady);
         }
 
         private float SecondsPerShot()
@@ -53,4 +71,3 @@ namespace Project147.GameCore.Combat
         }
     }
 }
-

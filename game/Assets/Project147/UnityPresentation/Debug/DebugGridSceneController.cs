@@ -80,6 +80,7 @@ namespace Project147.UnityPresentation.Debug
         private TowerPlacementValidator placementValidator;
         private AttackResolver attackResolver;
         private TowerDefinition towerDefinition;
+        private TowerUpgradeDefinition towerUpgradeDefinition;
         private AlienDefinition alienDefinition;
         private BaseState currentBase;
         private CurrencyWallet wallet;
@@ -119,6 +120,12 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
+            if (placedTowers.Contains(coordinate))
+            {
+                TryUpgradeTower(coordinate);
+                return;
+            }
+
             if (!wallet.CanSpend(towerDefinition.Cost))
             {
                 UnityEngine.Debug.Log("Not enough scrap for tower.");
@@ -139,15 +146,15 @@ namespace Project147.UnityPresentation.Debug
 
             wallet = wallet.Spend(towerDefinition.Cost);
             placedTowers.Add(coordinate);
-            towers.Add(new RuntimeTower(coordinate, new TowerState(towerDefinition)));
-            CreateTowerObject(coordinate);
+            var towerObject = CreateTowerObject(coordinate);
+            towers.Add(new RuntimeTower(coordinate, new TowerState(towerDefinition), towerObject));
             RebuildTiles();
             HidePlacementPreviewIfAny();
         }
 
         public void ShowPlacementPreview(GridCoordinate coordinate)
         {
-            if (towerDefinition == null || currentBase == null || wallet == null)
+            if (towerDefinition == null || towerUpgradeDefinition == null || currentBase == null || wallet == null)
             {
                 return;
             }
@@ -156,10 +163,21 @@ namespace Project147.UnityPresentation.Debug
             EnsurePlacementPreview();
 
             var canPlace = CanPreviewPlacement(coordinate);
-            var colour = canPlace ? new Color(0.25f, 1f, 0.35f, 0.95f) : new Color(1f, 0.2f, 0.2f, 0.95f);
+            var tower = FindRuntimeTower(coordinate);
+            var canUpgrade = tower != null
+                && !waveActive
+                && !won
+                && !lost
+                && tower.State.Level < config.MaxTowerLevel
+                && wallet.CanSpend(towerUpgradeDefinition.Cost);
+            var colour = canPlace || canUpgrade
+                ? new Color(0.25f, 1f, 0.35f, 0.95f)
+                : new Color(1f, 0.2f, 0.2f, 0.95f);
+            var range = tower == null ? towerDefinition.Range : tower.State.Definition.Range;
             placementPreview.transform.localPosition = ToWorldPosition(coordinate, 0.18f);
             placementPreviewLine.startColor = colour;
             placementPreviewLine.endColor = colour;
+            BuildPlacementPreviewCircle(range);
             SetPreviewMaterialColour(colour);
             placementPreview.SetActive(true);
         }
@@ -226,7 +244,37 @@ namespace Project147.UnityPresentation.Debug
             placementValidator = new TowerPlacementValidator(pathfinder);
             attackResolver = new AttackResolver(new DamageResolver());
             towerDefinition = config.CreateTowerDefinition();
+            towerUpgradeDefinition = config.CreateTowerUpgradeDefinition();
             alienDefinition = config.CreateAlienDefinition();
+        }
+
+        private void TryUpgradeTower(GridCoordinate coordinate)
+        {
+            var tower = FindRuntimeTower(coordinate);
+
+            if (tower == null)
+            {
+                UnityEngine.Debug.Log($"No tower found at {coordinate}.");
+                return;
+            }
+
+            if (tower.State.Level >= config.MaxTowerLevel)
+            {
+                UnityEngine.Debug.Log($"Tower at {coordinate} is already level {tower.State.Level}.");
+                return;
+            }
+
+            if (!wallet.CanSpend(towerUpgradeDefinition.Cost))
+            {
+                UnityEngine.Debug.Log("Not enough scrap for tower upgrade.");
+                return;
+            }
+
+            wallet = wallet.Spend(towerUpgradeDefinition.Cost);
+            tower.State = tower.State.Upgrade(towerUpgradeDefinition);
+            UpdateTowerObject(tower);
+            HidePlacementPreviewIfAny();
+            UnityEngine.Debug.Log($"Upgraded tower at {coordinate} to level {tower.State.Level}.");
         }
 
         private void StartNextWave()
@@ -422,6 +470,19 @@ namespace Project147.UnityPresentation.Debug
             return null;
         }
 
+        private RuntimeTower FindRuntimeTower(GridCoordinate coordinate)
+        {
+            foreach (var tower in towers)
+            {
+                if (tower.Coordinate == coordinate)
+                {
+                    return tower;
+                }
+            }
+
+            return null;
+        }
+
         private void CompleteWaveIfReady()
         {
             if (!waveActive
@@ -517,7 +578,7 @@ namespace Project147.UnityPresentation.Debug
             tileObjects.Add(tile);
         }
 
-        private void CreateTowerObject(GridCoordinate coordinate)
+        private GameObject CreateTowerObject(GridCoordinate coordinate)
         {
             var tower = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             tower.name = $"Debug Tower {coordinate}";
@@ -533,6 +594,19 @@ namespace Project147.UnityPresentation.Debug
             }
 
             towerObjects.Add(tower);
+            return tower;
+        }
+
+        private void UpdateTowerObject(RuntimeTower tower)
+        {
+            if (tower.GameObject == null)
+            {
+                return;
+            }
+
+            var levelBonus = (tower.State.Level - 1) * 0.16f;
+            tower.GameObject.transform.localPosition = ToWorldPosition(tower.Coordinate, 0.45f + levelBonus * 0.5f);
+            tower.GameObject.transform.localScale = new Vector3(0.45f, 0.65f + levelBonus, 0.45f);
         }
 
         private TacticalGrid CreateGrid(GridBounds bounds)
@@ -621,7 +695,7 @@ namespace Project147.UnityPresentation.Debug
             placementPreviewLine.positionCount = 72;
             placementPreviewLine.widthMultiplier = 0.06f;
             placementPreviewLine.material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
-            BuildPlacementPreviewCircle();
+            BuildPlacementPreviewCircle(towerDefinition.Range);
             placementPreview.SetActive(false);
         }
 
@@ -645,9 +719,9 @@ namespace Project147.UnityPresentation.Debug
             }
         }
 
-        private void BuildPlacementPreviewCircle()
+        private void BuildPlacementPreviewCircle(float range)
         {
-            var radius = towerDefinition.Range * cellSize;
+            var radius = range * cellSize;
 
             for (var index = 0; index < placementPreviewLine.positionCount; index++)
             {
@@ -694,18 +768,20 @@ namespace Project147.UnityPresentation.Debug
 
         private void OnGUI()
         {
-            if (currentBase == null || wallet == null || towerDefinition == null)
+            if (currentBase == null || wallet == null || towerDefinition == null || towerUpgradeDefinition == null)
             {
                 return;
             }
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 178), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 200), "Project 147 First Slice");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Scrap: {wallet.Balance}  Tower cost: {towerDefinition.Cost}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Upgrade: {towerUpgradeDefinition.Cost}  Max tower level: {config.MaxTowerLevel}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Wave: {completedWaves}/{config.TotalWaves}  Active aliens: {activeAliens.Count}");
             top += 30;
@@ -756,15 +832,18 @@ namespace Project147.UnityPresentation.Debug
 
         private sealed class RuntimeTower
         {
-            public RuntimeTower(GridCoordinate coordinate, TowerState state)
+            public RuntimeTower(GridCoordinate coordinate, TowerState state, GameObject gameObject)
             {
                 Coordinate = coordinate;
                 State = state;
+                GameObject = gameObject;
             }
 
             public GridCoordinate Coordinate { get; }
 
             public TowerState State { get; set; }
+
+            public GameObject GameObject { get; }
         }
 
         private sealed class RuntimeAlien

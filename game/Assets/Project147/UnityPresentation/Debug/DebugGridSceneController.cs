@@ -87,8 +87,7 @@ namespace Project147.UnityPresentation.Debug
         private bool won;
         private bool lost;
         private int completedWaves;
-        private int remainingSpawns;
-        private float spawnTimer;
+        private WaveSpawnState waveSpawnState;
         private GameObject placementPreview;
         private LineRenderer placementPreviewLine;
         private GridCoordinate? previewCoordinate;
@@ -194,8 +193,7 @@ namespace Project147.UnityPresentation.Debug
             won = false;
             lost = false;
             completedWaves = 0;
-            remainingSpawns = 0;
-            spawnTimer = 0;
+            waveSpawnState = null;
             RebuildTiles();
         }
 
@@ -239,27 +237,23 @@ namespace Project147.UnityPresentation.Debug
             }
 
             waveActive = true;
-            remainingSpawns = config.StartingWaveAlienCount + completedWaves * config.ExtraAliensPerWave;
-            spawnTimer = 0;
+            waveSpawnState = new WaveSpawnState(config.CreateWaveDefinition(completedWaves));
         }
 
         private void UpdateWaveSpawning(float deltaSeconds)
         {
-            if (!waveActive || remainingSpawns <= 0)
+            if (!waveActive || waveSpawnState == null || waveSpawnState.HasCompletedSpawning)
             {
                 return;
             }
 
-            spawnTimer -= deltaSeconds;
+            var spawnResult = waveSpawnState.Tick(deltaSeconds);
+            waveSpawnState = spawnResult.State;
 
-            if (spawnTimer > 0)
+            for (var spawnIndex = 0; spawnIndex < spawnResult.SpawnCount; spawnIndex++)
             {
-                return;
+                SpawnAlien();
             }
-
-            SpawnAlien();
-            remainingSpawns--;
-            spawnTimer = config.SecondsBetweenSpawns;
         }
 
         private void SpawnAlien()
@@ -430,14 +424,19 @@ namespace Project147.UnityPresentation.Debug
 
         private void CompleteWaveIfReady()
         {
-            if (!waveActive || remainingSpawns > 0 || activeAliens.Count > 0 || lost)
+            if (!waveActive
+                || waveSpawnState == null
+                || !waveSpawnState.HasCompletedSpawning
+                || activeAliens.Count > 0
+                || lost)
             {
                 return;
             }
 
             completedWaves++;
-            wallet = wallet.Add(config.WaveClearScrapReward);
+            wallet = wallet.Add(waveSpawnState.Definition.ClearReward);
             waveActive = false;
+            waveSpawnState = null;
 
             if (completedWaves >= config.TotalWaves)
             {

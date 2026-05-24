@@ -1,4 +1,5 @@
 using Project147.GameCore.Combat;
+using Project147.GameCore.Level;
 using UnityEngine;
 
 namespace Project147.GameData.Debug
@@ -105,6 +106,19 @@ namespace Project147.GameData.Debug
         public int WaveClearScrapReward
         {
             get { return waveClearScrapReward; }
+        }
+
+        public WaveDefinition CreateWaveDefinition(int completedWaves)
+        {
+            if (completedWaves < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(completedWaves), "Completed waves cannot be negative.");
+            }
+
+            return new WaveDefinition(
+                startingWaveAlienCount + completedWaves * extraAliensPerWave,
+                secondsBetweenSpawns,
+                waveClearScrapReward);
         }
 
         public TowerDefinition CreateTowerDefinition()

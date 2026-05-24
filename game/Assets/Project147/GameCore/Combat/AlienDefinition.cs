@@ -12,7 +12,8 @@ namespace Project147.GameCore.Combat
             float maxHealth,
             float speedCellsPerSecond,
             int reward,
-            IReadOnlyDictionary<DamageType, float> resistances)
+            IReadOnlyDictionary<DamageType, float> resistances,
+            float dodgeChance = 0)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -45,14 +46,20 @@ namespace Project147.GameCore.Combat
                 {
                     throw new ArgumentOutOfRangeException(
                         nameof(resistances),
-                        "Alien resistance values must be between zero and one.");
+                    "Alien resistance values must be between zero and one.");
                 }
+            }
+
+            if (dodgeChance < 0 || dodgeChance > 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(dodgeChance), "Alien dodge chance must be between zero and one.");
             }
 
             Id = id;
             MaxHealth = maxHealth;
             SpeedCellsPerSecond = speedCellsPerSecond;
             Reward = reward;
+            DodgeChance = dodgeChance;
             this.resistances = new Dictionary<DamageType, float>(resistances);
         }
 
@@ -64,10 +71,11 @@ namespace Project147.GameCore.Combat
 
         public int Reward { get; }
 
+        public float DodgeChance { get; }
+
         public float GetResistance(DamageType damageType)
         {
             return resistances.TryGetValue(damageType, out var resistance) ? resistance : 0;
         }
     }
 }
-

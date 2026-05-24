@@ -14,6 +14,17 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(result.BaseAmount, Is.EqualTo(100));
             Assert.That(result.Resistance, Is.EqualTo(0.25f));
             Assert.That(result.FinalAmount, Is.EqualTo(75));
+            Assert.That(result.WasCritical, Is.False);
+            Assert.That(result.WasDodged, Is.False);
+        }
+
+        [Test]
+        public void Constructor_WhenOutcomeFlagsAreProvided_StoresValues()
+        {
+            var result = new DamageResult(100, 0, 200, true, false);
+
+            Assert.That(result.WasCritical, Is.True);
+            Assert.That(result.WasDodged, Is.False);
         }
 
         [Test]
@@ -34,6 +45,17 @@ namespace Project147.Tests.EditMode.GameCore.Combat
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => new DamageResult(100, 0, -1));
         }
+
+        [Test]
+        public void Constructor_WhenDodgedResultHasFinalDamage_Throws()
+        {
+            Assert.Throws<ArgumentException>(() => new DamageResult(100, 0, 1, false, true));
+        }
+
+        [Test]
+        public void Constructor_WhenResultIsBothCriticalAndDodged_Throws()
+        {
+            Assert.Throws<ArgumentException>(() => new DamageResult(100, 0, 0, true, true));
+        }
     }
 }
-

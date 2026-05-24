@@ -4,7 +4,12 @@ namespace Project147.GameCore.Combat
 {
     public readonly struct DamageResult : IEquatable<DamageResult>
     {
-        public DamageResult(float baseAmount, float resistance, float finalAmount)
+        public DamageResult(
+            float baseAmount,
+            float resistance,
+            float finalAmount,
+            bool wasCritical = false,
+            bool wasDodged = false)
         {
             if (baseAmount < 0)
             {
@@ -21,9 +26,21 @@ namespace Project147.GameCore.Combat
                 throw new ArgumentOutOfRangeException(nameof(finalAmount), "Final amount cannot be negative.");
             }
 
+            if (wasCritical && wasDodged)
+            {
+                throw new ArgumentException("Damage cannot be both critical and dodged.");
+            }
+
+            if (wasDodged && finalAmount > 0)
+            {
+                throw new ArgumentException("Dodged damage must have zero final amount.");
+            }
+
             BaseAmount = baseAmount;
             Resistance = resistance;
             FinalAmount = finalAmount;
+            WasCritical = wasCritical;
+            WasDodged = wasDodged;
         }
 
         public float BaseAmount { get; }
@@ -32,11 +49,17 @@ namespace Project147.GameCore.Combat
 
         public float FinalAmount { get; }
 
+        public bool WasCritical { get; }
+
+        public bool WasDodged { get; }
+
         public bool Equals(DamageResult other)
         {
             return BaseAmount.Equals(other.BaseAmount)
                 && Resistance.Equals(other.Resistance)
-                && FinalAmount.Equals(other.FinalAmount);
+                && FinalAmount.Equals(other.FinalAmount)
+                && WasCritical == other.WasCritical
+                && WasDodged == other.WasDodged;
         }
 
         public override bool Equals(object obj)
@@ -46,8 +69,7 @@ namespace Project147.GameCore.Combat
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(BaseAmount, Resistance, FinalAmount);
+            return HashCode.Combine(BaseAmount, Resistance, FinalAmount, WasCritical, WasDodged);
         }
     }
 }
-

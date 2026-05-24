@@ -25,6 +25,26 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(tower.Damage, Is.EqualTo(12));
             Assert.That(tower.DamageType, Is.EqualTo(DamageType.Kinetic));
             Assert.That(tower.DefaultTargetingMode, Is.EqualTo(TowerTargetingMode.First));
+            Assert.That(tower.CriticalChance, Is.EqualTo(0));
+            Assert.That(tower.CriticalDamageMultiplier, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Constructor_WhenCriticalValuesAreValid_StoresValues()
+        {
+            var tower = new TowerDefinition(
+                "railgun-basic",
+                100,
+                3.5f,
+                1.25f,
+                12,
+                DamageType.Kinetic,
+                TowerTargetingMode.First,
+                0.2f,
+                1.75f);
+
+            Assert.That(tower.CriticalChance, Is.EqualTo(0.2f));
+            Assert.That(tower.CriticalDamageMultiplier, Is.EqualTo(1.75f));
         }
 
         [TestCase(null)]
@@ -93,6 +113,37 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 DamageType.Kinetic,
                 TowerTargetingMode.First));
         }
+
+        [TestCase(-0.01f)]
+        [TestCase(1.01f)]
+        public void Constructor_WhenCriticalChanceIsOutsideZeroToOne_Throws(float criticalChance)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new TowerDefinition(
+                "railgun-basic",
+                100,
+                3,
+                1,
+                10,
+                DamageType.Kinetic,
+                TowerTargetingMode.First,
+                criticalChance,
+                1.5f));
+        }
+
+        [TestCase(0)]
+        [TestCase(0.99f)]
+        public void Constructor_WhenCriticalMultiplierIsLessThanOne_Throws(float criticalDamageMultiplier)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new TowerDefinition(
+                "railgun-basic",
+                100,
+                3,
+                1,
+                10,
+                DamageType.Kinetic,
+                TowerTargetingMode.First,
+                0.2f,
+                criticalDamageMultiplier));
+        }
     }
 }
-

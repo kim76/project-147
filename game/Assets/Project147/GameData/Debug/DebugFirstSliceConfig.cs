@@ -45,6 +45,12 @@ namespace Project147.GameData.Debug
         private float towerDamage = 24;
 
         [SerializeField]
+        private float towerCriticalChance;
+
+        [SerializeField]
+        private float towerCriticalDamageMultiplier = 1.5f;
+
+        [SerializeField]
         private DamageType towerDamageType = DamageType.Kinetic;
 
         [SerializeField]
@@ -62,6 +68,9 @@ namespace Project147.GameData.Debug
 
         [SerializeField]
         private int alienReward = 15;
+
+        [SerializeField]
+        private float alienDodgeChance;
 
         public int StartingCurrency
         {
@@ -107,7 +116,9 @@ namespace Project147.GameData.Debug
                 towerFireRatePerSecond,
                 towerDamage,
                 towerDamageType,
-                towerTargetingMode);
+                towerTargetingMode,
+                towerCriticalChance,
+                towerCriticalDamageMultiplier);
         }
 
         public AlienDefinition CreateAlienDefinition()
@@ -117,7 +128,8 @@ namespace Project147.GameData.Debug
                 alienHealth,
                 alienSpeedCellsPerSecond,
                 alienReward,
-                new System.Collections.Generic.Dictionary<DamageType, float>());
+                new System.Collections.Generic.Dictionary<DamageType, float>(),
+                alienDodgeChance);
         }
     }
 }

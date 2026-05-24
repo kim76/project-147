@@ -11,7 +11,9 @@ namespace Project147.GameCore.Combat
             float fireRatePerSecond,
             float damage,
             DamageType damageType,
-            TowerTargetingMode defaultTargetingMode)
+            TowerTargetingMode defaultTargetingMode,
+            float criticalChance = 0,
+            float criticalDamageMultiplier = 1)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -38,6 +40,18 @@ namespace Project147.GameCore.Combat
                 throw new ArgumentOutOfRangeException(nameof(damage), "Tower damage must be greater than zero.");
             }
 
+            if (criticalChance < 0 || criticalChance > 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(criticalChance), "Critical chance must be between zero and one.");
+            }
+
+            if (criticalDamageMultiplier < 1)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(criticalDamageMultiplier),
+                    "Critical damage multiplier must be at least one.");
+            }
+
             Id = id;
             Cost = cost;
             Range = range;
@@ -45,6 +59,8 @@ namespace Project147.GameCore.Combat
             Damage = damage;
             DamageType = damageType;
             DefaultTargetingMode = defaultTargetingMode;
+            CriticalChance = criticalChance;
+            CriticalDamageMultiplier = criticalDamageMultiplier;
         }
 
         public string Id { get; }
@@ -60,6 +76,9 @@ namespace Project147.GameCore.Combat
         public DamageType DamageType { get; }
 
         public TowerTargetingMode DefaultTargetingMode { get; }
+
+        public float CriticalChance { get; }
+
+        public float CriticalDamageMultiplier { get; }
     }
 }
-

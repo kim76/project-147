@@ -23,6 +23,7 @@ These tickets are intentionally small. Each should leave the project in a better
 - Tower placement hover preview added with range and valid/invalid feedback.
 - Tower shot feedback added with short shot lines and alien hit flashes.
 - First-slice tuning moved into `DebugFirstSliceConfig` data asset.
+- Combat now supports deterministic crit and dodge rolls for future tower and alien upgrades.
 - Unity Test Runner confirmed available through `Window > General > Test Runner`.
 - Command-line test run not attempted while the Unity project is open in the editor.
 

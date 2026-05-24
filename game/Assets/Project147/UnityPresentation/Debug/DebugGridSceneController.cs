@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Project147.GameCore.Combat;
 using Project147.GameCore.Grid;
 using Project147.GameCore.Level;
+using Project147.GameData.Debug;
 using UnityEngine;
 
 namespace Project147.UnityPresentation.Debug
@@ -65,19 +66,7 @@ namespace Project147.UnityPresentation.Debug
         private Material shotLineMaterial;
 
         [SerializeField]
-        private float alienSpeedCellsPerSecond = 1.6f;
-
-        [SerializeField]
-        private int startingCurrency = 150;
-
-        [SerializeField]
-        private int baseHealth = 10;
-
-        [SerializeField]
-        private int totalWaves = 5;
-
-        [SerializeField]
-        private float secondsBetweenSpawns = 0.8f;
+        private DebugFirstSliceConfig config;
 
         private readonly List<GameObject> tileObjects = new List<GameObject>();
         private readonly List<GameObject> towerObjects = new List<GameObject>();
@@ -199,8 +188,8 @@ namespace Project147.UnityPresentation.Debug
             ClearTiles();
             placedTowers.Clear();
             towers.Clear();
-            currentBase = new BaseState(baseHealth);
-            wallet = new CurrencyWallet(startingCurrency);
+            currentBase = new BaseState(config.BaseHealth);
+            wallet = new CurrencyWallet(config.StartingCurrency);
             waveActive = false;
             won = false;
             lost = false;
@@ -230,33 +219,27 @@ namespace Project147.UnityPresentation.Debug
 
         private void InitialiseRules()
         {
+            if (config == null)
+            {
+                UnityEngine.Debug.LogWarning("Debug first-slice config is missing. Using in-memory defaults. Recreate the scene from Project147 > Debug > Create Grid Scene to create a tuneable asset.");
+                config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+            }
+
             placementValidator = new TowerPlacementValidator(pathfinder);
             attackResolver = new AttackResolver(new DamageResolver());
-            towerDefinition = new TowerDefinition(
-                "debug-railgun",
-                50,
-                2.35f,
-                1.25f,
-                24,
-                DamageType.Kinetic,
-                TowerTargetingMode.First);
-            alienDefinition = new AlienDefinition(
-                "debug-runner",
-                60,
-                alienSpeedCellsPerSecond,
-                15,
-                new Dictionary<DamageType, float>());
+            towerDefinition = config.CreateTowerDefinition();
+            alienDefinition = config.CreateAlienDefinition();
         }
 
         private void StartNextWave()
         {
-            if (waveActive || won || lost || completedWaves >= totalWaves)
+            if (waveActive || won || lost || completedWaves >= config.TotalWaves)
             {
                 return;
             }
 
             waveActive = true;
-            remainingSpawns = 4 + completedWaves * 2;
+            remainingSpawns = config.StartingWaveAlienCount + completedWaves * config.ExtraAliensPerWave;
             spawnTimer = 0;
         }
 
@@ -276,7 +259,7 @@ namespace Project147.UnityPresentation.Debug
 
             SpawnAlien();
             remainingSpawns--;
-            spawnTimer = secondsBetweenSpawns;
+            spawnTimer = config.SecondsBetweenSpawns;
         }
 
         private void SpawnAlien()
@@ -453,10 +436,10 @@ namespace Project147.UnityPresentation.Debug
             }
 
             completedWaves++;
-            wallet = wallet.Add(25);
+            wallet = wallet.Add(config.WaveClearScrapReward);
             waveActive = false;
 
-            if (completedWaves >= totalWaves)
+            if (completedWaves >= config.TotalWaves)
             {
                 won = true;
             }
@@ -725,7 +708,7 @@ namespace Project147.UnityPresentation.Debug
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Scrap: {wallet.Balance}  Tower cost: {towerDefinition.Cost}");
             top += 22;
-            GUI.Label(new Rect(left + 12, top, 260, 24), $"Wave: {completedWaves}/{totalWaves}  Active aliens: {activeAliens.Count}");
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Wave: {completedWaves}/{config.TotalWaves}  Active aliens: {activeAliens.Count}");
             top += 30;
 
             if (!waveActive && !won && !lost && GUI.Button(new Rect(left + 12, top, 120, 28), "Start Wave"))

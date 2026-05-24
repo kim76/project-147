@@ -22,6 +22,7 @@ These tickets are intentionally small. Each should leave the project in a better
 - Playable first-slice loop added with waves, base health, currency, tower fire and alien leaks.
 - Tower placement hover preview added with range and valid/invalid feedback.
 - Tower shot feedback added with short shot lines and alien hit flashes.
+- First-slice tuning moved into `DebugFirstSliceConfig` data asset.
 - Unity Test Runner confirmed available through `Window > General > Test Runner`.
 - Command-line test run not attempted while the Unity project is open in the editor.
 

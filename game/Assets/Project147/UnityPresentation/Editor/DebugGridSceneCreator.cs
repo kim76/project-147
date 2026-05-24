@@ -1,4 +1,5 @@
 using Project147.UnityPresentation.Debug;
+using Project147.GameData.Debug;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -8,6 +9,7 @@ namespace Project147.UnityPresentation.Editor
     public static class DebugGridSceneCreator
     {
         private const string ScenePath = "Assets/Project147/UnityPresentation/Debug/DebugGridScene.unity";
+        private const string ConfigPath = "Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset";
 
         [MenuItem("Project147/Debug/Create Grid Scene")]
         public static void CreateGridScene()
@@ -57,6 +59,28 @@ namespace Project147.UnityPresentation.Editor
             AssignMaterial(controller, "alienMaterial", CreateMaterial("Debug_Alien", new Color(0.8f, 0.25f, 1f)));
             AssignMaterial(controller, "alienHitMaterial", CreateMaterial("Debug_AlienHit", new Color(1f, 0.95f, 0.15f)));
             AssignMaterial(controller, "shotLineMaterial", CreateMaterial("Debug_ShotLine", new Color(1f, 0.95f, 0.2f)));
+            AssignConfig(controller, CreateConfig());
+        }
+
+        private static DebugFirstSliceConfig CreateConfig()
+        {
+            var existingConfig = AssetDatabase.LoadAssetAtPath<DebugFirstSliceConfig>(ConfigPath);
+
+            if (existingConfig != null)
+            {
+                return existingConfig;
+            }
+
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+            AssetDatabase.CreateAsset(config, ConfigPath);
+            return config;
+        }
+
+        private static void AssignConfig(Object target, DebugFirstSliceConfig config)
+        {
+            var serializedObject = new SerializedObject(target);
+            serializedObject.FindProperty("config").objectReferenceValue = config;
+            serializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static Material CreateMaterial(string name, Color colour)

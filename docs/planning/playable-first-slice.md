@@ -30,6 +30,8 @@ It is not the MVP and it is not final art. It is a playable test bed for the rul
 6. Press `Start Wave` in the debug HUD.
 7. Continue placing towers between waves.
 
+The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
+
 ## Debug Colours
 
 - Green: spawn.
@@ -46,6 +48,7 @@ It is not the MVP and it is not final art. It is a playable test bed for the rul
 - Towers can only be placed between waves.
 - There is one tower type.
 - There is one alien type.
+- First-slice tuning is in one debug config asset, not final production content data.
 - There are no upgrades yet.
 - There is no polished UI.
 - There is no save system.

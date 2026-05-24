@@ -22,6 +22,21 @@ namespace Project147.UnityPresentation.Debug
                 controller.TryPlaceTower(Coordinate);
             }
         }
+
+        private void OnMouseEnter()
+        {
+            if (controller != null)
+            {
+                controller.ShowPlacementPreview(Coordinate);
+            }
+        }
+
+        private void OnMouseExit()
+        {
+            if (controller != null)
+            {
+                controller.HidePlacementPreview(Coordinate);
+            }
+        }
     }
 }
-

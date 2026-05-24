@@ -9,6 +9,7 @@ It is not the MVP and it is not final art. It is a playable test bed for the rul
 ## Current Loop
 
 - Player places towers between waves.
+- Hovering a cell previews tower range and whether placement is valid.
 - Towers cost scrap.
 - Placement is rejected if it blocks all paths.
 - Player starts waves manually.
@@ -36,6 +37,8 @@ It is not the MVP and it is not final art. It is a playable test bed for the rul
 - Blue: calculated path.
 - Red: placed tower.
 - Purple: alien.
+- Green range ring: valid tower placement preview.
+- Red range ring: invalid or unaffordable tower placement preview.
 
 ## Deliberate Limits
 
@@ -49,4 +52,3 @@ It is not the MVP and it is not final art. It is a playable test bed for the rul
 - There is no final art.
 
 These limits are intentional. The slice exists to prove the loop before expanding content.
-

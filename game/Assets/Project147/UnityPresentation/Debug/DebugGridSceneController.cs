@@ -93,6 +93,9 @@ namespace Project147.UnityPresentation.Debug
         private int completedWaves;
         private int remainingSpawns;
         private float spawnTimer;
+        private GameObject placementPreview;
+        private LineRenderer placementPreviewLine;
+        private GridCoordinate? previewCoordinate;
 
         private void Start()
         {
@@ -144,11 +147,46 @@ namespace Project147.UnityPresentation.Debug
             towers.Add(new RuntimeTower(coordinate, new TowerState(towerDefinition)));
             CreateTowerObject(coordinate);
             RebuildTiles();
+            ShowPlacementPreview(coordinate);
+        }
+
+        public void ShowPlacementPreview(GridCoordinate coordinate)
+        {
+            if (towerDefinition == null || currentBase == null || wallet == null)
+            {
+                return;
+            }
+
+            previewCoordinate = coordinate;
+            EnsurePlacementPreview();
+
+            var canPlace = CanPreviewPlacement(coordinate);
+            var colour = canPlace ? new Color(0.25f, 1f, 0.35f, 0.95f) : new Color(1f, 0.2f, 0.2f, 0.95f);
+            placementPreview.transform.localPosition = ToWorldPosition(coordinate, 0.18f);
+            placementPreviewLine.startColor = colour;
+            placementPreviewLine.endColor = colour;
+            placementPreview.SetActive(true);
+        }
+
+        public void HidePlacementPreview(GridCoordinate coordinate)
+        {
+            if (!previewCoordinate.HasValue || previewCoordinate.Value != coordinate)
+            {
+                return;
+            }
+
+            previewCoordinate = null;
+
+            if (placementPreview != null)
+            {
+                placementPreview.SetActive(false);
+            }
         }
 
         [ContextMenu("Restart First Slice")]
         private void ResetSlice()
         {
+            HidePlacementPreviewIfAny();
             ClearActors();
             ClearTiles();
             placedTowers.Clear();
@@ -162,6 +200,24 @@ namespace Project147.UnityPresentation.Debug
             remainingSpawns = 0;
             spawnTimer = 0;
             RebuildTiles();
+        }
+
+        private bool CanPreviewPlacement(GridCoordinate coordinate)
+        {
+            if (waveActive || won || lost || !wallet.CanSpend(towerDefinition.Cost))
+            {
+                return false;
+            }
+
+            var bounds = new GridBounds(width, height);
+            var grid = CreateGrid(bounds);
+            var result = placementValidator.ValidatePlacement(
+                grid,
+                coordinate,
+                ToGridCoordinate(spawn),
+                ToGridCoordinate(goal));
+
+            return result.IsValid;
         }
 
         private void InitialiseRules()
@@ -480,6 +536,8 @@ namespace Project147.UnityPresentation.Debug
 
         private void ClearActors()
         {
+            HidePlacementPreviewIfAny();
+
             foreach (var alien in activeAliens)
             {
                 if (alien.GameObject != null)
@@ -498,6 +556,48 @@ namespace Project147.UnityPresentation.Debug
 
             activeAliens.Clear();
             towerObjects.Clear();
+        }
+
+        private void EnsurePlacementPreview()
+        {
+            if (placementPreview != null)
+            {
+                return;
+            }
+
+            placementPreview = new GameObject("Placement Range Preview");
+            placementPreview.transform.SetParent(transform, false);
+            placementPreviewLine = placementPreview.AddComponent<LineRenderer>();
+            placementPreviewLine.loop = true;
+            placementPreviewLine.useWorldSpace = false;
+            placementPreviewLine.positionCount = 72;
+            placementPreviewLine.widthMultiplier = 0.06f;
+            placementPreviewLine.material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+            BuildPlacementPreviewCircle();
+            placementPreview.SetActive(false);
+        }
+
+        private void BuildPlacementPreviewCircle()
+        {
+            var radius = towerDefinition.Range * cellSize;
+
+            for (var index = 0; index < placementPreviewLine.positionCount; index++)
+            {
+                var radians = index / (float)placementPreviewLine.positionCount * Mathf.PI * 2;
+                var x = Mathf.Cos(radians) * radius;
+                var z = Mathf.Sin(radians) * radius;
+                placementPreviewLine.SetPosition(index, new Vector3(x, 0, z));
+            }
+        }
+
+        private void HidePlacementPreviewIfAny()
+        {
+            previewCoordinate = null;
+
+            if (placementPreview != null)
+            {
+                placementPreview.SetActive(false);
+            }
         }
 
         private void ClearTiles()

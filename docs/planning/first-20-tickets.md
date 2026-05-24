@@ -20,6 +20,7 @@ These tickets are intentionally small. Each should leave the project in a better
 - Debug grid scene now supports click-to-place tower cells using the placement validator.
 - Debug grid scene now spawns a simple alien marker that follows the calculated path.
 - Playable first-slice loop added with waves, base health, currency, tower fire and alien leaks.
+- Tower placement hover preview added with range and valid/invalid feedback.
 - Unity Test Runner confirmed available through `Window > General > Test Runner`.
 - Command-line test run not attempted while the Unity project is open in the editor.
 

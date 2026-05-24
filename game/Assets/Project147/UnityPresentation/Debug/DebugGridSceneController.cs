@@ -59,6 +59,12 @@ namespace Project147.UnityPresentation.Debug
         private Material alienMaterial;
 
         [SerializeField]
+        private Material alienHitMaterial;
+
+        [SerializeField]
+        private Material shotLineMaterial;
+
+        [SerializeField]
         private float alienSpeedCellsPerSecond = 1.6f;
 
         [SerializeField]
@@ -75,6 +81,7 @@ namespace Project147.UnityPresentation.Debug
 
         private readonly List<GameObject> tileObjects = new List<GameObject>();
         private readonly List<GameObject> towerObjects = new List<GameObject>();
+        private readonly List<GameObject> shotObjects = new List<GameObject>();
         private readonly List<RuntimeTower> towers = new List<RuntimeTower>();
         private readonly List<RuntimeAlien> activeAliens = new List<RuntimeAlien>();
         private readonly HashSet<GridCoordinate> placedTowers = new HashSet<GridCoordinate>();
@@ -296,7 +303,7 @@ namespace Project147.UnityPresentation.Debug
                 renderer.sharedMaterial = alienMaterial;
             }
 
-            activeAliens.Add(new RuntimeAlien(alienObject, new AlienState(alienDefinition), path));
+            activeAliens.Add(new RuntimeAlien(alienObject, new AlienState(alienDefinition), path, renderer));
         }
 
         private void UpdateAliens(float deltaSeconds)
@@ -313,6 +320,8 @@ namespace Project147.UnityPresentation.Debug
                     continue;
                 }
 
+                UpdateAlienHitFlash(alien, deltaSeconds);
+
                 if (MoveAlien(alien, deltaSeconds))
                 {
                     currentBase = currentBase.ApplyLeakDamage(1);
@@ -325,6 +334,21 @@ namespace Project147.UnityPresentation.Debug
                         waveActive = false;
                     }
                 }
+            }
+        }
+
+        private void UpdateAlienHitFlash(RuntimeAlien alien, float deltaSeconds)
+        {
+            if (alien.HitFlashSeconds <= 0)
+            {
+                return;
+            }
+
+            alien.HitFlashSeconds -= deltaSeconds;
+
+            if (alien.HitFlashSeconds <= 0 && alien.Renderer != null && alienMaterial != null)
+            {
+                alien.Renderer.sharedMaterial = alienMaterial;
             }
         }
 
@@ -381,6 +405,7 @@ namespace Project147.UnityPresentation.Debug
                 var attack = attackResolver.Resolve(tower.State.Definition, alien.State);
                 alien.State = attack.Target;
                 tower.State = tower.State.MarkFired();
+                ShowShotFeedback(tower.Coordinate, alien);
             }
         }
 
@@ -555,8 +580,48 @@ namespace Project147.UnityPresentation.Debug
                 }
             }
 
+            foreach (var shot in shotObjects)
+            {
+                if (shot != null)
+                {
+                    Destroy(shot);
+                }
+            }
+
             activeAliens.Clear();
             towerObjects.Clear();
+            shotObjects.Clear();
+        }
+
+        private void ShowShotFeedback(GridCoordinate towerCoordinate, RuntimeAlien alien)
+        {
+            var start = ToWorldPosition(towerCoordinate, 0.8f);
+            var end = alien.GameObject.transform.localPosition;
+            end.y = 0.45f;
+
+            var shot = new GameObject("Debug Shot");
+            shot.transform.SetParent(transform, false);
+
+            var line = shot.AddComponent<LineRenderer>();
+            line.positionCount = 2;
+            line.useWorldSpace = false;
+            line.widthMultiplier = 0.08f;
+            line.SetPosition(0, start);
+            line.SetPosition(1, end);
+
+            if (shotLineMaterial != null)
+            {
+                line.sharedMaterial = shotLineMaterial;
+            }
+
+            shotObjects.Add(shot);
+            Destroy(shot, 0.08f);
+
+            if (alien.Renderer != null && alienHitMaterial != null)
+            {
+                alien.Renderer.sharedMaterial = alienHitMaterial;
+                alien.HitFlashSeconds = 0.08f;
+            }
         }
 
         private void EnsurePlacementPreview()
@@ -722,11 +787,16 @@ namespace Project147.UnityPresentation.Debug
 
         private sealed class RuntimeAlien
         {
-            public RuntimeAlien(GameObject gameObject, AlienState state, IReadOnlyList<GridCoordinate> path)
+            public RuntimeAlien(
+                GameObject gameObject,
+                AlienState state,
+                IReadOnlyList<GridCoordinate> path,
+                Renderer renderer)
             {
                 GameObject = gameObject;
                 State = state;
                 Path = path;
+                Renderer = renderer;
                 NextPathIndex = 1;
                 PathProgress = 0;
             }
@@ -737,9 +807,13 @@ namespace Project147.UnityPresentation.Debug
 
             public IReadOnlyList<GridCoordinate> Path { get; }
 
+            public Renderer Renderer { get; }
+
             public int NextPathIndex { get; set; }
 
             public float PathProgress { get; set; }
+
+            public float HitFlashSeconds { get; set; }
         }
     }
 }

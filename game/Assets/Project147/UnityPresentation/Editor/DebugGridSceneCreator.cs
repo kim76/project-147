@@ -55,6 +55,8 @@ namespace Project147.UnityPresentation.Editor
             AssignMaterial(controller, "goalCellMaterial", CreateMaterial("Debug_GoalCell", new Color(0.95f, 0.75f, 0.2f)));
             AssignMaterial(controller, "towerCellMaterial", CreateMaterial("Debug_TowerCell", new Color(0.9f, 0.2f, 0.25f)));
             AssignMaterial(controller, "alienMaterial", CreateMaterial("Debug_Alien", new Color(0.8f, 0.25f, 1f)));
+            AssignMaterial(controller, "alienHitMaterial", CreateMaterial("Debug_AlienHit", new Color(1f, 0.95f, 0.15f)));
+            AssignMaterial(controller, "shotLineMaterial", CreateMaterial("Debug_ShotLine", new Color(1f, 0.95f, 0.2f)));
         }
 
         private static Material CreateMaterial(string name, Color colour)

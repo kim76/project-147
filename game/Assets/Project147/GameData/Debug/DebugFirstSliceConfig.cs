@@ -29,6 +29,9 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private int waveClearScrapReward = 25;
 
+        [SerializeField]
+        private int perfectWaveScrapBonus = 15;
+
         [Header("Tower")]
         [SerializeField]
         private string towerId = "debug-railgun";
@@ -166,6 +169,11 @@ namespace Project147.GameData.Debug
         public int WaveClearScrapReward
         {
             get { return waveClearScrapReward; }
+        }
+
+        public int PerfectWaveScrapBonus
+        {
+            get { return perfectWaveScrapBonus; }
         }
 
         public int MaxTowerLevel

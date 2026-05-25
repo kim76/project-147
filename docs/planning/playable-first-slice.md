@@ -21,6 +21,7 @@ It is not the MVP and it is not final art. It is a playable test bed for the rul
 - Status effects expire automatically.
 - Killed aliens award scrap.
 - Clearing waves awards bonus scrap.
+- Clearing a wave without taking base damage awards a perfect-wave scrap bonus.
 - The slice ends in victory after all waves or defeat when the base reaches zero health.
 
 ## How To Run

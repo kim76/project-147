@@ -82,12 +82,15 @@ namespace Project147.UnityPresentation.Debug
         private TowerDefinition towerDefinition;
         private TowerUpgradeDefinition towerUpgradeDefinition;
         private AlienStatusEffectDefinition towerStatusEffectDefinition;
+        private RewardCalculator rewardCalculator;
         private BaseState currentBase;
         private CurrencyWallet wallet;
         private bool waveActive;
         private bool won;
         private bool lost;
         private int completedWaves;
+        private int waveStartBaseHealth;
+        private WaveDefinition currentWaveDefinition;
         private WaveSpawnState waveSpawnState;
         private GameObject placementPreview;
         private LineRenderer placementPreviewLine;
@@ -211,6 +214,8 @@ namespace Project147.UnityPresentation.Debug
             won = false;
             lost = false;
             completedWaves = 0;
+            waveStartBaseHealth = currentBase.CurrentHealth;
+            currentWaveDefinition = null;
             waveSpawnState = null;
             RebuildTiles();
         }
@@ -243,6 +248,7 @@ namespace Project147.UnityPresentation.Debug
 
             placementValidator = new TowerPlacementValidator(pathfinder);
             attackResolver = new AttackResolver(new DamageResolver());
+            rewardCalculator = new RewardCalculator(config.PerfectWaveScrapBonus);
             towerDefinition = config.CreateTowerDefinition();
             towerUpgradeDefinition = config.CreateTowerUpgradeDefinition();
             towerStatusEffectDefinition = config.CreateTowerStatusEffectDefinition();
@@ -285,7 +291,9 @@ namespace Project147.UnityPresentation.Debug
             }
 
             waveActive = true;
-            waveSpawnState = new WaveSpawnState(config.CreateWaveDefinition(completedWaves));
+            waveStartBaseHealth = currentBase.CurrentHealth;
+            currentWaveDefinition = config.CreateWaveDefinition(completedWaves);
+            waveSpawnState = new WaveSpawnState(currentWaveDefinition);
         }
 
         private void UpdateWaveSpawning(float deltaSeconds)
@@ -345,7 +353,7 @@ namespace Project147.UnityPresentation.Debug
                 {
                     Destroy(alien.GameObject);
                     activeAliens.RemoveAt(index);
-                    wallet = wallet.Add(alien.State.Definition.Reward);
+                    wallet = wallet.Add(rewardCalculator.CalculateAlienKillReward(alien.State.Definition).Amount);
                     continue;
                 }
 
@@ -506,8 +514,11 @@ namespace Project147.UnityPresentation.Debug
             }
 
             completedWaves++;
-            wallet = wallet.Add(waveSpawnState.Definition.ClearReward);
+            wallet = wallet.Add(rewardCalculator.CalculateWaveClearReward(
+                currentWaveDefinition,
+                currentBase.CurrentHealth == waveStartBaseHealth).Amount);
             waveActive = false;
+            currentWaveDefinition = null;
             waveSpawnState = null;
 
             if (completedWaves >= config.TotalWaves)
@@ -783,20 +794,23 @@ namespace Project147.UnityPresentation.Debug
                 || wallet == null
                 || towerDefinition == null
                 || towerUpgradeDefinition == null
-                || towerStatusEffectDefinition == null)
+                || towerStatusEffectDefinition == null
+                || rewardCalculator == null)
             {
                 return;
             }
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 222), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 244), "Project 147 First Slice");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Scrap: {wallet.Balance}  Tower cost: {towerDefinition.Cost}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Upgrade: {towerUpgradeDefinition.Cost}  Max tower level: {config.MaxTowerLevel}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Perfect wave bonus: {config.PerfectWaveScrapBonus}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Wave: {completedWaves}/{config.TotalWaves}  Alien cap: L{config.MaxAlienLevel}");
             top += 22;

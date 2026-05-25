@@ -16,6 +16,7 @@ The debug first slice has:
 - Scrap economy for tower placement, kills, wave clear and perfect waves.
 - Tower upgrading between waves.
 - Tower selling between waves with a tested partial refund rule.
+- Per-tower targeting mode changes between waves.
 - Tested 1x/2x/3x game speed control for wave pacing.
 - Tested pause/resume state for active waves without using Unity global time scale.
 - Three debug towers:
@@ -55,8 +56,9 @@ Before the next development slice:
 11. Confirm the run summary panel appears with stars, kill, reward and ability counts.
 12. Confirm the `Session Progress` panel updates after victory or defeat and survives pressing `Restart`.
 13. Toggle `Sell Mode`, click an existing tower between waves and confirm scrap increases and the path recalculates.
-14. Click `Speed` to cycle 1x/2x/3x and confirm waves visibly run faster.
-15. During a wave, click `Pause` and confirm aliens, cooldowns and firing stop until `Resume`.
+14. Toggle `Target`, click an existing tower between waves and confirm its targeting mode cycles.
+15. Click `Speed` to cycle 1x/2x/3x and confirm waves visibly run faster.
+16. During a wave, click `Pause` and confirm aliens, cooldowns and firing stop until `Resume`.
 
 ## Next Slice Candidates
 

@@ -69,6 +69,24 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(result.Tower.SecondsUntilReady, Is.EqualTo(0.5f));
         }
 
+        [Test]
+        public void Step_UsesTowerStateTargetingMode()
+        {
+            var tower = new TowerState(CreateTower()).SelectNextTargetingMode();
+            var step = CreateStep();
+
+            var result = step.Step(tower, new[]
+            {
+                Candidate(maxHealth: 100, damage: 0, pathProgress: 1, distanceToTower: 1),
+                Candidate(maxHealth: 100, damage: 50, pathProgress: 5, distanceToTower: 1)
+            });
+
+            Assert.That(tower.TargetingMode, Is.EqualTo(TowerTargetingMode.Last));
+            Assert.That(result.DidFire, Is.True);
+            Assert.That(result.Attack.HasValue, Is.True);
+            Assert.That(result.Attack.Value.Target.CurrentHealth, Is.EqualTo(90));
+        }
+
         private static TowerAttackStep CreateStep()
         {
             return new TowerAttackStep(new TowerTargetSelector(), new AttackResolver(new DamageResolver()));

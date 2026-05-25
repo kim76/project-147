@@ -16,6 +16,7 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(state.Definition, Is.SameAs(definition));
             Assert.That(state.Level, Is.EqualTo(1));
             Assert.That(state.SecondsUntilReady, Is.EqualTo(0));
+            Assert.That(state.TargetingMode, Is.EqualTo(TowerTargetingMode.First));
             Assert.That(state.CanFire, Is.True);
         }
 
@@ -33,6 +34,7 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             var result = state.MarkFired();
             Assert.That(result.SecondsUntilReady, Is.EqualTo(0.5f));
             Assert.That(result.CanFire, Is.False);
+            Assert.That(result.TargetingMode, Is.EqualTo(state.TargetingMode));
         }
 
         [Test]
@@ -43,6 +45,7 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             var result = state.Tick(0.2f);
 
             Assert.That(result.SecondsUntilReady, Is.EqualTo(0.3f).Within(0.0001f));
+            Assert.That(result.TargetingMode, Is.EqualTo(state.TargetingMode));
             Assert.That(state.SecondsUntilReady, Is.EqualTo(0.5f));
         }
 
@@ -84,6 +87,25 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(result.Definition.Damage, Is.EqualTo(15));
             Assert.That(result.Definition.FireRatePerSecond, Is.EqualTo(2.5f));
             Assert.That(result.SecondsUntilReady, Is.EqualTo(state.SecondsUntilReady));
+            Assert.That(result.TargetingMode, Is.EqualTo(state.TargetingMode));
+        }
+
+        [Test]
+        public void SelectNextTargetingMode_CyclesTargetingMode()
+        {
+            var state = new TowerState(CreateTower(fireRatePerSecond: 2));
+
+            var last = state.SelectNextTargetingMode();
+            var closest = last.SelectNextTargetingMode();
+            var strongest = closest.SelectNextTargetingMode();
+            var weakest = strongest.SelectNextTargetingMode();
+            var first = weakest.SelectNextTargetingMode();
+
+            Assert.That(last.TargetingMode, Is.EqualTo(TowerTargetingMode.Last));
+            Assert.That(closest.TargetingMode, Is.EqualTo(TowerTargetingMode.Closest));
+            Assert.That(strongest.TargetingMode, Is.EqualTo(TowerTargetingMode.Strongest));
+            Assert.That(weakest.TargetingMode, Is.EqualTo(TowerTargetingMode.Weakest));
+            Assert.That(first.TargetingMode, Is.EqualTo(TowerTargetingMode.First));
         }
 
         private static TowerDefinition CreateTower(float fireRatePerSecond)

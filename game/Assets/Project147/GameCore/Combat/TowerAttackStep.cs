@@ -26,7 +26,7 @@ namespace Project147.GameCore.Combat
                 return TowerAttackStepResult.NotFired(tower);
             }
 
-            var target = targetSelector.SelectTarget(candidates, tower.Definition.DefaultTargetingMode);
+            var target = targetSelector.SelectTarget(candidates, tower.TargetingMode);
 
             if (!target.HasValue)
             {
@@ -38,4 +38,3 @@ namespace Project147.GameCore.Combat
         }
     }
 }
-

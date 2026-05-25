@@ -111,6 +111,7 @@ namespace Project147.UnityPresentation.Debug
         private bool won;
         private bool lost;
         private bool sellMode;
+        private bool retargetMode;
         private int completedWaves;
         private int waveStartBaseHealth;
         private WaveDefinition currentWaveDefinition;
@@ -170,6 +171,10 @@ namespace Project147.UnityPresentation.Debug
                 if (sellMode)
                 {
                     TrySellTower(coordinate);
+                }
+                else if (retargetMode)
+                {
+                    TryCycleTowerTargetingMode(coordinate);
                 }
                 else
                 {
@@ -234,6 +239,7 @@ namespace Project147.UnityPresentation.Debug
                 && !won
                 && !lost
                 && !sellMode
+                && !retargetMode
                 && tower.State.Level < config.MaxTowerLevel
                 && wallet.CanSpend(towerUpgradeDefinition.Cost);
             var canSell = tower != null
@@ -242,7 +248,13 @@ namespace Project147.UnityPresentation.Debug
                 && !lost
                 && sellMode
                 && !HasPendingRunChoice;
-            var colour = canPlace || canUpgrade || canSell
+            var canRetarget = tower != null
+                && !waveActive
+                && !won
+                && !lost
+                && retargetMode
+                && !HasPendingRunChoice;
+            var colour = canPlace || canUpgrade || canSell || canRetarget
                 ? new Color(0.25f, 1f, 0.35f, 0.95f)
                 : new Color(1f, 0.2f, 0.2f, 0.95f);
             var range = tower == null ? SelectedTower.Range : tower.State.Definition.Range;
@@ -290,6 +302,7 @@ namespace Project147.UnityPresentation.Debug
             won = false;
             lost = false;
             sellMode = false;
+            retargetMode = false;
             completedWaves = 0;
             waveStartBaseHealth = currentBase.CurrentHealth;
             currentWaveDefinition = null;
@@ -436,6 +449,21 @@ namespace Project147.UnityPresentation.Debug
             RecordEvent($"Sold tower at {coordinate}. +{refund} scrap.");
         }
 
+        private void TryCycleTowerTargetingMode(GridCoordinate coordinate)
+        {
+            var tower = FindRuntimeTower(coordinate);
+
+            if (tower == null)
+            {
+                RecordEvent($"No tower found at {coordinate}.");
+                return;
+            }
+
+            tower.State = tower.State.SelectNextTargetingMode();
+            HidePlacementPreviewIfAny();
+            RecordEvent($"Tower at {coordinate} targeting: {tower.State.TargetingMode}.");
+        }
+
         private void StartNextWave()
         {
             if (waveActive || won || lost || completedWaves >= config.TotalWaves)
@@ -450,6 +478,8 @@ namespace Project147.UnityPresentation.Debug
             }
 
             waveActive = true;
+            sellMode = false;
+            retargetMode = false;
             runModifiers = runModifiers.StartWave();
             waveStartBaseHealth = currentBase.CurrentHealth;
             currentWaveDefinition = config.CreateWaveDefinition(completedWaves);
@@ -726,7 +756,7 @@ namespace Project147.UnityPresentation.Debug
                 }
 
                 var candidates = BuildTargetCandidates(tower);
-                var selected = targetSelector.SelectTarget(candidates, tower.State.Definition.DefaultTargetingMode);
+                var selected = targetSelector.SelectTarget(candidates, tower.State.TargetingMode);
 
                 if (!selected.HasValue)
                 {
@@ -1302,7 +1332,7 @@ namespace Project147.UnityPresentation.Debug
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 492), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 526), "Project 147 First Slice");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}");
             top += 22;
@@ -1344,12 +1374,28 @@ namespace Project147.UnityPresentation.Debug
             if (GUI.Button(new Rect(left + 12, top, 120, 28), sellMode ? "Sell Mode: On" : "Sell Mode: Off"))
             {
                 sellMode = !sellMode;
+                retargetMode = false;
                 HidePlacementPreviewIfAny();
                 RecordEvent(sellMode ? "Sell mode enabled." : "Sell mode disabled.");
             }
 
             GUI.enabled = previousEnabled;
             GUI.Label(new Rect(left + 144, top + 4, 130, 24), $"Refund {TowerSellRefundMultiplier:P0}");
+            top += 34;
+
+            previousEnabled = GUI.enabled;
+            GUI.enabled = !waveActive && !won && !lost && !HasPendingRunChoice;
+
+            if (GUI.Button(new Rect(left + 12, top, 120, 28), retargetMode ? "Target: On" : "Target: Off"))
+            {
+                retargetMode = !retargetMode;
+                sellMode = false;
+                HidePlacementPreviewIfAny();
+                RecordEvent(retargetMode ? "Retarget mode enabled." : "Retarget mode disabled.");
+            }
+
+            GUI.enabled = previousEnabled;
+            GUI.Label(new Rect(left + 144, top + 4, 130, 24), "Click tower");
             top += 34;
 
             if (GUI.Button(new Rect(left + 12, top, 120, 28), BuildSpeedButtonText()))
@@ -1428,7 +1474,9 @@ namespace Project147.UnityPresentation.Debug
                 ? "Choose reward"
                 : waveActive
                     ? gamePause.IsPaused ? "Paused" : "Wave running"
-                    : sellMode ? "Click tower to sell" : "Place towers, then start wave";
+                    : sellMode
+                        ? "Click tower to sell"
+                        : retargetMode ? "Click tower to retarget" : "Place towers, then start wave";
 
             if (won)
             {

@@ -104,6 +104,7 @@ namespace Project147.UnityPresentation.Debug
         private RunSummaryState runSummary;
         private LevelProgressState levelProgress;
         private LevelProgressApplicationResult lastProgressResult;
+        private GameSpeedState gameSpeed;
         private LevelEventFeed eventFeed;
         private bool waveActive;
         private bool won;
@@ -131,19 +132,21 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
-            if (freezePulseState != null)
-            {
-                freezePulseState = freezePulseState.Tick(Time.deltaTime);
-            }
+            var deltaSeconds = ScaledDeltaSeconds;
 
             if (orbitalStrikeState != null)
             {
-                orbitalStrikeState = orbitalStrikeState.Tick(Time.deltaTime);
+                orbitalStrikeState = orbitalStrikeState.Tick(deltaSeconds);
             }
 
-            UpdateWaveSpawning(Time.deltaTime);
-            UpdateAliens(Time.deltaTime);
-            UpdateTowers(Time.deltaTime);
+            if (freezePulseState != null)
+            {
+                freezePulseState = freezePulseState.Tick(deltaSeconds);
+            }
+
+            UpdateWaveSpawning(deltaSeconds);
+            UpdateAliens(deltaSeconds);
+            UpdateTowers(deltaSeconds);
             CompleteWaveIfReady();
         }
 
@@ -277,6 +280,7 @@ namespace Project147.UnityPresentation.Debug
             wallet = new CurrencyWallet(config.StartingCurrency);
             runModifiers = new RunModifierState();
             runSummary = new RunSummaryState();
+            gameSpeed = new GameSpeedState();
             freezePulseState = new PlayerAbilityState(config.CreateFreezePulseAbilityDefinition());
             orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
             eventFeed = new LevelEventFeed(EventFeedCapacity).Add("Ready. Place towers, then start wave.");
@@ -328,11 +332,23 @@ namespace Project147.UnityPresentation.Debug
             orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
             towerUpgradeDefinition = config.CreateTowerUpgradeDefinition();
             levelProgress = levelProgress ?? new LevelProgressState();
+            gameSpeed = gameSpeed ?? new GameSpeedState();
         }
 
         private TowerDefinition SelectedTower
         {
             get { return towerLoadout.SelectedTower; }
+        }
+
+        private float ScaledDeltaSeconds
+        {
+            get { return (gameSpeed ?? new GameSpeedState()).ScaleDeltaSeconds(Time.deltaTime); }
+        }
+
+        private void SelectNextGameSpeed()
+        {
+            gameSpeed = (gameSpeed ?? new GameSpeedState()).SelectNext();
+            RecordEvent($"Game speed: {gameSpeed.Multiplier:0.#}x.");
         }
 
         private void SelectPreviousTower()
@@ -1264,14 +1280,15 @@ namespace Project147.UnityPresentation.Debug
                 || rewardCalculator == null
                 || freezePulseState == null
                 || orbitalStrikeState == null
-                || runSummary == null)
+                || runSummary == null
+                || gameSpeed == null)
             {
                 return;
             }
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 458), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 492), "Project 147 First Slice");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}");
             top += 22;
@@ -1319,6 +1336,14 @@ namespace Project147.UnityPresentation.Debug
 
             GUI.enabled = previousEnabled;
             GUI.Label(new Rect(left + 144, top + 4, 130, 24), $"Refund {TowerSellRefundMultiplier:P0}");
+            top += 34;
+
+            if (GUI.Button(new Rect(left + 12, top, 120, 28), BuildSpeedButtonText()))
+            {
+                SelectNextGameSpeed();
+            }
+
+            GUI.Label(new Rect(left + 144, top + 4, 130, 24), "Wave speed");
             top += 34;
 
             previousEnabled = GUI.enabled;
@@ -1413,6 +1438,11 @@ namespace Project147.UnityPresentation.Debug
             return freezePulseState.CanActivate
                 ? "Freeze Pulse"
                 : $"Freeze {Mathf.CeilToInt(freezePulseState.RemainingCooldownSeconds)}s";
+        }
+
+        private string BuildSpeedButtonText()
+        {
+            return $"Speed {gameSpeed.Multiplier:0.#}x";
         }
 
         private string BuildFreezePulseStatusText()

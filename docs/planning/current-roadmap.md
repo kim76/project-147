@@ -16,6 +16,7 @@ The debug first slice has:
 - Scrap economy for tower placement, kills, wave clear and perfect waves.
 - Tower upgrading between waves.
 - Tower selling between waves with a tested partial refund rule.
+- Tested 1x/2x/3x game speed control for wave pacing.
 - Three debug towers:
   - Railgun: faster, applies a short slow effect.
   - Mortar: slower, explosive splash damage.
@@ -53,6 +54,7 @@ Before the next development slice:
 11. Confirm the run summary panel appears with stars, kill, reward and ability counts.
 12. Confirm the `Session Progress` panel updates after victory or defeat and survives pressing `Restart`.
 13. Toggle `Sell Mode`, click an existing tower between waves and confirm scrap increases and the path recalculates.
+14. Click `Speed` to cycle 1x/2x/3x and confirm waves visibly run faster.
 
 ## Next Slice Candidates
 

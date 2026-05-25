@@ -20,6 +20,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Toggling `Sell Mode` and clicking an existing tower between waves sells it for a partial refund.
 - Placement is rejected if it blocks all paths.
 - Player starts waves manually.
+- Player can cycle wave speed between 1x, 2x and 3x.
 - A `Next Wave` panel previews enemy counts and tags before each wave.
 - Mixed waves spawn basic, fast, armoured, shielded, burrower and boss debug aliens.
 - Shielded aliens absorb damage into shields before health.
@@ -54,11 +55,12 @@ For the active next-task list, see `current-roadmap.md`.
 7. After a non-final wave, choose one reward from the reward panel.
 8. Continue placing or upgrading towers between waves. If you picked the construction credit, the next tower cost is reduced.
 9. Toggle `Sell Mode`, click an existing tower, and confirm scrap increases.
-10. If you picked `Overclock`, the next wave gets boosted tower damage.
-11. If you picked `Rapid Loader`, the next wave gets boosted tower fire rate.
-12. Use `Freeze Pulse` or `Orbital Strike` during active waves when their cooldowns are ready.
-13. On victory or defeat, read the run summary panel.
-14. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
+10. Click `Speed` to cycle between 1x, 2x and 3x wave speed.
+11. If you picked `Overclock`, the next wave gets boosted tower damage.
+12. If you picked `Rapid Loader`, the next wave gets boosted tower fire rate.
+13. Use `Freeze Pulse` or `Orbital Strike` during active waves when their cooldowns are ready.
+14. On victory or defeat, read the run summary panel.
+15. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -97,6 +99,7 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Reward choices are debug-tuned and not final progression design.
 - The tower discount reward only affects the next placed tower, not upgrades.
 - Selling refunds 75% of tower and upgrade spend in the debug slice.
+- Speed controls scale gameplay updates, not Unity's global time scale.
 - Overclock affects damage only, not fire rate.
 - Rapid Loader affects fire rate only, not damage.
 - Orbital Strike is a debug ability, not final balance.

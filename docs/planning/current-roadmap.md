@@ -26,6 +26,7 @@ The debug first slice has:
 - Between-wave reward choices drawn as a random 3-option offer from a larger reward pool.
 - Reward effects for extra scrap, base repair, next-tower discount, next-wave tower damage and next-wave tower fire rate.
 - Next-wave intel showing upcoming enemy composition and simple tags before the wave starts.
+- End-of-run summary for outcome, waves, kills, leaks, scrap, rewards and ability use.
 - First-slice tuning grouped by level, towers, aliens, upgrades and abilities.
 - First-pass in-scene visual profiles for towers and aliens.
 - Debug HUD, hover range preview, shot feedback and event feed.
@@ -41,6 +42,7 @@ Before the next development slice:
 5. Confirm the `Next Wave` panel shows a `Boss` tag before the final wave.
 6. Start the final wave and confirm a large purple boss alien appears.
 7. Confirm victory still triggers after the boss wave is cleared.
+8. Confirm the run summary panel appears with kill, reward and ability counts.
 
 ## Next Slice Candidates
 
@@ -121,9 +123,9 @@ Why next: this starts the “addictive” part without monetisation or content b
 ## Recommended Order
 
 1. Verify the final-wave boss in Unity.
-2. Generate concept boards for final art direction.
-3. Add an enemy-side mechanic such as shields or burrowers.
-4. Add a simple post-run summary screen for kill/reward stats.
+2. Verify the post-run summary in Unity.
+3. Generate concept boards for final art direction.
+4. Add an enemy-side mechanic such as shields or burrowers.
 5. Split debug tuning into separate ScriptableObject assets only when the current single asset becomes painful.
 
 ## Not Yet

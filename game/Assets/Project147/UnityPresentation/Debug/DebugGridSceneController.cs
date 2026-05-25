@@ -99,6 +99,7 @@ namespace Project147.UnityPresentation.Debug
         private BaseState currentBase;
         private CurrencyWallet wallet;
         private RunModifierState runModifiers;
+        private RunSummaryState runSummary;
         private LevelEventFeed eventFeed;
         private bool waveActive;
         private bool won;
@@ -255,6 +256,7 @@ namespace Project147.UnityPresentation.Debug
             currentBase = new BaseState(config.BaseHealth);
             wallet = new CurrencyWallet(config.StartingCurrency);
             runModifiers = new RunModifierState();
+            runSummary = new RunSummaryState();
             freezePulseState = new PlayerAbilityState(config.CreateFreezePulseAbilityDefinition());
             orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
             eventFeed = new LevelEventFeed(EventFeedCapacity).Add("Ready. Place towers, then start wave.");
@@ -412,6 +414,7 @@ namespace Project147.UnityPresentation.Debug
 
             var results = freezePulseResolver.Resolve(freezePulseState.Definition, targets);
             freezePulseState = freezePulseState.Activate();
+            runSummary = runSummary.RecordFreezePulseUsed();
 
             foreach (var result in results)
             {
@@ -467,6 +470,7 @@ namespace Project147.UnityPresentation.Debug
 
             var results = orbitalStrikeResolver.Resolve(orbitalStrikeState.Definition, targets);
             orbitalStrikeState = orbitalStrikeState.Activate();
+            runSummary = runSummary.RecordOrbitalStrikeUsed();
 
             foreach (var result in results)
             {
@@ -503,6 +507,7 @@ namespace Project147.UnityPresentation.Debug
             currentBase = result.BaseState;
             wallet = result.Wallet;
             runModifiers = result.RunModifiers;
+            runSummary = runSummary.RecordRewardChosen();
             pendingRunChoices = new List<RunChoiceDefinition>();
             RecordEvent($"Chose {choice.Label}: {FormatRunChoiceEffect(choice)}.");
         }
@@ -562,6 +567,7 @@ namespace Project147.UnityPresentation.Debug
                     activeAliens.RemoveAt(index);
                     var reward = rewardCalculator.CalculateAlienKillReward(alien.State.Definition);
                     wallet = wallet.Add(reward.Amount);
+                    runSummary = runSummary.RecordAlienDestroyed(reward.Amount);
                     RecordEvent($"{FormatAlienLabel(alien.State.Definition.Id)} destroyed. +{reward.Amount} scrap.");
                     continue;
                 }
@@ -572,6 +578,7 @@ namespace Project147.UnityPresentation.Debug
                 if (MoveAlien(alien, deltaSeconds))
                 {
                     currentBase = currentBase.ApplyLeakDamage(1);
+                    runSummary = runSummary.RecordAlienLeaked();
                     Destroy(alien.GameObject);
                     activeAliens.RemoveAt(index);
                     RecordEvent($"{FormatAlienLabel(alien.State.Definition.Id)} leaked. Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}.");
@@ -580,6 +587,7 @@ namespace Project147.UnityPresentation.Debug
                     {
                         lost = true;
                         waveActive = false;
+                        runSummary = runSummary.Complete(RunOutcome.Defeat);
                         RecordEvent("Defeat. Base destroyed.");
                     }
                 }
@@ -789,6 +797,7 @@ namespace Project147.UnityPresentation.Debug
                 currentWaveDefinition,
                 wasPerfectWave);
             wallet = wallet.Add(reward.Amount);
+            runSummary = runSummary.RecordWaveCleared(reward.Amount, wasPerfectWave);
             RecordEvent(wasPerfectWave
                 ? $"Wave cleared perfectly. +{reward.Amount} scrap."
                 : $"Wave cleared. +{reward.Amount} scrap.");
@@ -800,6 +809,7 @@ namespace Project147.UnityPresentation.Debug
             if (completedWaves >= config.TotalWaves)
             {
                 won = true;
+                runSummary = runSummary.Complete(RunOutcome.Victory);
                 RecordEvent("Victory. All waves cleared.");
                 return;
             }
@@ -1190,7 +1200,8 @@ namespace Project147.UnityPresentation.Debug
                 || towerUpgradeDefinition == null
                 || rewardCalculator == null
                 || freezePulseState == null
-                || orbitalStrikeState == null)
+                || orbitalStrikeState == null
+                || runSummary == null)
             {
                 return;
             }
@@ -1300,6 +1311,7 @@ namespace Project147.UnityPresentation.Debug
             DrawEventFeed(left + 296, 16);
             DrawWaveIntelPanel(left + 296, 232);
             DrawRunChoicePanel(left + 296, 356);
+            DrawRunSummaryPanel(left + 296, 232);
         }
 
         private string BuildSelectedTowerAbilityText()
@@ -1392,6 +1404,26 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Types: {BuildWaveIntelEntriesText(intel)}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Tags: {BuildWaveIntelTagsText(intel)}");
+        }
+
+        private void DrawRunSummaryPanel(int left, int top)
+        {
+            if (!won && !lost)
+            {
+                return;
+            }
+
+            GUI.Box(new Rect(left, top, 360, 180), "Run Summary");
+            top += 28;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Outcome: {runSummary.Outcome}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Waves: {runSummary.WavesCleared}/{config.TotalWaves}  Perfect: {runSummary.PerfectWaves}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Aliens destroyed: {runSummary.AliensDestroyed}  Leaked: {runSummary.AliensLeaked}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Scrap earned: {runSummary.ScrapEarned}  Rewards: {runSummary.RewardsChosen}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Abilities: Freeze {runSummary.FreezePulseUses}  Strike {runSummary.OrbitalStrikeUses}");
         }
 
         private void DrawEventFeed(int left, int top)

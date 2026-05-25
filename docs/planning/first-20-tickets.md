@@ -45,6 +45,7 @@ This file records the foundation work. The active next-task list is `current-roa
 - Orbital Strike player ability added with tested resistance-aware damage.
 - Rapid Loader reward added for next-wave tower fire-rate boosts.
 - Final-wave boss alien added with wave-intel tagging and first-pass visual profile.
+- End-of-run summary added for outcome, waves, kills, leaks, scrap, rewards and ability use.
 - Unity Test Runner confirmed available through `Window > General > Test Runner`.
 - Command-line test run not attempted while the Unity project is open in the editor.
 

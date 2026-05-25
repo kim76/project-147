@@ -12,7 +12,7 @@ For the active next-task list, see `current-roadmap.md`.
 
 - Player places towers between waves.
 - Player can switch between two debug tower types before placing.
-- Railgun and mortar towers use distinct debug colours and shapes.
+- Railgun and mortar towers use distinct first-pass debug visual profiles.
 - Railgun applies a short slow effect; mortar deals splash damage to nearby aliens.
 - Hovering a cell previews tower range and whether placement is valid.
 - Towers cost scrap.
@@ -54,6 +54,8 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Purple: alien.
 - Cyan capsule: fast alien.
 - Stone cube: armoured alien.
+- Red/black tower: railgun.
+- Orange/black tower: mortar.
 - Green range ring: valid tower placement or affordable tower upgrade preview.
 - Red range ring: invalid, unaffordable or max-level tower preview.
 - Cyan pulse ring: Freeze Pulse ability.
@@ -64,7 +66,7 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Towers can only be upgraded between waves.
 - There are two debug tower types.
 - There are three debug alien types.
-- First-slice tuning is in one debug config asset, not final production content data.
+- First-slice tuning is grouped in one debug config asset, not final production content data.
 - There is no polished UI.
 - There is no save system.
 - There is no mobile touch polish.

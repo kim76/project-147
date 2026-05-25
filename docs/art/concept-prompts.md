@@ -16,3 +16,12 @@ Avoid: sheep, farms, TowerMadness-like towers, copied UI, copied map layouts, re
 
 This prompt is for art direction only. Do not treat generated output as final production art until it has been reviewed for originality, readability, consistency and technical fit.
 
+## Current In-Scene Placeholder Direction
+
+Use the current first-pass visual profiles as the production brief:
+
+- chunky improvised towers;
+- visible mechanical purpose at phone size;
+- weird but readable alien roles;
+- bright effects that tell the player what happened;
+- no farm, sheep or TowerMadness-like silhouette language.

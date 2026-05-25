@@ -58,3 +58,14 @@ Bad placeholder:
 
 - a scene-only object with hardcoded stats and no connection to data definitions.
 
+## First-Pass In-Scene Profiles
+
+The current debug scene uses code-native low-poly profiles, not final art:
+
+- railgun: red/black tower with a visible barrel and core;
+- mortar: orange/black chunky base with angled tube and rim;
+- basic alien: purple body with readable eye;
+- fast alien: cyan capsule with fin;
+- armoured alien: stone cube body with shell and visor.
+
+These profiles are deliberately built from simple primitives so behaviour and silhouette can change quickly without asset pipeline friction.

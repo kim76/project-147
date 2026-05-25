@@ -415,26 +415,19 @@ namespace Project147.UnityPresentation.Debug
             }
 
             var definition = config.CreateAlienDefinition(alienId, completedWaves);
-            var alienObject = GameObject.CreatePrimitive(SelectAlienPrimitive(definition));
-            alienObject.name = $"Debug Alien {definition.Id}";
-            alienObject.transform.SetParent(transform, false);
-            alienObject.transform.localScale = SelectAlienScale(definition);
-            alienObject.transform.localPosition = ToWorldPosition(path[0], 0.35f);
-
-            var renderer = alienObject.GetComponent<Renderer>();
-            var defaultMaterial = CreateAlienMaterial(definition);
-
-            if (renderer != null)
-            {
-                renderer.sharedMaterial = defaultMaterial;
-            }
+            var visual = DebugActorVisualFactory.CreateAlien(
+                transform,
+                ToWorldPosition(path[0], 0.35f),
+                definition,
+                SelectAlienVisualRole(definition),
+                alienMaterial);
 
             activeAliens.Add(new RuntimeAlien(
-                alienObject,
+                visual.GameObject,
                 new AlienState(definition),
                 path,
-                renderer,
-                defaultMaterial));
+                visual.PrimaryRenderer,
+                visual.DefaultMaterial));
         }
 
         private void UpdateAliens(float deltaSeconds)
@@ -762,139 +755,28 @@ namespace Project147.UnityPresentation.Debug
 
         private GameObject CreateTowerObject(GridCoordinate coordinate, TowerDefinition definition)
         {
-            var tower = new GameObject($"Debug Tower {coordinate} {definition.Id}");
+            var tower = DebugActorVisualFactory.CreateTower(
+                transform,
+                ToWorldPosition(coordinate, 0.45f),
+                definition);
             tower.name = $"Debug Tower {coordinate}";
-            tower.transform.SetParent(transform, false);
-            tower.transform.localPosition = ToWorldPosition(coordinate, 0.45f);
-
-            if (definition.DamageType == DamageType.Explosive)
-            {
-                CreateTowerPart(
-                    tower.transform,
-                    PrimitiveType.Cube,
-                    "Mortar Base",
-                    new Vector3(0, -0.05f, 0),
-                    new Vector3(0.62f, 0.35f, 0.62f),
-                    new Color(1f, 0.55f, 0.12f, 1f));
-                CreateTowerPart(
-                    tower.transform,
-                    PrimitiveType.Cylinder,
-                    "Mortar Tube",
-                    new Vector3(0, 0.28f, 0),
-                    new Vector3(0.35f, 0.48f, 0.35f),
-                    new Color(0.16f, 0.13f, 0.11f, 1f));
-            }
-            else
-            {
-                CreateTowerPart(
-                    tower.transform,
-                    PrimitiveType.Cylinder,
-                    "Railgun Stem",
-                    new Vector3(0, -0.04f, 0),
-                    new Vector3(0.38f, 0.72f, 0.38f),
-                    new Color(0.94f, 0.12f, 0.24f, 1f));
-                CreateTowerPart(
-                    tower.transform,
-                    PrimitiveType.Sphere,
-                    "Railgun Core",
-                    new Vector3(0, 0.42f, 0),
-                    new Vector3(0.52f, 0.52f, 0.52f),
-                    new Color(1f, 0.22f, 0.36f, 1f));
-            }
-
-
             towerObjects.Add(tower);
             return tower;
         }
 
-        private static void CreateTowerPart(
-            Transform parent,
-            PrimitiveType primitiveType,
-            string name,
-            Vector3 localPosition,
-            Vector3 localScale,
-            Color colour)
-        {
-            var part = GameObject.CreatePrimitive(primitiveType);
-            part.name = name;
-            part.transform.SetParent(parent, false);
-            part.transform.localPosition = localPosition;
-            part.transform.localScale = localScale;
-
-            var renderer = part.GetComponent<Renderer>();
-
-            if (renderer != null)
-            {
-                renderer.material = CreateDebugMaterial(colour);
-            }
-        }
-
-        private Material CreateAlienMaterial(AlienDefinition definition)
-        {
-            return CreateDebugMaterial(SelectAlienColour(definition));
-        }
-
-        private PrimitiveType SelectAlienPrimitive(AlienDefinition definition)
+        private DebugAlienVisualRole SelectAlienVisualRole(AlienDefinition definition)
         {
             if (definition.Id == config.FastAlienId)
             {
-                return PrimitiveType.Capsule;
+                return DebugAlienVisualRole.Fast;
             }
 
             if (definition.Id == config.ArmouredAlienId)
             {
-                return PrimitiveType.Cube;
+                return DebugAlienVisualRole.Armoured;
             }
 
-            return PrimitiveType.Sphere;
-        }
-
-        private Vector3 SelectAlienScale(AlienDefinition definition)
-        {
-            if (definition.Id == config.FastAlienId)
-            {
-                return new Vector3(0.32f, 0.5f, 0.32f);
-            }
-
-            if (definition.Id == config.ArmouredAlienId)
-            {
-                return new Vector3(0.52f, 0.52f, 0.52f);
-            }
-
-            return new Vector3(0.45f, 0.45f, 0.45f);
-        }
-
-        private Color SelectAlienColour(AlienDefinition definition)
-        {
-            if (definition.Id == config.FastAlienId)
-            {
-                return new Color(0.12f, 0.85f, 1f, 1f);
-            }
-
-            if (definition.Id == config.ArmouredAlienId)
-            {
-                return new Color(0.72f, 0.62f, 0.48f, 1f);
-            }
-
-            if (alienMaterial != null && alienMaterial.HasProperty("_BaseColor"))
-            {
-                return alienMaterial.GetColor("_BaseColor");
-            }
-
-            return new Color(0.52f, 0.27f, 0.85f, 1f);
-        }
-
-        private static Material CreateDebugMaterial(Color colour)
-        {
-            var material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-            material.color = colour;
-
-            if (material.HasProperty("_BaseColor"))
-            {
-                material.SetColor("_BaseColor", colour);
-            }
-
-            return material;
+            return DebugAlienVisualRole.Basic;
         }
 
         private void UpdateTowerObject(RuntimeTower tower)
@@ -1021,7 +903,7 @@ namespace Project147.UnityPresentation.Debug
             line.useWorldSpace = false;
             line.positionCount = 96;
             line.widthMultiplier = 0.08f;
-            line.material = CreateDebugMaterial(new Color(0.12f, 0.85f, 1f, 0.95f));
+            line.material = DebugActorVisualFactory.CreateDebugMaterial(new Color(0.12f, 0.85f, 1f, 0.95f));
 
             var centre = ToWorldPosition(
                 new GridCoordinate(width / 2, height / 2),

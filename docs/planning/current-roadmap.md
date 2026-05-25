@@ -21,6 +21,8 @@ The debug first slice has:
 - Mixed enemy waves with basic, fast and armoured debug aliens.
 - Alien upgrades across later waves.
 - Freeze Pulse player ability with cooldown and debug feedback.
+- First-slice tuning grouped by level, towers, aliens, upgrades and abilities.
+- First-pass in-scene visual profiles for towers and aliens.
 - Debug HUD, hover range preview, shot feedback and event feed.
 
 ## Immediate Verification
@@ -70,14 +72,27 @@ Goal: stop the debug config from becoming a giant dumping ground.
 
 Deliverables:
 
-- Extract wave composition data into a clearer model.
-- Keep Unity config asset as tuning input only.
-- Add tests around wave composition.
-- Keep the debug scene consuming tested models.
+- Done: extract debug tuning into smaller level, tower, alien, upgrade and ability tuning classes.
+- Done: keep `DebugFirstSliceConfig` as the Unity-facing entry point.
+- Done: add config-level tests for defaults.
+- Done: keep the debug scene consuming tested models.
 
 Why next: the first-slice config is becoming too broad. This is where we keep quality high instead of accepting future pain.
 
-### 4. Add Basic In-Run Choice
+### 4. Add First-Pass Visual Profiles
+
+Goal: make the slice easier to read without pretending debug art is final production art.
+
+Deliverables:
+
+- Done: move actor construction out of the scene controller.
+- Done: add reusable first-pass tower visual profiles.
+- Done: add reusable first-pass alien visual profiles.
+- Done: keep visuals code-native for now so they remain fast to iterate.
+
+Why next: the game needs a clearer visual language, but final art should wait until the loop survives more iteration.
+
+### 5. Add Basic In-Run Choice
 
 Goal: make each run less automatic.
 
@@ -91,10 +106,10 @@ Why next: this starts the “addictive” part without monetisation or content b
 
 ## Recommended Order
 
-1. Verify Freeze Pulse.
+1. Verify config cleanup and first-pass visuals.
 2. Add one between-wave choice.
-3. Clean up debug tuning into smaller data assets if the config keeps growing.
-4. Replace debug shapes with first-pass generated concept visuals.
+3. Generate concept boards for final art direction.
+4. Split debug tuning into separate ScriptableObject assets only when the current single asset becomes painful.
 
 ## Not Yet
 

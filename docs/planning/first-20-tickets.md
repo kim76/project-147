@@ -38,6 +38,8 @@ This file records the foundation work. The active next-task list is `current-roa
 - Mortar splash damage added with tested core rules and debug-scene feedback.
 - Mixed wave composition added with basic, fast and armoured debug aliens.
 - Freeze Pulse player ability added with tested cooldown, targeting and debug-scene feedback.
+- Debug first-slice tuning split into grouped tuning classes.
+- Debug actor visuals moved into reusable first-pass visual profiles.
 - Unity Test Runner confirmed available through `Window > General > Test Runner`.
 - Command-line test run not attempted while the Unity project is open in the editor.
 

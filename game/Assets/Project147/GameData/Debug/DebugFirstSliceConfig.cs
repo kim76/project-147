@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Project147.GameCore.Abilities;
 using Project147.GameCore.Combat;
@@ -11,318 +12,136 @@ namespace Project147.GameData.Debug
     {
         [Header("Level")]
         [SerializeField]
-        private int startingCurrency = 150;
+        private DebugLevelTuning level = new DebugLevelTuning();
+
+        [Header("Towers")]
+        [SerializeField]
+        private DebugTowerTuning railgunTower = new DebugTowerTuning(
+            "debug-railgun",
+            50,
+            2.35f,
+            1.25f,
+            24,
+            DamageType.Kinetic,
+            TowerTargetingMode.First,
+            0,
+            1.5f,
+            0,
+            0);
 
         [SerializeField]
-        private int baseHealth = 10;
+        private DebugTowerTuning mortarTower = new DebugTowerTuning(
+            "debug-mortar",
+            70,
+            2.8f,
+            0.75f,
+            38,
+            DamageType.Explosive,
+            TowerTargetingMode.Strongest,
+            0.1f,
+            1.8f,
+            1.25f,
+            0.45f);
 
         [SerializeField]
-        private int totalWaves = 5;
+        private DebugTowerUpgradeTuning towerUpgrade = new DebugTowerUpgradeTuning();
 
         [SerializeField]
-        private float secondsBetweenSpawns = 0.8f;
-
-        [SerializeField]
-        private int startingWaveAlienCount = 4;
-
-        [SerializeField]
-        private int extraAliensPerWave = 2;
-
-        [SerializeField]
-        private int waveClearScrapReward = 25;
-
-        [SerializeField]
-        private int perfectWaveScrapBonus = 15;
-
-        [Header("Tower")]
-        [SerializeField]
-        private string towerId = "debug-railgun";
-
-        [SerializeField]
-        private int towerCost = 50;
-
-        [SerializeField]
-        private float towerRange = 2.35f;
-
-        [SerializeField]
-        private float towerFireRatePerSecond = 1.25f;
-
-        [SerializeField]
-        private float towerDamage = 24;
-
-        [SerializeField]
-        private float towerCriticalChance;
-
-        [SerializeField]
-        private float towerCriticalDamageMultiplier = 1.5f;
-
-        [SerializeField]
-        private DamageType towerDamageType = DamageType.Kinetic;
-
-        [SerializeField]
-        private TowerTargetingMode towerTargetingMode = TowerTargetingMode.First;
-
-        [Header("Second Tower")]
-        [SerializeField]
-        private string secondTowerId = "debug-mortar";
-
-        [SerializeField]
-        private int secondTowerCost = 70;
-
-        [SerializeField]
-        private float secondTowerRange = 2.8f;
-
-        [SerializeField]
-        private float secondTowerFireRatePerSecond = 0.75f;
-
-        [SerializeField]
-        private float secondTowerDamage = 38;
-
-        [SerializeField]
-        private float secondTowerCriticalChance = 0.1f;
-
-        [SerializeField]
-        private float secondTowerCriticalDamageMultiplier = 1.8f;
-
-        [SerializeField]
-        private float secondTowerSplashRadius = 1.25f;
-
-        [SerializeField]
-        private float secondTowerSplashDamageMultiplier = 0.45f;
-
-        [SerializeField]
-        private DamageType secondTowerDamageType = DamageType.Explosive;
-
-        [SerializeField]
-        private TowerTargetingMode secondTowerTargetingMode = TowerTargetingMode.Strongest;
-
-        [Header("Tower Upgrade")]
-        [SerializeField]
-        private int maxTowerLevel = 3;
-
-        [SerializeField]
-        private string towerUpgradeId = "debug-railgun-upgrade";
-
-        [SerializeField]
-        private int towerUpgradeCost = 75;
-
-        [SerializeField]
-        private float towerUpgradeDamageMultiplier = 1.35f;
-
-        [SerializeField]
-        private float towerUpgradeFireRateMultiplier = 1.15f;
-
-        [SerializeField]
-        private float towerUpgradeRangeBonus = 0.2f;
-
-        [SerializeField]
-        private float towerUpgradeCriticalChanceBonus = 0.05f;
-
-        [SerializeField]
-        private float towerUpgradeCriticalDamageMultiplierBonus = 0.15f;
-
-        [Header("Tower Status Effect")]
-        [SerializeField]
-        private string towerStatusEffectId = "debug-frost-slow";
-
-        [SerializeField]
-        private float towerStatusEffectDurationSeconds = 1.4f;
-
-        [SerializeField]
-        private float towerStatusEffectMovementSpeedMultiplier = 0.7f;
+        private DebugStatusEffectTuning railgunSlow = new DebugStatusEffectTuning(
+            "debug-frost-slow",
+            1.4f,
+            0.7f);
 
         [Header("Player Ability")]
         [SerializeField]
-        private string freezePulseAbilityId = "debug-freeze-pulse";
+        private DebugAbilityTuning freezePulse = new DebugAbilityTuning();
+
+        [Header("Aliens")]
+        [SerializeField]
+        private DebugAlienTuning basicAlien = new DebugAlienTuning(
+            "debug-basic",
+            60,
+            1.45f,
+            15,
+            0,
+            DamageType.Kinetic,
+            0);
 
         [SerializeField]
-        private float freezePulseCooldownSeconds = 12;
+        private DebugAlienTuning fastAlien = new DebugAlienTuning(
+            "debug-fast",
+            38,
+            2.25f,
+            12,
+            0.12f,
+            DamageType.Kinetic,
+            0);
 
         [SerializeField]
-        private string freezePulseStatusEffectId = "debug-freeze-pulse-slow";
+        private DebugAlienTuning armouredAlien = new DebugAlienTuning(
+            "debug-armoured",
+            115,
+            0.95f,
+            26,
+            0,
+            DamageType.Kinetic,
+            0.35f);
 
         [SerializeField]
-        private float freezePulseDurationSeconds = 2.2f;
-
-        [SerializeField]
-        private float freezePulseMovementSpeedMultiplier = 0.35f;
-
-        [Header("Basic Alien")]
-        [SerializeField]
-        private string basicAlienId = "debug-basic";
-
-        [SerializeField]
-        private float basicAlienHealth = 60;
-
-        [SerializeField]
-        private float basicAlienSpeedCellsPerSecond = 1.45f;
-
-        [SerializeField]
-        private int basicAlienReward = 15;
-
-        [SerializeField]
-        private float basicAlienDodgeChance;
-
-        [Header("Fast Alien")]
-        [SerializeField]
-        private string fastAlienId = "debug-fast";
-
-        [SerializeField]
-        private float fastAlienHealth = 38;
-
-        [SerializeField]
-        private float fastAlienSpeedCellsPerSecond = 2.25f;
-
-        [SerializeField]
-        private int fastAlienReward = 12;
-
-        [SerializeField]
-        private float fastAlienDodgeChance = 0.12f;
-
-        [Header("Armoured Alien")]
-        [SerializeField]
-        private string armouredAlienId = "debug-armoured";
-
-        [SerializeField]
-        private float armouredAlienHealth = 115;
-
-        [SerializeField]
-        private float armouredAlienSpeedCellsPerSecond = 0.95f;
-
-        [SerializeField]
-        private int armouredAlienReward = 26;
-
-        [SerializeField]
-        private float armouredAlienDodgeChance;
-
-        [SerializeField]
-        private DamageType armouredAlienResistanceDamageType = DamageType.Kinetic;
-
-        [SerializeField]
-        private float armouredAlienResistance = 0.35f;
-
-        [Header("Alien Upgrade")]
-        [SerializeField]
-        private int maxAlienLevel = 3;
-
-        [SerializeField]
-        private string alienUpgradeId = "debug-runner-upgrade";
-
-        [SerializeField]
-        private float alienUpgradeHealthMultiplier = 1.2f;
-
-        [SerializeField]
-        private float alienUpgradeSpeedMultiplier = 1.05f;
-
-        [SerializeField]
-        private float alienUpgradeRewardMultiplier = 1.15f;
-
-        [SerializeField]
-        private float alienUpgradeDodgeChanceBonus = 0.02f;
-
-        [SerializeField]
-        private DamageType alienUpgradeResistanceDamageType = DamageType.Kinetic;
-
-        [SerializeField]
-        private float alienUpgradeResistanceBonus = 0.05f;
+        private DebugAlienUpgradeTuning alienUpgrade = new DebugAlienUpgradeTuning();
 
         public int StartingCurrency
         {
-            get { return startingCurrency; }
+            get { return level.StartingCurrency; }
         }
 
         public int BaseHealth
         {
-            get { return baseHealth; }
+            get { return level.BaseHealth; }
         }
 
         public int TotalWaves
         {
-            get { return totalWaves; }
-        }
-
-        public float SecondsBetweenSpawns
-        {
-            get { return secondsBetweenSpawns; }
-        }
-
-        public int StartingWaveAlienCount
-        {
-            get { return startingWaveAlienCount; }
-        }
-
-        public int ExtraAliensPerWave
-        {
-            get { return extraAliensPerWave; }
-        }
-
-        public int WaveClearScrapReward
-        {
-            get { return waveClearScrapReward; }
+            get { return level.TotalWaves; }
         }
 
         public int PerfectWaveScrapBonus
         {
-            get { return perfectWaveScrapBonus; }
+            get { return level.PerfectWaveScrapBonus; }
         }
 
         public int MaxTowerLevel
         {
-            get { return maxTowerLevel; }
+            get { return towerUpgrade.MaxTowerLevel; }
         }
 
         public int MaxAlienLevel
         {
-            get { return System.Math.Max(1, maxAlienLevel); }
+            get { return alienUpgrade.MaxAlienLevel; }
         }
 
         public string BasicAlienId
         {
-            get { return basicAlienId; }
+            get { return basicAlien.Id; }
         }
 
         public string FastAlienId
         {
-            get { return fastAlienId; }
+            get { return fastAlien.Id; }
         }
 
         public string ArmouredAlienId
         {
-            get { return armouredAlienId; }
+            get { return armouredAlien.Id; }
         }
 
         public WaveDefinition CreateWaveDefinition(int completedWaves)
         {
-            if (completedWaves < 0)
-            {
-                throw new System.ArgumentOutOfRangeException(nameof(completedWaves), "Completed waves cannot be negative.");
-            }
-
-            var totalAliens = startingWaveAlienCount + completedWaves * extraAliensPerWave;
-            var fastAliens = completedWaves <= 0 ? 0 : System.Math.Max(1, totalAliens / 4);
-            var armouredAliens = completedWaves < 2 ? 0 : System.Math.Max(1, totalAliens / 5);
-            var basicAliens = totalAliens - fastAliens - armouredAliens;
-            var groups = new List<WaveSpawnGroup>();
-
-            if (basicAliens > 0)
-            {
-                groups.Add(new WaveSpawnGroup(basicAlienId, basicAliens));
-            }
-
-            if (fastAliens > 0)
-            {
-                groups.Add(new WaveSpawnGroup(fastAlienId, fastAliens));
-            }
-
-            if (armouredAliens > 0)
-            {
-                groups.Add(new WaveSpawnGroup(armouredAlienId, armouredAliens));
-            }
-
-            return new WaveDefinition(
-                new WaveComposition(groups),
-                secondsBetweenSpawns,
-                waveClearScrapReward);
+            return level.CreateWaveDefinition(
+                completedWaves,
+                BasicAlienId,
+                FastAlienId,
+                ArmouredAlienId);
         }
 
         public TowerDefinition CreateTowerDefinition()
@@ -334,87 +153,29 @@ namespace Project147.GameData.Debug
         {
             return new[]
             {
-                CreateRailgunTowerDefinition(),
-                CreateMortarTowerDefinition()
+                railgunTower.CreateDefinition(new[] { CreateTowerStatusEffectDefinition() }),
+                mortarTower.CreateDefinition()
             };
-        }
-
-        private TowerDefinition CreateRailgunTowerDefinition()
-        {
-            return new TowerDefinition(
-                towerId,
-                towerCost,
-                towerRange,
-                towerFireRatePerSecond,
-                towerDamage,
-                towerDamageType,
-                towerTargetingMode,
-                towerCriticalChance,
-                towerCriticalDamageMultiplier,
-                0,
-                0,
-                new[] { CreateTowerStatusEffectDefinition() });
-        }
-
-        private TowerDefinition CreateMortarTowerDefinition()
-        {
-            return new TowerDefinition(
-                secondTowerId,
-                secondTowerCost,
-                secondTowerRange,
-                secondTowerFireRatePerSecond,
-                secondTowerDamage,
-                secondTowerDamageType,
-                secondTowerTargetingMode,
-                secondTowerCriticalChance,
-                secondTowerCriticalDamageMultiplier,
-                secondTowerSplashRadius,
-                secondTowerSplashDamageMultiplier);
         }
 
         public TowerUpgradeDefinition CreateTowerUpgradeDefinition()
         {
-            return new TowerUpgradeDefinition(
-                towerUpgradeId,
-                towerUpgradeCost,
-                towerUpgradeDamageMultiplier,
-                towerUpgradeFireRateMultiplier,
-                towerUpgradeRangeBonus,
-                towerUpgradeCriticalChanceBonus,
-                towerUpgradeCriticalDamageMultiplierBonus);
+            return towerUpgrade.CreateDefinition();
         }
 
         public PlayerAbilityDefinition CreateFreezePulseAbilityDefinition()
         {
-            return new PlayerAbilityDefinition(
-                freezePulseAbilityId,
-                freezePulseCooldownSeconds,
-                new AlienStatusEffectDefinition(
-                    freezePulseStatusEffectId,
-                    AlienStatusEffectType.Slow,
-                    freezePulseDurationSeconds,
-                    freezePulseMovementSpeedMultiplier));
+            return freezePulse.CreateFreezePulseDefinition();
         }
 
         public AlienStatusEffectDefinition CreateTowerStatusEffectDefinition()
         {
-            return new AlienStatusEffectDefinition(
-                towerStatusEffectId,
-                AlienStatusEffectType.Slow,
-                towerStatusEffectDurationSeconds,
-                towerStatusEffectMovementSpeedMultiplier);
+            return railgunSlow.CreateDefinition();
         }
 
         public AlienUpgradeDefinition CreateAlienUpgradeDefinition()
         {
-            return new AlienUpgradeDefinition(
-                alienUpgradeId,
-                alienUpgradeHealthMultiplier,
-                alienUpgradeSpeedMultiplier,
-                alienUpgradeRewardMultiplier,
-                alienUpgradeDodgeChanceBonus,
-                alienUpgradeResistanceDamageType,
-                alienUpgradeResistanceBonus);
+            return alienUpgrade.CreateDefinition();
         }
 
         public AlienDefinition CreateAlienDefinition()
@@ -424,19 +185,19 @@ namespace Project147.GameData.Debug
 
         public AlienDefinition CreateAlienDefinition(int completedWaves)
         {
-            return CreateAlienDefinition(basicAlienId, completedWaves);
+            return CreateAlienDefinition(BasicAlienId, completedWaves);
         }
 
         public AlienDefinition CreateAlienDefinition(string alienId, int completedWaves)
         {
             if (completedWaves < 0)
             {
-                throw new System.ArgumentOutOfRangeException(nameof(completedWaves), "Completed waves cannot be negative.");
+                throw new ArgumentOutOfRangeException(nameof(completedWaves), "Completed waves cannot be negative.");
             }
 
             var definition = CreateBaseAlienDefinition(alienId);
             var upgrade = CreateAlienUpgradeDefinition();
-            var upgradeCount = System.Math.Min(completedWaves, MaxAlienLevel - 1);
+            var upgradeCount = Math.Min(completedWaves, MaxAlienLevel - 1);
 
             for (var index = 0; index < upgradeCount; index++)
             {
@@ -448,43 +209,22 @@ namespace Project147.GameData.Debug
 
         private AlienDefinition CreateBaseAlienDefinition(string alienId)
         {
-            if (alienId == basicAlienId)
+            if (alienId == BasicAlienId)
             {
-                return new AlienDefinition(
-                    basicAlienId,
-                    basicAlienHealth,
-                    basicAlienSpeedCellsPerSecond,
-                    basicAlienReward,
-                    new Dictionary<DamageType, float>(),
-                    basicAlienDodgeChance);
+                return basicAlien.CreateDefinition();
             }
 
-            if (alienId == fastAlienId)
+            if (alienId == FastAlienId)
             {
-                return new AlienDefinition(
-                    fastAlienId,
-                    fastAlienHealth,
-                    fastAlienSpeedCellsPerSecond,
-                    fastAlienReward,
-                    new Dictionary<DamageType, float>(),
-                    fastAlienDodgeChance);
+                return fastAlien.CreateDefinition();
             }
 
-            if (alienId == armouredAlienId)
+            if (alienId == ArmouredAlienId)
             {
-                return new AlienDefinition(
-                    armouredAlienId,
-                    armouredAlienHealth,
-                    armouredAlienSpeedCellsPerSecond,
-                    armouredAlienReward,
-                    new Dictionary<DamageType, float>
-                    {
-                        { armouredAlienResistanceDamageType, armouredAlienResistance }
-                    },
-                    armouredAlienDodgeChance);
+                return armouredAlien.CreateDefinition();
             }
 
-            throw new System.ArgumentException($"Unknown alien id '{alienId}'.", nameof(alienId));
+            throw new ArgumentException($"Unknown alien id '{alienId}'.", nameof(alienId));
         }
     }
 }

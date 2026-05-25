@@ -45,6 +45,9 @@ namespace Project147.GameData.Debug
             0.45f);
 
         [SerializeField]
+        private DebugTowerTuning energyTower = CreateDefaultEnergyTowerTuning();
+
+        [SerializeField]
         private DebugTowerUpgradeTuning towerUpgrade = new DebugTowerUpgradeTuning();
 
         [SerializeField]
@@ -94,6 +97,9 @@ namespace Project147.GameData.Debug
 
         [SerializeField]
         private DebugAlienTuning bossAlien = CreateDefaultBossAlienTuning();
+
+        [SerializeField]
+        private DebugAlienTuning shieldedAlien = CreateDefaultShieldedAlienTuning();
 
         [SerializeField]
         private DebugAlienUpgradeTuning alienUpgrade = new DebugAlienUpgradeTuning();
@@ -148,6 +154,11 @@ namespace Project147.GameData.Debug
             get { return BossAlien.Id; }
         }
 
+        public string ShieldedAlienId
+        {
+            get { return ShieldedAlien.Id; }
+        }
+
         public WaveDefinition CreateWaveDefinition(int completedWaves)
         {
             return level.CreateWaveDefinition(
@@ -155,6 +166,7 @@ namespace Project147.GameData.Debug
                 BasicAlienId,
                 FastAlienId,
                 ArmouredAlienId,
+                ShieldedAlienId,
                 BossAlienId);
         }
 
@@ -168,7 +180,8 @@ namespace Project147.GameData.Debug
             return new[]
             {
                 railgunTower.CreateDefinition(new[] { CreateTowerStatusEffectDefinition() }),
-                mortarTower.CreateDefinition()
+                mortarTower.CreateDefinition(),
+                EnergyTower.CreateDefinition()
             };
         }
 
@@ -248,6 +261,11 @@ namespace Project147.GameData.Debug
                 return armouredAlien.CreateDefinition();
             }
 
+            if (alienId == ShieldedAlienId)
+            {
+                return ShieldedAlien.CreateDefinition();
+            }
+
             if (alienId == BossAlienId)
             {
                 return BossAlien.CreateDefinition();
@@ -259,6 +277,45 @@ namespace Project147.GameData.Debug
         private DebugAlienTuning BossAlien
         {
             get { return bossAlien ?? CreateDefaultBossAlienTuning(); }
+        }
+
+        private DebugAlienTuning ShieldedAlien
+        {
+            get { return shieldedAlien ?? CreateDefaultShieldedAlienTuning(); }
+        }
+
+        private DebugTowerTuning EnergyTower
+        {
+            get { return energyTower ?? CreateDefaultEnergyTowerTuning(); }
+        }
+
+        private static DebugTowerTuning CreateDefaultEnergyTowerTuning()
+        {
+            return new DebugTowerTuning(
+                "debug-energy",
+                65,
+                2.45f,
+                1f,
+                30,
+                DamageType.Energy,
+                TowerTargetingMode.Closest,
+                0.05f,
+                1.6f,
+                0,
+                0);
+        }
+
+        private static DebugAlienTuning CreateDefaultShieldedAlienTuning()
+        {
+            return new DebugAlienTuning(
+                "debug-shielded",
+                80,
+                1.05f,
+                24,
+                0.02f,
+                DamageType.Kinetic,
+                0.1f,
+                65);
         }
 
         private static DebugAlienTuning CreateDefaultBossAlienTuning()

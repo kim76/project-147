@@ -103,7 +103,8 @@ namespace Project147.GameCore.Combat
                 alien.SpeedCellsPerSecond * SpeedMultiplier,
                 Convert.ToInt32(Math.Round(alien.Reward * RewardMultiplier, MidpointRounding.AwayFromZero)),
                 resistances,
-                dodgeChance);
+                dodgeChance,
+                alien.ShieldCapacity);
         }
 
         private static Dictionary<DamageType, float> CopyResistances(AlienDefinition alien)

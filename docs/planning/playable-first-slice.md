@@ -11,16 +11,17 @@ For the active next-task list, see `current-roadmap.md`.
 ## Current Loop
 
 - Player places towers between waves.
-- Player can switch between two debug tower types before placing.
-- Railgun and mortar towers use distinct first-pass debug visual profiles.
-- Railgun applies a short slow effect; mortar deals splash damage to nearby aliens.
+- Player can switch between three debug tower types before placing.
+- Railgun, mortar and energy towers use distinct first-pass debug visual profiles.
+- Railgun applies a short slow effect, mortar deals splash damage to nearby aliens, and energy provides a direct single-target damage profile.
 - Hovering a cell previews tower range and whether placement is valid.
 - Towers cost scrap.
 - Clicking an existing tower between waves upgrades it if enough scrap is available.
 - Placement is rejected if it blocks all paths.
 - Player starts waves manually.
 - A `Next Wave` panel previews enemy counts and tags before each wave.
-- Mixed waves spawn basic, fast, armoured and boss debug aliens.
+- Mixed waves spawn basic, fast, armoured, shielded and boss debug aliens.
+- Shielded aliens absorb damage into shields before health.
 - The final wave includes one boss alien.
 - Aliens follow the current path and damage the base if they reach the goal.
 - Later waves spawn upgraded aliens, capped by the debug config.
@@ -36,7 +37,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Reward choices show as a random 3-option offer from a larger pool.
 - Reward choices can currently add scrap, repair the base, discount the next placed tower, boost next-wave tower damage or boost next-wave tower fire rate.
 - A debug event feed shows important placement, upgrade, reward, leak and win/loss events.
-- Victory and defeat show a run summary with wave, kill, leak, scrap, reward and ability-use counts.
+- Victory and defeat show a run summary with stars, wave, kill, leak, scrap, reward and ability-use counts.
 - The slice ends in victory after all waves or defeat when the base reaches zero health.
 
 ## How To Run
@@ -66,9 +67,11 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Purple: alien.
 - Cyan capsule: fast alien.
 - Stone cube: armoured alien.
+- Blue alien with pale shell: shielded alien.
 - Large purple alien with crown: boss alien.
 - Red/black tower: railgun.
 - Orange/black tower: mortar.
+- Teal/yellow tower: energy.
 - Green range ring: valid tower placement or affordable tower upgrade preview.
 - Red range ring: invalid, unaffordable or max-level tower preview.
 - Cyan pulse ring: Freeze Pulse ability.
@@ -78,8 +81,8 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 
 - Towers can only be placed between waves.
 - Towers can only be upgraded between waves.
-- There are two debug tower types.
-- There are four debug alien types.
+- There are three debug tower types.
+- There are five debug alien types.
 - First-slice tuning is grouped in one debug config asset, not final production content data.
 - There is no polished UI.
 - There is no save system.

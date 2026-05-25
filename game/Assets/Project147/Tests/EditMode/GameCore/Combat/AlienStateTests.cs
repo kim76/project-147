@@ -17,6 +17,7 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(state.Definition, Is.SameAs(definition));
             Assert.That(state.Level, Is.EqualTo(1));
             Assert.That(state.CurrentHealth, Is.EqualTo(100));
+            Assert.That(state.CurrentShield, Is.EqualTo(0));
             Assert.That(state.ActiveStatusEffects, Is.Empty);
             Assert.That(state.MovementSpeedMultiplier, Is.EqualTo(1));
             Assert.That(state.IsAlive, Is.True);
@@ -51,6 +52,37 @@ namespace Project147.Tests.EditMode.GameCore.Combat
         }
 
         [Test]
+        public void Constructor_WhenDefinitionHasShield_StartsAtFullShield()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100, shieldCapacity: 35));
+
+            Assert.That(state.CurrentHealth, Is.EqualTo(100));
+            Assert.That(state.CurrentShield, Is.EqualTo(35));
+        }
+
+        [Test]
+        public void ApplyDamage_WhenShielded_ReducesShieldBeforeHealth()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100, shieldCapacity: 35));
+
+            var result = state.ApplyDamage(25);
+
+            Assert.That(result.CurrentShield, Is.EqualTo(10));
+            Assert.That(result.CurrentHealth, Is.EqualTo(100));
+        }
+
+        [Test]
+        public void ApplyDamage_WhenDamageExceedsShield_AppliesOverflowToHealth()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100, shieldCapacity: 35));
+
+            var result = state.ApplyDamage(50);
+
+            Assert.That(result.CurrentShield, Is.EqualTo(0));
+            Assert.That(result.CurrentHealth, Is.EqualTo(85));
+        }
+
+        [Test]
         public void ApplyDamage_WhenDamageIsNegative_Throws()
         {
             var state = new AlienState(CreateAlien(maxHealth: 100));
@@ -67,6 +99,17 @@ namespace Project147.Tests.EditMode.GameCore.Combat
 
             Assert.That(result.CurrentHealth, Is.EqualTo(85));
             Assert.That(damaged.CurrentHealth, Is.EqualTo(60));
+        }
+
+        [Test]
+        public void Heal_DoesNotRestoreShield()
+        {
+            var damaged = new AlienState(CreateAlien(maxHealth: 100, shieldCapacity: 35)).ApplyDamage(50);
+
+            var result = damaged.Heal(10);
+
+            Assert.That(result.CurrentHealth, Is.EqualTo(95));
+            Assert.That(result.CurrentShield, Is.EqualTo(0));
         }
 
         [Test]
@@ -97,14 +140,16 @@ namespace Project147.Tests.EditMode.GameCore.Combat
         [Test]
         public void Upgrade_AppliesUpgradeAndIncrementsLevel()
         {
-            var state = new AlienState(CreateAlien(maxHealth: 100)).ApplyDamage(25);
+            var state = new AlienState(CreateAlien(maxHealth: 100, shieldCapacity: 20)).ApplyDamage(25);
             var upgrade = new AlienUpgradeDefinition("runner-evasion-1", 1.5f, 1.1f, 1.2f, 0.1f, DamageType.Kinetic, 0);
 
             var result = state.Upgrade(upgrade);
 
             Assert.That(result.Level, Is.EqualTo(2));
             Assert.That(result.Definition.MaxHealth, Is.EqualTo(150));
-            Assert.That(result.CurrentHealth, Is.EqualTo(125));
+            Assert.That(result.Definition.ShieldCapacity, Is.EqualTo(20));
+            Assert.That(result.CurrentHealth, Is.EqualTo(145));
+            Assert.That(result.CurrentShield, Is.EqualTo(0));
         }
 
         [Test]
@@ -173,14 +218,16 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.Throws<ArgumentOutOfRangeException>(() => state.TickStatusEffects(-0.01f));
         }
 
-        private static AlienDefinition CreateAlien(float maxHealth)
+        private static AlienDefinition CreateAlien(float maxHealth, float shieldCapacity = 0)
         {
             return new AlienDefinition(
                 "runner-basic",
                 maxHealth,
                 1,
                 5,
-                new Dictionary<DamageType, float>());
+                new Dictionary<DamageType, float>(),
+                0,
+                shieldCapacity);
         }
 
         private static AlienStatusEffectDefinition CreateSlow(

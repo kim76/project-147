@@ -916,6 +916,11 @@ namespace Project147.UnityPresentation.Debug
                 return DebugAlienVisualRole.Armoured;
             }
 
+            if (definition.Id == config.ShieldedAlienId)
+            {
+                return DebugAlienVisualRole.Shielded;
+            }
+
             if (definition.Id == config.BossAlienId)
             {
                 return DebugAlienVisualRole.Boss;
@@ -1395,7 +1400,8 @@ namespace Project147.UnityPresentation.Debug
                 nextWave,
                 config.FastAlienId,
                 config.ArmouredAlienId,
-                config.BossAlienId);
+                config.BossAlienId,
+                config.ShieldedAlienId);
 
             GUI.Box(new Rect(left, top, 360, 112), "Next Wave");
             top += 28;
@@ -1413,9 +1419,11 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
-            GUI.Box(new Rect(left, top, 360, 180), "Run Summary");
+            GUI.Box(new Rect(left, top, 360, 202), "Run Summary");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Outcome: {runSummary.Outcome}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Stars: {runSummary.StarRating}/3");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Waves: {runSummary.WavesCleared}/{config.TotalWaves}  Perfect: {runSummary.PerfectWaves}");
             top += 22;

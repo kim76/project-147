@@ -25,6 +25,7 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(alien.SpeedCellsPerSecond, Is.EqualTo(1.75f));
             Assert.That(alien.Reward, Is.EqualTo(5));
             Assert.That(alien.DodgeChance, Is.EqualTo(0));
+            Assert.That(alien.ShieldCapacity, Is.EqualTo(0));
             Assert.That(alien.GetResistance(DamageType.Energy), Is.EqualTo(0.25f));
             Assert.That(alien.GetResistance(DamageType.Kinetic), Is.EqualTo(0));
         }
@@ -41,6 +42,21 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 0.35f);
 
             Assert.That(alien.DodgeChance, Is.EqualTo(0.35f));
+        }
+
+        [Test]
+        public void Constructor_WhenShieldCapacityIsValid_StoresValue()
+        {
+            var alien = new AlienDefinition(
+                "shield-runner",
+                50,
+                1.75f,
+                5,
+                new Dictionary<DamageType, float>(),
+                0,
+                30);
+
+            Assert.That(alien.ShieldCapacity, Is.EqualTo(30));
         }
 
         [TestCase(null)]
@@ -126,6 +142,19 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 5,
                 new Dictionary<DamageType, float>(),
                 dodgeChance));
+        }
+
+        [Test]
+        public void Constructor_WhenShieldCapacityIsNegative_Throws()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new AlienDefinition(
+                "runner-basic",
+                50,
+                1,
+                5,
+                new Dictionary<DamageType, float>(),
+                0,
+                -1));
         }
     }
 }

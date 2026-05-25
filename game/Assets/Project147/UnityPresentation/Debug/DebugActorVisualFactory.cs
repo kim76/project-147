@@ -18,6 +18,10 @@ namespace Project147.UnityPresentation.Debug
             {
                 CreateMortarTower(tower.transform);
             }
+            else if (definition.DamageType == DamageType.Energy)
+            {
+                CreateEnergyTower(tower.transform);
+            }
             else
             {
                 CreateRailgunTower(tower.transform);
@@ -43,6 +47,8 @@ namespace Project147.UnityPresentation.Debug
                     return CreateFastAlien(alien, definition);
                 case DebugAlienVisualRole.Armoured:
                     return CreateArmouredAlien(alien, definition);
+                case DebugAlienVisualRole.Shielded:
+                    return CreateShieldedAlien(alien, definition);
                 case DebugAlienVisualRole.Boss:
                     return CreateBossAlien(alien, definition);
                 default:
@@ -127,6 +133,50 @@ namespace Project147.UnityPresentation.Debug
                 new Color(0.95f, 0.82f, 0.34f, 1f));
         }
 
+        private static void CreateEnergyTower(Transform parent)
+        {
+            CreatePart(
+                parent,
+                PrimitiveType.Cube,
+                "Energy Base",
+                new Vector3(0, -0.16f, 0),
+                new Vector3(0.58f, 0.2f, 0.58f),
+                new Vector3(0, 35, 0),
+                new Color(0.08f, 0.28f, 0.34f, 1f));
+            CreatePart(
+                parent,
+                PrimitiveType.Cylinder,
+                "Energy Coil",
+                new Vector3(0, 0.18f, 0),
+                new Vector3(0.24f, 0.58f, 0.24f),
+                Vector3.zero,
+                new Color(0.12f, 0.75f, 0.85f, 1f));
+            CreatePart(
+                parent,
+                PrimitiveType.Sphere,
+                "Energy Core",
+                new Vector3(0, 0.55f, 0),
+                new Vector3(0.34f, 0.34f, 0.34f),
+                Vector3.zero,
+                new Color(0.9f, 1f, 0.34f, 1f));
+            CreatePart(
+                parent,
+                PrimitiveType.Cube,
+                "Energy Prong",
+                new Vector3(0.24f, 0.38f, 0),
+                new Vector3(0.12f, 0.32f, 0.12f),
+                Vector3.zero,
+                new Color(0.88f, 0.96f, 1f, 1f));
+            CreatePart(
+                parent,
+                PrimitiveType.Cube,
+                "Energy Prong",
+                new Vector3(-0.24f, 0.38f, 0),
+                new Vector3(0.12f, 0.32f, 0.12f),
+                Vector3.zero,
+                new Color(0.88f, 0.96f, 1f, 1f));
+        }
+
         private static DebugActorVisual CreateBasicAlien(
             GameObject root,
             AlienDefinition definition,
@@ -201,6 +251,36 @@ namespace Project147.UnityPresentation.Debug
                 new Vector3(0.28f, 0.08f, 0.08f),
                 Vector3.zero,
                 new Color(0.2f, 0.95f, 0.58f, 1f));
+            return new DebugActorVisual(root, body.GetComponent<Renderer>(), material);
+        }
+
+        private static DebugActorVisual CreateShieldedAlien(GameObject root, AlienDefinition definition)
+        {
+            var material = CreateDebugMaterial(new Color(0.18f, 0.62f, 0.88f, 1f));
+            var body = CreatePart(
+                root.transform,
+                PrimitiveType.Sphere,
+                "Shielded Body",
+                Vector3.zero,
+                new Vector3(0.42f, 0.42f, 0.42f),
+                Vector3.zero,
+                material);
+            CreatePart(
+                root.transform,
+                PrimitiveType.Sphere,
+                "Shield Shell",
+                Vector3.zero,
+                new Vector3(0.66f, 0.66f, 0.66f),
+                Vector3.zero,
+                new Color(0.72f, 0.98f, 1f, 0.78f));
+            CreatePart(
+                root.transform,
+                PrimitiveType.Cube,
+                "Shielded Visor",
+                new Vector3(0, 0.06f, -0.31f),
+                new Vector3(0.26f, 0.08f, 0.08f),
+                Vector3.zero,
+                new Color(1f, 0.95f, 0.24f, 1f));
             return new DebugActorVisual(root, body.GetComponent<Renderer>(), material);
         }
 

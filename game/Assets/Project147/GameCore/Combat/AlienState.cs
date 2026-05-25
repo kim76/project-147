@@ -6,7 +6,12 @@ namespace Project147.GameCore.Combat
     public sealed class AlienState
     {
         public AlienState(AlienDefinition definition)
-            : this(definition, 1, definition?.MaxHealth ?? 0, new List<AlienStatusEffectState>())
+            : this(
+                definition,
+                1,
+                definition?.MaxHealth ?? 0,
+                definition?.ShieldCapacity ?? 0,
+                new List<AlienStatusEffectState>())
         {
         }
 
@@ -14,6 +19,7 @@ namespace Project147.GameCore.Combat
             AlienDefinition definition,
             int level,
             float currentHealth,
+            float currentShield,
             IReadOnlyList<AlienStatusEffectState> activeStatusEffects)
         {
             Definition = definition ?? throw new ArgumentNullException(nameof(definition));
@@ -30,6 +36,13 @@ namespace Project147.GameCore.Combat
                     "Alien health must be between zero and max health.");
             }
 
+            if (currentShield < 0 || currentShield > definition.ShieldCapacity)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(currentShield),
+                    "Alien shield must be between zero and shield capacity.");
+            }
+
             if (activeStatusEffects == null)
             {
                 throw new ArgumentNullException(nameof(activeStatusEffects));
@@ -37,6 +50,7 @@ namespace Project147.GameCore.Combat
 
             Level = level;
             CurrentHealth = currentHealth;
+            CurrentShield = currentShield;
             ActiveStatusEffects = new List<AlienStatusEffectState>(activeStatusEffects);
         }
 
@@ -45,6 +59,8 @@ namespace Project147.GameCore.Combat
         public int Level { get; }
 
         public float CurrentHealth { get; }
+
+        public float CurrentShield { get; }
 
         public IReadOnlyList<AlienStatusEffectState> ActiveStatusEffects { get; }
 
@@ -78,8 +94,11 @@ namespace Project147.GameCore.Combat
                 throw new ArgumentOutOfRangeException(nameof(damage), "Damage cannot be negative.");
             }
 
-            var nextHealth = Math.Max(0, CurrentHealth - damage);
-            return new AlienState(Definition, Level, nextHealth, ActiveStatusEffects);
+            var shieldDamage = Math.Min(CurrentShield, damage);
+            var remainingDamage = damage - shieldDamage;
+            var nextShield = CurrentShield - shieldDamage;
+            var nextHealth = Math.Max(0, CurrentHealth - remainingDamage);
+            return new AlienState(Definition, Level, nextHealth, nextShield, ActiveStatusEffects);
         }
 
         public AlienState Heal(float amount)
@@ -90,7 +109,7 @@ namespace Project147.GameCore.Combat
             }
 
             var nextHealth = Math.Min(Definition.MaxHealth, CurrentHealth + amount);
-            return new AlienState(Definition, Level, nextHealth, ActiveStatusEffects);
+            return new AlienState(Definition, Level, nextHealth, CurrentShield, ActiveStatusEffects);
         }
 
         public AlienState Upgrade(AlienUpgradeDefinition upgrade)
@@ -103,7 +122,8 @@ namespace Project147.GameCore.Combat
             var upgradedDefinition = upgrade.ApplyTo(Definition);
             var missingHealth = Definition.MaxHealth - CurrentHealth;
             var upgradedHealth = IsAlive ? Math.Max(0, upgradedDefinition.MaxHealth - missingHealth) : 0;
-            return new AlienState(upgradedDefinition, Level + 1, upgradedHealth, ActiveStatusEffects);
+            var upgradedShield = Math.Min(CurrentShield, upgradedDefinition.ShieldCapacity);
+            return new AlienState(upgradedDefinition, Level + 1, upgradedHealth, upgradedShield, ActiveStatusEffects);
         }
 
         public AlienState ApplyStatusEffect(AlienStatusEffectDefinition definition)
@@ -118,7 +138,7 @@ namespace Project147.GameCore.Combat
                 new AlienStatusEffectState(definition)
             };
 
-            return new AlienState(Definition, Level, CurrentHealth, effects);
+            return new AlienState(Definition, Level, CurrentHealth, CurrentShield, effects);
         }
 
         public AlienState TickStatusEffects(float deltaSeconds)
@@ -145,7 +165,7 @@ namespace Project147.GameCore.Combat
                 }
             }
 
-            return new AlienState(Definition, Level, CurrentHealth, effects);
+            return new AlienState(Definition, Level, CurrentHealth, CurrentShield, effects);
         }
     }
 }

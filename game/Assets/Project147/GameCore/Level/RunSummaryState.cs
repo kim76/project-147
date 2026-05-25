@@ -91,6 +91,24 @@ namespace Project147.GameCore.Level
 
         public int OrbitalStrikeUses { get; }
 
+        public int StarRating
+        {
+            get
+            {
+                if (Outcome != RunOutcome.Victory)
+                {
+                    return 0;
+                }
+
+                if (AliensLeaked == 0)
+                {
+                    return 3;
+                }
+
+                return AliensLeaked <= 2 ? 2 : 1;
+            }
+        }
+
         public RunSummaryState RecordAlienDestroyed(int scrapEarned)
         {
             return new RunSummaryState(

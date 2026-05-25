@@ -69,6 +69,25 @@ namespace Project147.Tests.EditMode.GameCore.Level
         }
 
         [Test]
+        public void Build_WhenWaveContainsShieldedAlien_AddsShieldedTag()
+        {
+            var builder = new WaveIntelBuilder();
+            var wave = new WaveDefinition(
+                new WaveComposition(new[]
+                {
+                    new WaveSpawnGroup("basic", 6),
+                    new WaveSpawnGroup("shielded", 2)
+                }),
+                0.5f,
+                25);
+
+            var summary = builder.Build(3, wave, "fast", "armoured", "boss", "shielded");
+
+            Assert.That(summary.Tags.Contains("Shielded"), Is.True);
+            Assert.That(summary.Tags.Contains("Mixed"), Is.True);
+        }
+
+        [Test]
         public void Build_WhenCompletedWavesIsNegative_Throws()
         {
             var builder = new WaveIntelBuilder();

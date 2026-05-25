@@ -17,6 +17,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
             Assert.That(summary.WavesCleared, Is.EqualTo(0));
             Assert.That(summary.PerfectWaves, Is.EqualTo(0));
             Assert.That(summary.ScrapEarned, Is.EqualTo(0));
+            Assert.That(summary.StarRating, Is.EqualTo(0));
         }
 
         [Test]
@@ -91,6 +92,51 @@ namespace Project147.Tests.EditMode.GameCore.Level
             var result = summary.Complete(RunOutcome.Victory);
 
             Assert.That(result.Outcome, Is.EqualTo(RunOutcome.Victory));
+        }
+
+        [Test]
+        public void StarRating_WhenVictoryHasNoLeaks_ReturnsThreeStars()
+        {
+            var summary = new RunSummaryState()
+                .RecordWaveCleared(25, true)
+                .Complete(RunOutcome.Victory);
+
+            Assert.That(summary.StarRating, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void StarRating_WhenVictoryHasFewLeaks_ReturnsTwoStars()
+        {
+            var summary = new RunSummaryState()
+                .RecordAlienLeaked()
+                .RecordAlienLeaked()
+                .RecordWaveCleared(25, false)
+                .Complete(RunOutcome.Victory);
+
+            Assert.That(summary.StarRating, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void StarRating_WhenVictoryHasManyLeaks_ReturnsOneStar()
+        {
+            var summary = new RunSummaryState()
+                .RecordAlienLeaked()
+                .RecordAlienLeaked()
+                .RecordAlienLeaked()
+                .RecordWaveCleared(25, false)
+                .Complete(RunOutcome.Victory);
+
+            Assert.That(summary.StarRating, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void StarRating_WhenDefeat_ReturnsZeroStars()
+        {
+            var summary = new RunSummaryState()
+                .RecordWaveCleared(25, true)
+                .Complete(RunOutcome.Defeat);
+
+            Assert.That(summary.StarRating, Is.EqualTo(0));
         }
 
         [Test]

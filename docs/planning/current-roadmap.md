@@ -15,18 +15,20 @@ The debug first slice has:
 - Base health, leaks, victory and defeat.
 - Scrap economy for tower placement, kills, wave clear and perfect waves.
 - Tower upgrading between waves.
-- Two debug towers:
+- Three debug towers:
   - Railgun: faster, applies a short slow effect.
   - Mortar: slower, explosive splash damage.
-- Mixed enemy waves with basic, fast, armoured and boss debug aliens.
+  - Energy: direct single-target energy profile.
+- Mixed enemy waves with basic, fast, armoured, shielded and boss debug aliens.
 - Alien upgrades across later waves.
 - A final-wave boss alien with distinct stats, wave-intel tag and first-pass visual profile.
+- Shielded aliens with tested shield-first damage behaviour.
 - Freeze Pulse player ability with cooldown and debug feedback.
 - Orbital Strike player ability with cooldown, resistance-aware damage and debug feedback.
 - Between-wave reward choices drawn as a random 3-option offer from a larger reward pool.
 - Reward effects for extra scrap, base repair, next-tower discount, next-wave tower damage and next-wave tower fire rate.
 - Next-wave intel showing upcoming enemy composition and simple tags before the wave starts.
-- End-of-run summary for outcome, waves, kills, leaks, scrap, rewards and ability use.
+- End-of-run summary for outcome, stars, waves, kills, leaks, scrap, rewards and ability use.
 - First-slice tuning grouped by level, towers, aliens, upgrades and abilities.
 - First-pass in-scene visual profiles for towers and aliens.
 - Debug HUD, hover range preview, shot feedback and event feed.
@@ -40,9 +42,11 @@ Before the next development slice:
 3. Press Play.
 4. Progress to the final wave.
 5. Confirm the `Next Wave` panel shows a `Boss` tag before the final wave.
-6. Start the final wave and confirm a large purple boss alien appears.
-7. Confirm victory still triggers after the boss wave is cleared.
-8. Confirm the run summary panel appears with kill, reward and ability counts.
+6. Confirm later waves show a `Shielded` tag before shielded aliens appear.
+7. Select tower `3/3` and confirm the energy tower appears visually different.
+8. Start the final wave and confirm a large purple boss alien appears.
+9. Confirm victory still triggers after the boss wave is cleared.
+10. Confirm the run summary panel appears with stars, kill, reward and ability counts.
 
 ## Next Slice Candidates
 
@@ -54,11 +58,13 @@ Deliverables:
 
 - Done: add basic, fast and armoured alien definitions to the debug config.
 - Done: add a boss alien definition to the debug config.
+- Done: add a shielded alien definition to the debug config.
 - Done: add a tested alien wave composition model.
 - Done: spawn mixed waves instead of one repeated alien.
-- Done: show visual differences for basic, fast, armoured and boss aliens.
+- Done: show visual differences for basic, fast, armoured, shielded and boss aliens.
 - Done: show enemy type in event/debug information where useful.
 - Done: tag boss waves in next-wave intel.
+- Done: tag shielded waves in next-wave intel.
 
 Why next: tower variety is now meaningful, but enemy variety is still too flat.
 
@@ -125,8 +131,9 @@ Why next: this starts the “addictive” part without monetisation or content b
 1. Verify the final-wave boss in Unity.
 2. Verify the post-run summary in Unity.
 3. Generate concept boards for final art direction.
-4. Add an enemy-side mechanic such as shields or burrowers.
-5. Split debug tuning into separate ScriptableObject assets only when the current single asset becomes painful.
+4. Add one lightweight progression layer that uses the star rating.
+5. Add an enemy-side mechanic such as burrowers.
+6. Split debug tuning into separate ScriptableObject assets only when the current single asset becomes painful.
 
 ## Not Yet
 

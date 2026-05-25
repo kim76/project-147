@@ -5,6 +5,7 @@ namespace Project147.UnityPresentation.Debug
         Basic = 0,
         Fast = 1,
         Armoured = 2,
-        Boss = 3
+        Shielded = 3,
+        Boss = 4
     }
 }

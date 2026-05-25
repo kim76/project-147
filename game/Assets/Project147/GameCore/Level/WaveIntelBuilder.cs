@@ -10,7 +10,8 @@ namespace Project147.GameCore.Level
             WaveDefinition wave,
             string fastAlienId,
             string armouredAlienId,
-            string bossAlienId = null)
+            string bossAlienId = null,
+            string shieldedAlienId = null)
         {
             if (completedWaves < 0)
             {
@@ -36,6 +37,7 @@ namespace Project147.GameCore.Level
             var tags = new List<string>();
             var hasFast = false;
             var hasArmoured = false;
+            var hasShielded = false;
             var hasBoss = false;
 
             foreach (var group in wave.Composition.Groups)
@@ -50,6 +52,11 @@ namespace Project147.GameCore.Level
                 if (group.AlienId == armouredAlienId)
                 {
                     hasArmoured = true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(shieldedAlienId) && group.AlienId == shieldedAlienId)
+                {
+                    hasShielded = true;
                 }
 
                 if (!string.IsNullOrWhiteSpace(bossAlienId) && group.AlienId == bossAlienId)
@@ -71,6 +78,11 @@ namespace Project147.GameCore.Level
             if (hasArmoured)
             {
                 tags.Add("Armoured");
+            }
+
+            if (hasShielded)
+            {
+                tags.Add("Shielded");
             }
 
             if (hasBoss)

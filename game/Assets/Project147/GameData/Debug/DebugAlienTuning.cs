@@ -29,6 +29,9 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private float resistance;
 
+        [SerializeField]
+        private float shieldCapacity;
+
         public DebugAlienTuning(
             string id,
             float health,
@@ -36,7 +39,8 @@ namespace Project147.GameData.Debug
             int reward,
             float dodgeChance,
             DamageType resistanceDamageType,
-            float resistance)
+            float resistance,
+            float shieldCapacity = 0)
         {
             this.id = id;
             this.health = health;
@@ -45,6 +49,7 @@ namespace Project147.GameData.Debug
             this.dodgeChance = dodgeChance;
             this.resistanceDamageType = resistanceDamageType;
             this.resistance = resistance;
+            this.shieldCapacity = shieldCapacity;
         }
 
         public string Id
@@ -67,7 +72,8 @@ namespace Project147.GameData.Debug
                 speedCellsPerSecond,
                 reward,
                 resistances,
-                dodgeChance);
+                dodgeChance,
+                shieldCapacity);
         }
     }
 }

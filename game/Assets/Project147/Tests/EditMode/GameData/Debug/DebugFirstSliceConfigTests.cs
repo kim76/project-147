@@ -8,17 +8,18 @@ namespace Project147.Tests.EditMode.GameData.Debug
     public sealed class DebugFirstSliceConfigTests
     {
         [Test]
-        public void CreateTowerDefinitions_ReturnsRailgunAndMortar()
+        public void CreateTowerDefinitions_ReturnsRailgunMortarAndEnergyTower()
         {
             var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
 
             var towers = config.CreateTowerDefinitions();
 
-            Assert.That(towers.Count, Is.EqualTo(2));
+            Assert.That(towers.Count, Is.EqualTo(3));
             Assert.That(towers[0].Id, Is.EqualTo("debug-railgun"));
             Assert.That(towers[0].StatusEffects.Count, Is.EqualTo(1));
             Assert.That(towers[1].Id, Is.EqualTo("debug-mortar"));
             Assert.That(towers[1].SplashRadius, Is.GreaterThan(0));
+            Assert.That(towers[2].Id, Is.EqualTo("debug-energy"));
         }
 
         [Test]
@@ -32,7 +33,18 @@ namespace Project147.Tests.EditMode.GameData.Debug
             Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.BasicAlienId), Is.True);
             Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.FastAlienId), Is.True);
             Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.ArmouredAlienId), Is.True);
+            Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.ShieldedAlienId), Is.False);
             Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.BossAlienId), Is.False);
+        }
+
+        [Test]
+        public void CreateWaveDefinition_WhenLateWave_ReturnsShieldedAlienId()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var wave = config.CreateWaveDefinition(3);
+
+            Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.ShieldedAlienId), Is.True);
         }
 
         [Test]
@@ -56,6 +68,17 @@ namespace Project147.Tests.EditMode.GameData.Debug
             Assert.That(boss.Id, Is.EqualTo(config.BossAlienId));
             Assert.That(boss.MaxHealth, Is.GreaterThan(200));
             Assert.That(boss.Reward, Is.GreaterThan(50));
+        }
+
+        [Test]
+        public void CreateAlienDefinition_WhenShieldedId_ReturnsShieldedAlien()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var shielded = config.CreateAlienDefinition(config.ShieldedAlienId, 0);
+
+            Assert.That(shielded.Id, Is.EqualTo(config.ShieldedAlienId));
+            Assert.That(shielded.ShieldCapacity, Is.GreaterThan(0));
         }
 
         [Test]

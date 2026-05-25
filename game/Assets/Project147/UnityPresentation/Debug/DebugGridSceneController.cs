@@ -105,6 +105,7 @@ namespace Project147.UnityPresentation.Debug
         private LevelProgressState levelProgress;
         private LevelProgressApplicationResult lastProgressResult;
         private GameSpeedState gameSpeed;
+        private GamePauseState gamePause;
         private LevelEventFeed eventFeed;
         private bool waveActive;
         private bool won;
@@ -281,6 +282,7 @@ namespace Project147.UnityPresentation.Debug
             runModifiers = new RunModifierState();
             runSummary = new RunSummaryState();
             gameSpeed = new GameSpeedState();
+            gamePause = new GamePauseState();
             freezePulseState = new PlayerAbilityState(config.CreateFreezePulseAbilityDefinition());
             orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
             eventFeed = new LevelEventFeed(EventFeedCapacity).Add("Ready. Place towers, then start wave.");
@@ -333,6 +335,7 @@ namespace Project147.UnityPresentation.Debug
             towerUpgradeDefinition = config.CreateTowerUpgradeDefinition();
             levelProgress = levelProgress ?? new LevelProgressState();
             gameSpeed = gameSpeed ?? new GameSpeedState();
+            gamePause = gamePause ?? new GamePauseState();
         }
 
         private TowerDefinition SelectedTower
@@ -342,13 +345,23 @@ namespace Project147.UnityPresentation.Debug
 
         private float ScaledDeltaSeconds
         {
-            get { return (gameSpeed ?? new GameSpeedState()).ScaleDeltaSeconds(Time.deltaTime); }
+            get
+            {
+                var speedScaledDeltaSeconds = (gameSpeed ?? new GameSpeedState()).ScaleDeltaSeconds(Time.deltaTime);
+                return (gamePause ?? new GamePauseState()).ScaleDeltaSeconds(speedScaledDeltaSeconds);
+            }
         }
 
         private void SelectNextGameSpeed()
         {
             gameSpeed = (gameSpeed ?? new GameSpeedState()).SelectNext();
             RecordEvent($"Game speed: {gameSpeed.Multiplier:0.#}x.");
+        }
+
+        private void TogglePause()
+        {
+            gamePause = (gamePause ?? new GamePauseState()).Toggle();
+            RecordEvent(gamePause.IsPaused ? "Paused." : "Resumed.");
         }
 
         private void SelectPreviousTower()
@@ -1281,7 +1294,8 @@ namespace Project147.UnityPresentation.Debug
                 || freezePulseState == null
                 || orbitalStrikeState == null
                 || runSummary == null
-                || gameSpeed == null)
+                || gameSpeed == null
+                || gamePause == null)
             {
                 return;
             }
@@ -1347,9 +1361,22 @@ namespace Project147.UnityPresentation.Debug
             top += 34;
 
             previousEnabled = GUI.enabled;
+            GUI.enabled = waveActive && !won && !lost;
+
+            if (GUI.Button(new Rect(left + 12, top, 120, 28), BuildPauseButtonText()))
+            {
+                TogglePause();
+            }
+
+            GUI.enabled = previousEnabled;
+            GUI.Label(new Rect(left + 144, top + 4, 130, 24), gamePause.IsPaused ? "Frozen" : "Running");
+            top += 34;
+
+            previousEnabled = GUI.enabled;
             GUI.enabled = waveActive
                 && !won
                 && !lost
+                && !gamePause.IsPaused
                 && activeAliens.Count > 0
                 && freezePulseState.CanActivate;
 
@@ -1366,6 +1393,7 @@ namespace Project147.UnityPresentation.Debug
             GUI.enabled = waveActive
                 && !won
                 && !lost
+                && !gamePause.IsPaused
                 && activeAliens.Count > 0
                 && orbitalStrikeState.CanActivate;
 
@@ -1398,7 +1426,9 @@ namespace Project147.UnityPresentation.Debug
 
             var status = HasPendingRunChoice
                 ? "Choose reward"
-                : waveActive ? "Wave running" : sellMode ? "Click tower to sell" : "Place towers, then start wave";
+                : waveActive
+                    ? gamePause.IsPaused ? "Paused" : "Wave running"
+                    : sellMode ? "Click tower to sell" : "Place towers, then start wave";
 
             if (won)
             {
@@ -1443,6 +1473,11 @@ namespace Project147.UnityPresentation.Debug
         private string BuildSpeedButtonText()
         {
             return $"Speed {gameSpeed.Multiplier:0.#}x";
+        }
+
+        private string BuildPauseButtonText()
+        {
+            return gamePause.IsPaused ? "Resume" : "Pause";
         }
 
         private string BuildFreezePulseStatusText()

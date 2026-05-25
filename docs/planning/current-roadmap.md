@@ -17,6 +17,7 @@ The debug first slice has:
 - Tower upgrading between waves.
 - Tower selling between waves with a tested partial refund rule.
 - Tested 1x/2x/3x game speed control for wave pacing.
+- Tested pause/resume state for active waves without using Unity global time scale.
 - Three debug towers:
   - Railgun: faster, applies a short slow effect.
   - Mortar: slower, explosive splash damage.
@@ -55,6 +56,7 @@ Before the next development slice:
 12. Confirm the `Session Progress` panel updates after victory or defeat and survives pressing `Restart`.
 13. Toggle `Sell Mode`, click an existing tower between waves and confirm scrap increases and the path recalculates.
 14. Click `Speed` to cycle 1x/2x/3x and confirm waves visibly run faster.
+15. During a wave, click `Pause` and confirm aliens, cooldowns and firing stop until `Resume`.
 
 ## Next Slice Candidates
 

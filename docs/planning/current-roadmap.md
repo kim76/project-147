@@ -21,6 +21,7 @@ The debug first slice has:
 - Mixed enemy waves with basic, fast and armoured debug aliens.
 - Alien upgrades across later waves.
 - Freeze Pulse player ability with cooldown and debug feedback.
+- Between-wave reward choices for extra scrap, base repair or a next-tower discount.
 - First-slice tuning grouped by level, towers, aliens, upgrades and abilities.
 - First-pass in-scene visual profiles for towers and aliens.
 - Debug HUD, hover range preview, shot feedback and event feed.
@@ -30,11 +31,11 @@ The debug first slice has:
 Before the next development slice:
 
 1. Run Edit Mode tests in Unity.
-2. Confirm the new ability tests appear and pass.
+2. Confirm the new choice tests appear and pass.
 3. Press Play.
-4. Start a wave with active aliens.
-5. Press `Freeze Pulse`.
-6. Confirm the event feed reports slowed aliens and the cooldown begins.
+4. Clear a non-final wave.
+5. Confirm the reward panel appears.
+6. Choose a reward and confirm the next wave can then start.
 
 ## Next Slice Candidates
 
@@ -98,18 +99,21 @@ Goal: make each run less automatic.
 
 Deliverables:
 
-- After a wave, offer a simple choice such as extra scrap, tower discount, damage boost or base repair.
-- Add choice definitions and application rules with tests.
-- Display a temporary debug choice panel.
+- Done: after a non-final wave, offer reward choices before the next wave.
+- Done: add tested choice definitions and application rules.
+- Done: support extra scrap, base repair and next-tower discount effects.
+- Done: display a temporary debug choice panel.
+- Done: block the next wave until a reward is chosen.
 
 Why next: this starts the “addictive” part without monetisation or content bloat.
 
 ## Recommended Order
 
-1. Verify config cleanup and first-pass visuals.
-2. Add one between-wave choice.
-3. Generate concept boards for final art direction.
-4. Split debug tuning into separate ScriptableObject assets only when the current single asset becomes painful.
+1. Verify between-wave choices in Unity.
+2. Generate concept boards for final art direction.
+3. Add one more player ability only after the choice loop feels stable.
+4. Add one more strategic reward type, such as temporary tower damage or enemy debuff.
+5. Split debug tuning into separate ScriptableObject assets only when the current single asset becomes painful.
 
 ## Not Yet
 

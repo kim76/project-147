@@ -29,6 +29,8 @@ For the active next-task list, see `current-roadmap.md`.
 - Killed aliens award scrap.
 - Clearing waves awards bonus scrap.
 - Clearing a wave without taking base damage awards a perfect-wave scrap bonus.
+- Clearing a non-final wave offers a reward choice before the next wave can start.
+- Reward choices can currently add scrap, repair the base or discount the next placed tower.
 - A debug event feed shows important placement, upgrade, reward, leak and win/loss events.
 - The slice ends in victory after all waves or defeat when the base reaches zero health.
 
@@ -40,7 +42,8 @@ For the active next-task list, see `current-roadmap.md`.
 4. Press Play.
 5. Place towers by clicking open cells.
 6. Press `Start Wave` in the debug HUD.
-7. Continue placing or upgrading towers between waves.
+7. After a non-final wave, choose one reward from the reward panel.
+8. Continue placing or upgrading towers between waves. If you picked the construction credit, the next tower cost is reduced.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -71,5 +74,7 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - There is no save system.
 - There is no mobile touch polish.
 - There is no final art.
+- Reward choices are debug-tuned and not final progression design.
+- The tower discount reward only affects the next placed tower, not upgrades.
 
 These limits are intentional. The slice exists to prove the loop before expanding content.

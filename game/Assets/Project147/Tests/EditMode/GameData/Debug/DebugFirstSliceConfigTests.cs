@@ -45,5 +45,19 @@ namespace Project147.Tests.EditMode.GameData.Debug
             Assert.That(ability.CooldownSeconds, Is.GreaterThan(0));
             Assert.That(ability.StatusEffect.MovementSpeedMultiplier, Is.LessThan(1));
         }
+
+        [Test]
+        public void CreateRunChoiceDefinitions_ReturnsBetweenWaveChoices()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var choices = config.CreateRunChoiceDefinitions();
+
+            Assert.That(choices.Count, Is.EqualTo(4));
+            Assert.That(choices.Any(choice => choice.Id == "salvage-drop"), Is.True);
+            Assert.That(choices.Any(choice => choice.Id == "field-repair"), Is.True);
+            Assert.That(choices.Any(choice => choice.Id == "construction-credit"), Is.True);
+            Assert.That(choices.All(choice => choice.Amount > 0), Is.True);
+        }
     }
 }

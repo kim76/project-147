@@ -43,6 +43,15 @@ namespace Project147.GameCore.Level
 
             return new BaseState(MaxHealth, Math.Max(0, CurrentHealth - amount));
         }
+
+        public BaseState Repair(int amount)
+        {
+            if (amount < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(amount), "Repair amount cannot be negative.");
+            }
+
+            return new BaseState(MaxHealth, Math.Min(MaxHealth, CurrentHealth + amount));
+        }
     }
 }
-

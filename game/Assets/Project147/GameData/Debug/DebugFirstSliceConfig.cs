@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Project147.GameCore.Abilities;
+using Project147.GameCore.Choices;
 using Project147.GameCore.Combat;
 using Project147.GameCore.Level;
 using UnityEngine;
@@ -55,6 +56,10 @@ namespace Project147.GameData.Debug
         [Header("Player Ability")]
         [SerializeField]
         private DebugAbilityTuning freezePulse = new DebugAbilityTuning();
+
+        [Header("Run Choices")]
+        [SerializeField]
+        private DebugRunChoiceTuning runChoices = new DebugRunChoiceTuning();
 
         [Header("Aliens")]
         [SerializeField]
@@ -166,6 +171,11 @@ namespace Project147.GameData.Debug
         public PlayerAbilityDefinition CreateFreezePulseAbilityDefinition()
         {
             return freezePulse.CreateFreezePulseDefinition();
+        }
+
+        public IReadOnlyList<RunChoiceDefinition> CreateRunChoiceDefinitions()
+        {
+            return runChoices.CreateDefinitions();
         }
 
         public AlienStatusEffectDefinition CreateTowerStatusEffectDefinition()

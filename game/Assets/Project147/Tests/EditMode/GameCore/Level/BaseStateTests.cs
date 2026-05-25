@@ -51,6 +51,34 @@ namespace Project147.Tests.EditMode.GameCore.Level
 
             Assert.Throws<ArgumentOutOfRangeException>(() => state.ApplyLeakDamage(-1));
         }
+
+        [Test]
+        public void Repair_IncreasesHealthAndReturnsNewState()
+        {
+            var state = new BaseState(10).ApplyLeakDamage(4);
+
+            var result = state.Repair(2);
+
+            Assert.That(result.CurrentHealth, Is.EqualTo(8));
+            Assert.That(state.CurrentHealth, Is.EqualTo(6));
+        }
+
+        [Test]
+        public void Repair_WhenAmountExceedsMissingHealth_ClampsAtMaxHealth()
+        {
+            var state = new BaseState(10).ApplyLeakDamage(2);
+
+            var result = state.Repair(10);
+
+            Assert.That(result.CurrentHealth, Is.EqualTo(10));
+        }
+
+        [Test]
+        public void Repair_WhenAmountIsNegative_Throws()
+        {
+            var state = new BaseState(10);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => state.Repair(-1));
+        }
     }
 }
-

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Project147.GameCore.Abilities;
+using Project147.GameCore.Choices;
 using Project147.GameCore.Combat;
 using Project147.GameCore.Grid;
 using Project147.GameCore.Level;
@@ -79,6 +80,7 @@ namespace Project147.UnityPresentation.Debug
         private readonly HashSet<GridCoordinate> placedTowers = new HashSet<GridCoordinate>();
 
         private readonly FreezePulseResolver freezePulseResolver = new FreezePulseResolver();
+        private readonly RunChoiceResolver runChoiceResolver = new RunChoiceResolver();
         private readonly GridPathfinder pathfinder = new GridPathfinder();
         private readonly TowerTargetSelector targetSelector = new TowerTargetSelector();
         private TowerPlacementValidator placementValidator;
@@ -90,6 +92,7 @@ namespace Project147.UnityPresentation.Debug
         private RewardCalculator rewardCalculator;
         private BaseState currentBase;
         private CurrencyWallet wallet;
+        private RunModifierState runModifiers;
         private LevelEventFeed eventFeed;
         private bool waveActive;
         private bool won;
@@ -98,6 +101,7 @@ namespace Project147.UnityPresentation.Debug
         private int waveStartBaseHealth;
         private WaveDefinition currentWaveDefinition;
         private WaveSpawnState waveSpawnState;
+        private IReadOnlyList<RunChoiceDefinition> pendingRunChoices;
         private GameObject placementPreview;
         private LineRenderer placementPreviewLine;
         private GridCoordinate? previewCoordinate;
@@ -134,13 +138,21 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
+            if (HasPendingRunChoice)
+            {
+                RecordEvent("Choose a reward before building.");
+                return;
+            }
+
             if (placedTowers.Contains(coordinate))
             {
                 TryUpgradeTower(coordinate);
                 return;
             }
 
-            if (!wallet.CanSpend(SelectedTower.Cost))
+            var selectedTowerCost = GetSelectedTowerCost();
+
+            if (!wallet.CanSpend(selectedTowerCost))
             {
                 RecordEvent("Not enough scrap for tower.");
                 return;
@@ -158,13 +170,22 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
-            wallet = wallet.Spend(SelectedTower.Cost);
+            wallet = wallet.Spend(selectedTowerCost);
+            var discountApplied = SelectedTower.Cost - selectedTowerCost;
+
+            if (discountApplied > 0)
+            {
+                runModifiers = runModifiers.ConsumeNextTowerDiscount();
+            }
+
             placedTowers.Add(coordinate);
             var towerObject = CreateTowerObject(coordinate, SelectedTower);
             towers.Add(new RuntimeTower(coordinate, new TowerState(SelectedTower), towerObject));
             RebuildTiles();
             HidePlacementPreviewIfAny();
-            RecordEvent($"Placed {SelectedTower.Id} at {coordinate}. Scrap: {wallet.Balance}.");
+            RecordEvent(discountApplied > 0
+                ? $"Placed {SelectedTower.Id} at {coordinate}. Discount {discountApplied}. Scrap: {wallet.Balance}."
+                : $"Placed {SelectedTower.Id} at {coordinate}. Scrap: {wallet.Balance}.");
         }
 
         public void ShowPlacementPreview(GridCoordinate coordinate)
@@ -222,6 +243,7 @@ namespace Project147.UnityPresentation.Debug
             towers.Clear();
             currentBase = new BaseState(config.BaseHealth);
             wallet = new CurrencyWallet(config.StartingCurrency);
+            runModifiers = new RunModifierState();
             freezePulseState = new PlayerAbilityState(config.CreateFreezePulseAbilityDefinition());
             eventFeed = new LevelEventFeed(EventFeedCapacity).Add("Ready. Place towers, then start wave.");
             waveActive = false;
@@ -231,12 +253,13 @@ namespace Project147.UnityPresentation.Debug
             waveStartBaseHealth = currentBase.CurrentHealth;
             currentWaveDefinition = null;
             waveSpawnState = null;
+            pendingRunChoices = new List<RunChoiceDefinition>();
             RebuildTiles();
         }
 
         private bool CanPreviewPlacement(GridCoordinate coordinate)
         {
-            if (waveActive || won || lost || !wallet.CanSpend(SelectedTower.Cost))
+            if (waveActive || won || lost || HasPendingRunChoice || !wallet.CanSpend(GetSelectedTowerCost()))
             {
                 return false;
             }
@@ -325,6 +348,12 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
+            if (HasPendingRunChoice)
+            {
+                RecordEvent("Choose a reward before starting the next wave.");
+                return;
+            }
+
             waveActive = true;
             waveStartBaseHealth = currentBase.CurrentHealth;
             currentWaveDefinition = config.CreateWaveDefinition(completedWaves);
@@ -385,6 +414,28 @@ namespace Project147.UnityPresentation.Debug
 
             ShowFreezePulseFeedback();
             RecordEvent($"Freeze Pulse slowed {results.Count} alien(s).");
+        }
+
+        private void SelectRunChoice(int choiceIndex)
+        {
+            if (!HasPendingRunChoice)
+            {
+                return;
+            }
+
+            if (choiceIndex < 0 || choiceIndex >= pendingRunChoices.Count)
+            {
+                RecordEvent("Invalid reward choice.");
+                return;
+            }
+
+            var choice = pendingRunChoices[choiceIndex];
+            var result = runChoiceResolver.Apply(choice, currentBase, wallet, runModifiers);
+            currentBase = result.BaseState;
+            wallet = result.Wallet;
+            runModifiers = result.RunModifiers;
+            pendingRunChoices = new List<RunChoiceDefinition>();
+            RecordEvent($"Chose {choice.Label}: {FormatRunChoiceEffect(choice)}.");
         }
 
         private void UpdateWaveSpawning(float deltaSeconds)
@@ -677,7 +728,11 @@ namespace Project147.UnityPresentation.Debug
             {
                 won = true;
                 RecordEvent("Victory. All waves cleared.");
+                return;
             }
+
+            pendingRunChoices = config.CreateRunChoiceDefinitions();
+            RecordEvent("Choose a reward before the next wave.");
         }
 
         private void RebuildTiles()
@@ -1037,7 +1092,7 @@ namespace Project147.UnityPresentation.Debug
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}");
             top += 22;
-            GUI.Label(new Rect(left + 12, top, 260, 24), $"Scrap: {wallet.Balance}  Tower cost: {SelectedTower.Cost}");
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Scrap: {wallet.Balance}  {BuildTowerCostText()}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Selected: {SelectedTower.Id}");
             top += 22;
@@ -1083,10 +1138,16 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 144, top + 4, 130, 24), BuildFreezePulseStatusText());
             top += 34;
 
-            if (!waveActive && !won && !lost && GUI.Button(new Rect(left + 12, top, 120, 28), "Start Wave"))
+            var startWaveEnabled = !waveActive && !won && !lost && !HasPendingRunChoice;
+            var previousStartWaveEnabled = GUI.enabled;
+            GUI.enabled = startWaveEnabled;
+
+            if (GUI.Button(new Rect(left + 12, top, 120, 28), "Start Wave"))
             {
                 StartNextWave();
             }
+
+            GUI.enabled = previousStartWaveEnabled;
 
             if (GUI.Button(new Rect(left + 144, top, 120, 28), "Restart"))
             {
@@ -1095,7 +1156,9 @@ namespace Project147.UnityPresentation.Debug
 
             top += 34;
 
-            var status = waveActive ? "Wave running" : "Place towers, then start wave";
+            var status = HasPendingRunChoice
+                ? "Choose reward"
+                : waveActive ? "Wave running" : "Place towers, then start wave";
 
             if (won)
             {
@@ -1108,6 +1171,7 @@ namespace Project147.UnityPresentation.Debug
 
             GUI.Label(new Rect(left + 12, top, 260, 24), status);
             DrawEventFeed(left + 296, 16);
+            DrawRunChoicePanel(left + 296, 232);
         }
 
         private string BuildSelectedTowerAbilityText()
@@ -1140,6 +1204,30 @@ namespace Project147.UnityPresentation.Debug
                 : $"Cooldown {freezePulseState.RemainingCooldownSeconds:0.0}s";
         }
 
+        private void DrawRunChoicePanel(int left, int top)
+        {
+            if (!HasPendingRunChoice)
+            {
+                return;
+            }
+
+            var panelHeight = 46 + pendingRunChoices.Count * 30;
+            GUI.Box(new Rect(left, top, 360, panelHeight), "Choose Reward");
+            top += 30;
+
+            for (var index = 0; index < pendingRunChoices.Count; index++)
+            {
+                var choice = pendingRunChoices[index];
+
+                if (GUI.Button(new Rect(left + 12, top, 336, 26), BuildRunChoiceButtonText(choice)))
+                {
+                    SelectRunChoice(index);
+                }
+
+                top += 30;
+            }
+        }
+
         private void DrawEventFeed(int left, int top)
         {
             if (eventFeed == null)
@@ -1161,6 +1249,47 @@ namespace Project147.UnityPresentation.Debug
         {
             eventFeed = (eventFeed ?? new LevelEventFeed(EventFeedCapacity)).Add(message);
             UnityEngine.Debug.Log(message);
+        }
+
+        private bool HasPendingRunChoice
+        {
+            get { return pendingRunChoices != null && pendingRunChoices.Count > 0; }
+        }
+
+        private static string BuildRunChoiceButtonText(RunChoiceDefinition choice)
+        {
+            return $"{choice.Label}: {FormatRunChoiceEffect(choice)}";
+        }
+
+        private static string FormatRunChoiceEffect(RunChoiceDefinition choice)
+        {
+            switch (choice.EffectType)
+            {
+                case RunChoiceEffectType.AddScrap:
+                    return $"+{choice.Amount} scrap";
+                case RunChoiceEffectType.RepairBase:
+                    return $"+{choice.Amount} base";
+                case RunChoiceEffectType.AddNextTowerDiscount:
+                    return $"-{choice.Amount} next tower";
+                default:
+                    return $"{choice.Amount}";
+            }
+        }
+
+        private int GetSelectedTowerCost()
+        {
+            return runModifiers == null
+                ? SelectedTower.Cost
+                : runModifiers.CalculateTowerCost(SelectedTower.Cost);
+        }
+
+        private string BuildTowerCostText()
+        {
+            var currentCost = GetSelectedTowerCost();
+
+            return currentCost == SelectedTower.Cost
+                ? $"Tower cost: {currentCost}"
+                : $"Tower cost: {currentCost} (was {SelectedTower.Cost})";
         }
 
         private string BuildWaveSummary(WaveDefinition wave)

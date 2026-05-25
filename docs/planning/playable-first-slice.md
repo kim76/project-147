@@ -17,6 +17,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Hovering a cell previews tower range and whether placement is valid.
 - Towers cost scrap.
 - Clicking an existing tower between waves upgrades it if enough scrap is available.
+- Toggling `Sell Mode` and clicking an existing tower between waves sells it for a partial refund.
 - Placement is rejected if it blocks all paths.
 - Player starts waves manually.
 - A `Next Wave` panel previews enemy counts and tags before each wave.
@@ -52,11 +53,12 @@ For the active next-task list, see `current-roadmap.md`.
 6. Read the `Next Wave` panel, then press `Start Wave` in the debug HUD.
 7. After a non-final wave, choose one reward from the reward panel.
 8. Continue placing or upgrading towers between waves. If you picked the construction credit, the next tower cost is reduced.
-9. If you picked `Overclock`, the next wave gets boosted tower damage.
-10. If you picked `Rapid Loader`, the next wave gets boosted tower fire rate.
-11. Use `Freeze Pulse` or `Orbital Strike` during active waves when their cooldowns are ready.
-12. On victory or defeat, read the run summary panel.
-13. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
+9. Toggle `Sell Mode`, click an existing tower, and confirm scrap increases.
+10. If you picked `Overclock`, the next wave gets boosted tower damage.
+11. If you picked `Rapid Loader`, the next wave gets boosted tower fire rate.
+12. Use `Freeze Pulse` or `Orbital Strike` during active waves when their cooldowns are ready.
+13. On victory or defeat, read the run summary panel.
+14. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -94,6 +96,7 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - There is no final art.
 - Reward choices are debug-tuned and not final progression design.
 - The tower discount reward only affects the next placed tower, not upgrades.
+- Selling refunds 75% of tower and upgrade spend in the debug slice.
 - Overclock affects damage only, not fire rate.
 - Rapid Loader affects fire rate only, not damage.
 - Orbital Strike is a debug ability, not final balance.

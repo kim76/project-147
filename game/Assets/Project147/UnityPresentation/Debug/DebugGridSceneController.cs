@@ -13,6 +13,7 @@ namespace Project147.UnityPresentation.Debug
     {
         private const int EventFeedCapacity = 7;
         private const int RunChoiceOfferSize = 3;
+        private const float TowerSellRefundMultiplier = 0.75f;
 
         [SerializeField]
         private int width = 8;
@@ -88,6 +89,7 @@ namespace Project147.UnityPresentation.Debug
         private readonly WaveIntelBuilder waveIntelBuilder = new WaveIntelBuilder();
         private readonly GridPathfinder pathfinder = new GridPathfinder();
         private readonly TowerTargetSelector targetSelector = new TowerTargetSelector();
+        private readonly TowerSaleCalculator towerSaleCalculator = new TowerSaleCalculator();
         private TowerPlacementValidator placementValidator;
         private AttackResolver attackResolver;
         private SplashDamageResolver splashDamageResolver;
@@ -106,6 +108,7 @@ namespace Project147.UnityPresentation.Debug
         private bool waveActive;
         private bool won;
         private bool lost;
+        private bool sellMode;
         private int completedWaves;
         private int waveStartBaseHealth;
         private WaveDefinition currentWaveDefinition;
@@ -160,7 +163,15 @@ namespace Project147.UnityPresentation.Debug
 
             if (placedTowers.Contains(coordinate))
             {
-                TryUpgradeTower(coordinate);
+                if (sellMode)
+                {
+                    TrySellTower(coordinate);
+                }
+                else
+                {
+                    TryUpgradeTower(coordinate);
+                }
+
                 return;
             }
 
@@ -218,9 +229,16 @@ namespace Project147.UnityPresentation.Debug
                 && !waveActive
                 && !won
                 && !lost
+                && !sellMode
                 && tower.State.Level < config.MaxTowerLevel
                 && wallet.CanSpend(towerUpgradeDefinition.Cost);
-            var colour = canPlace || canUpgrade
+            var canSell = tower != null
+                && !waveActive
+                && !won
+                && !lost
+                && sellMode
+                && !HasPendingRunChoice;
+            var colour = canPlace || canUpgrade || canSell
                 ? new Color(0.25f, 1f, 0.35f, 0.95f)
                 : new Color(1f, 0.2f, 0.2f, 0.95f);
             var range = tower == null ? SelectedTower.Range : tower.State.Definition.Range;
@@ -265,6 +283,7 @@ namespace Project147.UnityPresentation.Debug
             waveActive = false;
             won = false;
             lost = false;
+            sellMode = false;
             completedWaves = 0;
             waveStartBaseHealth = currentBase.CurrentHealth;
             currentWaveDefinition = null;
@@ -357,6 +376,35 @@ namespace Project147.UnityPresentation.Debug
             UpdateTowerObject(tower);
             HidePlacementPreviewIfAny();
             RecordEvent($"Upgraded tower at {coordinate} to level {tower.State.Level}.");
+        }
+
+        private void TrySellTower(GridCoordinate coordinate)
+        {
+            var tower = FindRuntimeTower(coordinate);
+
+            if (tower == null)
+            {
+                RecordEvent($"No tower found at {coordinate}.");
+                return;
+            }
+
+            var refund = towerSaleCalculator.CalculateRefund(
+                tower.State,
+                towerUpgradeDefinition,
+                TowerSellRefundMultiplier);
+            wallet = wallet.Add(refund);
+            towers.Remove(tower);
+            placedTowers.Remove(coordinate);
+
+            if (tower.GameObject != null)
+            {
+                towerObjects.Remove(tower.GameObject);
+                Destroy(tower.GameObject);
+            }
+
+            RebuildTiles();
+            HidePlacementPreviewIfAny();
+            RecordEvent($"Sold tower at {coordinate}. +{refund} scrap.");
         }
 
         private void StartNextWave()
@@ -1223,7 +1271,7 @@ namespace Project147.UnityPresentation.Debug
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 424), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 458), "Project 147 First Slice");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}");
             top += 22;
@@ -1260,6 +1308,20 @@ namespace Project147.UnityPresentation.Debug
             top += 30;
 
             var previousEnabled = GUI.enabled;
+            GUI.enabled = !waveActive && !won && !lost && !HasPendingRunChoice;
+
+            if (GUI.Button(new Rect(left + 12, top, 120, 28), sellMode ? "Sell Mode: On" : "Sell Mode: Off"))
+            {
+                sellMode = !sellMode;
+                HidePlacementPreviewIfAny();
+                RecordEvent(sellMode ? "Sell mode enabled." : "Sell mode disabled.");
+            }
+
+            GUI.enabled = previousEnabled;
+            GUI.Label(new Rect(left + 144, top + 4, 130, 24), $"Refund {TowerSellRefundMultiplier:P0}");
+            top += 34;
+
+            previousEnabled = GUI.enabled;
             GUI.enabled = waveActive
                 && !won
                 && !lost
@@ -1311,7 +1373,7 @@ namespace Project147.UnityPresentation.Debug
 
             var status = HasPendingRunChoice
                 ? "Choose reward"
-                : waveActive ? "Wave running" : "Place towers, then start wave";
+                : waveActive ? "Wave running" : sellMode ? "Click tower to sell" : "Place towers, then start wave";
 
             if (won)
             {

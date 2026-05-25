@@ -135,7 +135,9 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 DamageType.Kinetic,
                 TowerTargetingMode.First,
                 0.2f,
-                1.5f);
+                1.5f,
+                1.25f,
+                0.45f);
             var upgrade = new TowerUpgradeDefinition("railgun-damage-1", 75, 1.25f, 1.1f, 0.5f, 0.1f, 0.25f);
 
             var result = upgrade.ApplyTo(tower);
@@ -149,6 +151,8 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(result.DefaultTargetingMode, Is.EqualTo(TowerTargetingMode.First));
             Assert.That(result.CriticalChance, Is.EqualTo(0.3f).Within(0.0001f));
             Assert.That(result.CriticalDamageMultiplier, Is.EqualTo(1.75f));
+            Assert.That(result.SplashRadius, Is.EqualTo(1.25f));
+            Assert.That(result.SplashDamageMultiplier, Is.EqualTo(0.45f));
         }
 
         [Test]
@@ -169,6 +173,8 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 TowerTargetingMode.First,
                 0,
                 1,
+                0,
+                0,
                 new[] { slow });
             var upgrade = new TowerUpgradeDefinition("frost-upgrade-1", 75, 1.25f, 1.1f, 0, 0, 0);
 

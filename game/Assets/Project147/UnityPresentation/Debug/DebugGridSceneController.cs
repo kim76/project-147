@@ -81,6 +81,7 @@ namespace Project147.UnityPresentation.Debug
         private readonly TowerTargetSelector targetSelector = new TowerTargetSelector();
         private TowerPlacementValidator placementValidator;
         private AttackResolver attackResolver;
+        private SplashDamageResolver splashDamageResolver;
         private TowerLoadout towerLoadout;
         private TowerUpgradeDefinition towerUpgradeDefinition;
         private RewardCalculator rewardCalculator;
@@ -251,7 +252,9 @@ namespace Project147.UnityPresentation.Debug
             }
 
             placementValidator = new TowerPlacementValidator(pathfinder);
-            attackResolver = new AttackResolver(new DamageResolver());
+            var damageResolver = new DamageResolver();
+            attackResolver = new AttackResolver(damageResolver);
+            splashDamageResolver = new SplashDamageResolver(damageResolver);
             rewardCalculator = new RewardCalculator(config.PerfectWaveScrapBonus);
             towerLoadout = new TowerLoadout(config.CreateTowerDefinitions());
             towerUpgradeDefinition = config.CreateTowerUpgradeDefinition();
@@ -316,7 +319,7 @@ namespace Project147.UnityPresentation.Debug
             waveStartBaseHealth = currentBase.CurrentHealth;
             currentWaveDefinition = config.CreateWaveDefinition(completedWaves);
             waveSpawnState = new WaveSpawnState(currentWaveDefinition);
-            RecordEvent($"Wave {completedWaves + 1} started: {currentWaveDefinition.AlienCount} aliens.");
+            RecordEvent($"Wave {completedWaves + 1} started: {BuildWaveSummary(currentWaveDefinition)}.");
         }
 
         private void UpdateWaveSpawning(float deltaSeconds)
@@ -329,13 +332,13 @@ namespace Project147.UnityPresentation.Debug
             var spawnResult = waveSpawnState.Tick(deltaSeconds);
             waveSpawnState = spawnResult.State;
 
-            for (var spawnIndex = 0; spawnIndex < spawnResult.SpawnCount; spawnIndex++)
+            foreach (var spawnEntry in spawnResult.SpawnEntries)
             {
-                SpawnAlien();
+                SpawnAlien(spawnEntry.AlienId);
             }
         }
 
-        private void SpawnAlien()
+        private void SpawnAlien(string alienId)
         {
             var bounds = new GridBounds(width, height);
             var path = pathfinder.FindShortestPath(CreateGrid(bounds), ToGridCoordinate(spawn), ToGridCoordinate(goal));
@@ -346,24 +349,27 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
-            var alienObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            alienObject.name = "Debug Alien";
+            var definition = config.CreateAlienDefinition(alienId, completedWaves);
+            var alienObject = GameObject.CreatePrimitive(SelectAlienPrimitive(definition));
+            alienObject.name = $"Debug Alien {definition.Id}";
             alienObject.transform.SetParent(transform, false);
-            alienObject.transform.localScale = new Vector3(0.45f, 0.45f, 0.45f);
+            alienObject.transform.localScale = SelectAlienScale(definition);
             alienObject.transform.localPosition = ToWorldPosition(path[0], 0.35f);
 
             var renderer = alienObject.GetComponent<Renderer>();
+            var defaultMaterial = CreateAlienMaterial(definition);
 
-            if (renderer != null && alienMaterial != null)
+            if (renderer != null)
             {
-                renderer.sharedMaterial = alienMaterial;
+                renderer.sharedMaterial = defaultMaterial;
             }
 
             activeAliens.Add(new RuntimeAlien(
                 alienObject,
-                new AlienState(config.CreateAlienDefinition(completedWaves)),
+                new AlienState(definition),
                 path,
-                renderer));
+                renderer,
+                defaultMaterial));
         }
 
         private void UpdateAliens(float deltaSeconds)
@@ -378,7 +384,7 @@ namespace Project147.UnityPresentation.Debug
                     activeAliens.RemoveAt(index);
                     var reward = rewardCalculator.CalculateAlienKillReward(alien.State.Definition);
                     wallet = wallet.Add(reward.Amount);
-                    RecordEvent($"Alien destroyed. +{reward.Amount} scrap.");
+                    RecordEvent($"{FormatAlienLabel(alien.State.Definition.Id)} destroyed. +{reward.Amount} scrap.");
                     continue;
                 }
 
@@ -390,7 +396,7 @@ namespace Project147.UnityPresentation.Debug
                     currentBase = currentBase.ApplyLeakDamage(1);
                     Destroy(alien.GameObject);
                     activeAliens.RemoveAt(index);
-                    RecordEvent($"Alien leaked. Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}.");
+                    RecordEvent($"{FormatAlienLabel(alien.State.Definition.Id)} leaked. Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}.");
 
                     if (currentBase.IsDestroyed)
                     {
@@ -411,9 +417,9 @@ namespace Project147.UnityPresentation.Debug
 
             alien.HitFlashSeconds -= deltaSeconds;
 
-            if (alien.HitFlashSeconds <= 0 && alien.Renderer != null && alienMaterial != null)
+            if (alien.HitFlashSeconds <= 0 && alien.Renderer != null)
             {
-                alien.Renderer.sharedMaterial = alienMaterial;
+                alien.Renderer.sharedMaterial = alien.DefaultMaterial;
             }
         }
 
@@ -479,8 +485,61 @@ namespace Project147.UnityPresentation.Debug
                     }
                 }
 
+                ApplySplashDamage(tower, alien, attack.Damage);
                 ShowShotFeedback(tower.Coordinate, alien);
             }
+        }
+
+        private void ApplySplashDamage(RuntimeTower tower, RuntimeAlien primaryAlien, DamageResult primaryDamage)
+        {
+            var definition = tower.State.Definition;
+
+            if (primaryDamage.WasDodged
+                || primaryDamage.FinalAmount <= 0
+                || definition.SplashRadius <= 0
+                || definition.SplashDamageMultiplier <= 0)
+            {
+                return;
+            }
+
+            var candidates = new List<SplashDamageCandidate>();
+            var impactPosition = primaryAlien.GameObject.transform.localPosition;
+
+            foreach (var alien in activeAliens)
+            {
+                if (alien == primaryAlien || !alien.State.IsAlive)
+                {
+                    continue;
+                }
+
+                var distance = Vector3.Distance(impactPosition, alien.GameObject.transform.localPosition) / cellSize;
+                candidates.Add(new SplashDamageCandidate(alien.State, distance));
+            }
+
+            var results = splashDamageResolver.Resolve(definition, candidates);
+            var hitCount = 0;
+
+            foreach (var result in results)
+            {
+                var alien = FindRuntimeAlien(result.Source);
+
+                if (alien == null)
+                {
+                    continue;
+                }
+
+                alien.State = result.Target;
+                FlashAlien(alien);
+                hitCount++;
+            }
+
+            if (hitCount <= 0)
+            {
+                return;
+            }
+
+            ShowSplashFeedback(impactPosition, definition.SplashRadius);
+            RecordEvent($"{definition.Id} splash hit {hitCount} alien(s).");
         }
 
         private List<TargetCandidate> BuildTargetCandidates(RuntimeTower tower)
@@ -701,16 +760,76 @@ namespace Project147.UnityPresentation.Debug
 
             if (renderer != null)
             {
-                var material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-                material.color = colour;
-
-                if (material.HasProperty("_BaseColor"))
-                {
-                    material.SetColor("_BaseColor", colour);
-                }
-
-                renderer.material = material;
+                renderer.material = CreateDebugMaterial(colour);
             }
+        }
+
+        private Material CreateAlienMaterial(AlienDefinition definition)
+        {
+            return CreateDebugMaterial(SelectAlienColour(definition));
+        }
+
+        private PrimitiveType SelectAlienPrimitive(AlienDefinition definition)
+        {
+            if (definition.Id == config.FastAlienId)
+            {
+                return PrimitiveType.Capsule;
+            }
+
+            if (definition.Id == config.ArmouredAlienId)
+            {
+                return PrimitiveType.Cube;
+            }
+
+            return PrimitiveType.Sphere;
+        }
+
+        private Vector3 SelectAlienScale(AlienDefinition definition)
+        {
+            if (definition.Id == config.FastAlienId)
+            {
+                return new Vector3(0.32f, 0.5f, 0.32f);
+            }
+
+            if (definition.Id == config.ArmouredAlienId)
+            {
+                return new Vector3(0.52f, 0.52f, 0.52f);
+            }
+
+            return new Vector3(0.45f, 0.45f, 0.45f);
+        }
+
+        private Color SelectAlienColour(AlienDefinition definition)
+        {
+            if (definition.Id == config.FastAlienId)
+            {
+                return new Color(0.12f, 0.85f, 1f, 1f);
+            }
+
+            if (definition.Id == config.ArmouredAlienId)
+            {
+                return new Color(0.72f, 0.62f, 0.48f, 1f);
+            }
+
+            if (alienMaterial != null && alienMaterial.HasProperty("_BaseColor"))
+            {
+                return alienMaterial.GetColor("_BaseColor");
+            }
+
+            return new Color(0.52f, 0.27f, 0.85f, 1f);
+        }
+
+        private static Material CreateDebugMaterial(Color colour)
+        {
+            var material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            material.color = colour;
+
+            if (material.HasProperty("_BaseColor"))
+            {
+                material.SetColor("_BaseColor", colour);
+            }
+
+            return material;
         }
 
         private void UpdateTowerObject(RuntimeTower tower)
@@ -791,9 +910,51 @@ namespace Project147.UnityPresentation.Debug
 
             if (alien.Renderer != null && alienHitMaterial != null)
             {
-                alien.Renderer.sharedMaterial = alienHitMaterial;
-                alien.HitFlashSeconds = 0.08f;
+                FlashAlien(alien);
             }
+        }
+
+        private void ShowSplashFeedback(Vector3 impactPosition, float radiusCells)
+        {
+            var splash = new GameObject("Debug Splash");
+            splash.transform.SetParent(transform, false);
+
+            var line = splash.AddComponent<LineRenderer>();
+            line.loop = true;
+            line.useWorldSpace = false;
+            line.positionCount = 64;
+            line.widthMultiplier = 0.045f;
+
+            if (shotLineMaterial != null)
+            {
+                line.sharedMaterial = shotLineMaterial;
+            }
+
+            var radius = radiusCells * cellSize;
+            var centre = impactPosition;
+            centre.y = 0.48f;
+
+            for (var index = 0; index < line.positionCount; index++)
+            {
+                var radians = index / (float)line.positionCount * Mathf.PI * 2;
+                var x = centre.x + Mathf.Cos(radians) * radius;
+                var z = centre.z + Mathf.Sin(radians) * radius;
+                line.SetPosition(index, new Vector3(x, centre.y, z));
+            }
+
+            shotObjects.Add(splash);
+            Destroy(splash, 0.12f);
+        }
+
+        private void FlashAlien(RuntimeAlien alien)
+        {
+            if (alien.Renderer == null || alienHitMaterial == null)
+            {
+                return;
+            }
+
+            alien.Renderer.sharedMaterial = alienHitMaterial;
+            alien.HitFlashSeconds = 0.08f;
         }
 
         private void EnsurePlacementPreview()
@@ -895,7 +1056,7 @@ namespace Project147.UnityPresentation.Debug
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 320), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 342), "Project 147 First Slice");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}");
             top += 22;
@@ -904,6 +1065,8 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Selected: {SelectedTower.Id}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Dmg {SelectedTower.Damage}  Rng {SelectedTower.Range}  Rate {SelectedTower.FireRatePerSecond}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 260, 24), BuildSelectedTowerAbilityText());
             top += 30;
 
             if (!waveActive && !won && !lost && GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
@@ -954,6 +1117,22 @@ namespace Project147.UnityPresentation.Debug
             DrawEventFeed(left + 296, 16);
         }
 
+        private string BuildSelectedTowerAbilityText()
+        {
+            if (SelectedTower.SplashRadius > 0 && SelectedTower.SplashDamageMultiplier > 0)
+            {
+                return $"Ability: splash {SelectedTower.SplashRadius} cells at {SelectedTower.SplashDamageMultiplier:P0} dmg";
+            }
+
+            if (SelectedTower.StatusEffects.Count > 0)
+            {
+                var effect = SelectedTower.StatusEffects[0];
+                return $"Ability: {effect.Type} {effect.DurationSeconds:0.#}s";
+            }
+
+            return "Ability: none";
+        }
+
         private void DrawEventFeed(int left, int top)
         {
             if (eventFeed == null)
@@ -975,6 +1154,39 @@ namespace Project147.UnityPresentation.Debug
         {
             eventFeed = (eventFeed ?? new LevelEventFeed(EventFeedCapacity)).Add(message);
             UnityEngine.Debug.Log(message);
+        }
+
+        private string BuildWaveSummary(WaveDefinition wave)
+        {
+            var counts = new Dictionary<string, int>();
+
+            foreach (var entry in wave.SpawnEntries)
+            {
+                if (!counts.ContainsKey(entry.AlienId))
+                {
+                    counts.Add(entry.AlienId, 0);
+                }
+
+                counts[entry.AlienId]++;
+            }
+
+            var parts = new List<string>();
+
+            foreach (var count in counts)
+            {
+                parts.Add($"{count.Value} {FormatAlienLabel(count.Key)}");
+            }
+
+            return string.Join(", ", parts);
+        }
+
+        private static string FormatAlienLabel(string alienId)
+        {
+            const string debugPrefix = "debug-";
+
+            return alienId != null && alienId.StartsWith(debugPrefix)
+                ? alienId.Substring(debugPrefix.Length)
+                : alienId;
         }
 
         private Vector3 ToWorldPosition(GridCoordinate coordinate, float y)
@@ -1017,12 +1229,14 @@ namespace Project147.UnityPresentation.Debug
                 GameObject gameObject,
                 AlienState state,
                 IReadOnlyList<GridCoordinate> path,
-                Renderer renderer)
+                Renderer renderer,
+                Material defaultMaterial)
             {
                 GameObject = gameObject;
                 State = state;
                 Path = path;
                 Renderer = renderer;
+                DefaultMaterial = defaultMaterial;
                 NextPathIndex = 1;
                 PathProgress = 0;
             }
@@ -1034,6 +1248,8 @@ namespace Project147.UnityPresentation.Debug
             public IReadOnlyList<GridCoordinate> Path { get; }
 
             public Renderer Renderer { get; }
+
+            public Material DefaultMaterial { get; }
 
             public int NextPathIndex { get; set; }
 

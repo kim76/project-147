@@ -5,22 +5,22 @@ namespace Project147.GameCore.Level
     public sealed class WaveSpawnState : IEquatable<WaveSpawnState>
     {
         public WaveSpawnState(WaveDefinition definition)
-            : this(definition, definition?.AlienCount ?? 0, 0)
+            : this(definition, 0, 0)
         {
         }
 
-        private WaveSpawnState(WaveDefinition definition, int remainingSpawns, float secondsUntilNextSpawn)
+        private WaveSpawnState(WaveDefinition definition, int nextSpawnIndex, float secondsUntilNextSpawn)
         {
             if (definition == null)
             {
                 throw new ArgumentNullException(nameof(definition));
             }
 
-            if (remainingSpawns < 0 || remainingSpawns > definition.AlienCount)
+            if (nextSpawnIndex < 0 || nextSpawnIndex > definition.AlienCount)
             {
                 throw new ArgumentOutOfRangeException(
-                    nameof(remainingSpawns),
-                    "Remaining spawns must be between zero and wave alien count.");
+                    nameof(nextSpawnIndex),
+                    "Next spawn index must be between zero and wave alien count.");
             }
 
             if (secondsUntilNextSpawn < 0)
@@ -31,13 +31,18 @@ namespace Project147.GameCore.Level
             }
 
             Definition = definition;
-            RemainingSpawns = remainingSpawns;
+            NextSpawnIndex = nextSpawnIndex;
             SecondsUntilNextSpawn = secondsUntilNextSpawn;
         }
 
         public WaveDefinition Definition { get; }
 
-        public int RemainingSpawns { get; }
+        public int NextSpawnIndex { get; }
+
+        public int RemainingSpawns
+        {
+            get { return Definition.AlienCount - NextSpawnIndex; }
+        }
 
         public float SecondsUntilNextSpawn { get; }
 
@@ -59,30 +64,30 @@ namespace Project147.GameCore.Level
             }
 
             var secondsUntilNextSpawn = SecondsUntilNextSpawn - deltaSeconds;
-            var remainingSpawns = RemainingSpawns;
-            var spawnCount = 0;
+            var nextSpawnIndex = NextSpawnIndex;
+            var spawnEntries = new System.Collections.Generic.List<WaveSpawnEntry>();
 
-            while (remainingSpawns > 0 && secondsUntilNextSpawn <= 0)
+            while (nextSpawnIndex < Definition.AlienCount && secondsUntilNextSpawn <= 0)
             {
-                spawnCount++;
-                remainingSpawns--;
+                spawnEntries.Add(Definition.SpawnEntries[nextSpawnIndex]);
+                nextSpawnIndex++;
                 secondsUntilNextSpawn += Definition.SecondsBetweenSpawns;
             }
 
-            if (remainingSpawns <= 0)
+            if (nextSpawnIndex >= Definition.AlienCount)
             {
                 secondsUntilNextSpawn = 0;
             }
 
-            var state = new WaveSpawnState(Definition, remainingSpawns, secondsUntilNextSpawn);
-            return new WaveSpawnResult(state, spawnCount);
+            var state = new WaveSpawnState(Definition, nextSpawnIndex, secondsUntilNextSpawn);
+            return new WaveSpawnResult(state, spawnEntries);
         }
 
         public bool Equals(WaveSpawnState other)
         {
             return other != null
                 && Equals(Definition, other.Definition)
-                && RemainingSpawns == other.RemainingSpawns
+                && NextSpawnIndex == other.NextSpawnIndex
                 && SecondsUntilNextSpawn.Equals(other.SecondsUntilNextSpawn);
         }
 
@@ -93,7 +98,7 @@ namespace Project147.GameCore.Level
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Definition, RemainingSpawns, SecondsUntilNextSpawn);
+            return HashCode.Combine(Definition, NextSpawnIndex, SecondsUntilNextSpawn);
         }
     }
 }

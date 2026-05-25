@@ -15,6 +15,8 @@ namespace Project147.GameCore.Combat
             TowerTargetingMode defaultTargetingMode,
             float criticalChance = 0,
             float criticalDamageMultiplier = 1,
+            float splashRadius = 0,
+            float splashDamageMultiplier = 0,
             IReadOnlyList<AlienStatusEffectDefinition> statusEffects = null)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -54,6 +56,18 @@ namespace Project147.GameCore.Combat
                     "Critical damage multiplier must be at least one.");
             }
 
+            if (splashRadius < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(splashRadius), "Splash radius cannot be negative.");
+            }
+
+            if (splashDamageMultiplier < 0 || splashDamageMultiplier > 1)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(splashDamageMultiplier),
+                    "Splash damage multiplier must be between zero and one.");
+            }
+
             statusEffects = statusEffects ?? new List<AlienStatusEffectDefinition>();
 
             foreach (var statusEffect in statusEffects)
@@ -73,6 +87,8 @@ namespace Project147.GameCore.Combat
             DefaultTargetingMode = defaultTargetingMode;
             CriticalChance = criticalChance;
             CriticalDamageMultiplier = criticalDamageMultiplier;
+            SplashRadius = splashRadius;
+            SplashDamageMultiplier = splashDamageMultiplier;
             StatusEffects = new List<AlienStatusEffectDefinition>(statusEffects);
         }
 
@@ -93,6 +109,10 @@ namespace Project147.GameCore.Combat
         public float CriticalChance { get; }
 
         public float CriticalDamageMultiplier { get; }
+
+        public float SplashRadius { get; }
+
+        public float SplashDamageMultiplier { get; }
 
         public IReadOnlyList<AlienStatusEffectDefinition> StatusEffects { get; }
     }

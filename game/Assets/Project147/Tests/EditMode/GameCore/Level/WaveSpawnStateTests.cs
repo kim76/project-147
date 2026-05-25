@@ -29,8 +29,30 @@ namespace Project147.Tests.EditMode.GameCore.Level
             var result = state.Tick(0);
 
             Assert.That(result.SpawnCount, Is.EqualTo(1));
+            Assert.That(result.SpawnEntries[0].AlienId, Is.EqualTo("default"));
             Assert.That(result.State.RemainingSpawns, Is.EqualTo(2));
             Assert.That(result.State.HasCompletedSpawning, Is.False);
+        }
+
+        [Test]
+        public void Tick_WhenWaveUsesMixedComposition_ReturnsSpawnEntriesInCompositionOrder()
+        {
+            var wave = new WaveDefinition(
+                new WaveComposition(new[]
+                {
+                    new WaveSpawnGroup("basic", 2),
+                    new WaveSpawnGroup("fast", 1)
+                }),
+                0.5f,
+                10);
+            var state = new WaveSpawnState(wave);
+
+            var firstSpawn = state.Tick(0);
+            var secondSpawn = firstSpawn.State.Tick(0.5f);
+
+            Assert.That(firstSpawn.SpawnEntries[0].AlienId, Is.EqualTo("basic"));
+            Assert.That(secondSpawn.SpawnEntries[0].AlienId, Is.EqualTo("fast"));
+            Assert.That(secondSpawn.State.RemainingSpawns, Is.EqualTo(1));
         }
 
         [Test]

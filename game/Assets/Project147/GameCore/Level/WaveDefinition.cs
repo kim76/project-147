@@ -1,14 +1,22 @@
 using System;
+using System.Collections.Generic;
 
 namespace Project147.GameCore.Level
 {
     public sealed class WaveDefinition
     {
+        private const string DefaultAlienId = "default";
+
         public WaveDefinition(int alienCount, float secondsBetweenSpawns, int clearReward)
+            : this(CreateDefaultComposition(alienCount), secondsBetweenSpawns, clearReward)
         {
-            if (alienCount <= 0)
+        }
+
+        public WaveDefinition(WaveComposition composition, float secondsBetweenSpawns, int clearReward)
+        {
+            if (composition == null)
             {
-                throw new ArgumentOutOfRangeException(nameof(alienCount), "Wave alien count must be greater than zero.");
+                throw new ArgumentNullException(nameof(composition));
             }
 
             if (secondsBetweenSpawns <= 0)
@@ -23,15 +31,23 @@ namespace Project147.GameCore.Level
                 throw new ArgumentOutOfRangeException(nameof(clearReward), "Wave clear reward cannot be negative.");
             }
 
-            AlienCount = alienCount;
+            SpawnEntries = composition.BuildSpawnEntries();
+            AlienCount = SpawnEntries.Count;
             SecondsBetweenSpawns = secondsBetweenSpawns;
             ClearReward = clearReward;
         }
 
         public int AlienCount { get; }
 
+        public IReadOnlyList<WaveSpawnEntry> SpawnEntries { get; }
+
         public float SecondsBetweenSpawns { get; }
 
         public int ClearReward { get; }
+
+        private static WaveComposition CreateDefaultComposition(int alienCount)
+        {
+            return new WaveComposition(new[] { new WaveSpawnGroup(DefaultAlienId, alienCount) });
+        }
     }
 }

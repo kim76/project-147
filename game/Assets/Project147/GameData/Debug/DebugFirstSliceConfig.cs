@@ -84,6 +84,12 @@ namespace Project147.GameData.Debug
         private float secondTowerCriticalDamageMultiplier = 1.8f;
 
         [SerializeField]
+        private float secondTowerSplashRadius = 1.25f;
+
+        [SerializeField]
+        private float secondTowerSplashDamageMultiplier = 0.45f;
+
+        [SerializeField]
         private DamageType secondTowerDamageType = DamageType.Explosive;
 
         [SerializeField]
@@ -124,21 +130,59 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private float towerStatusEffectMovementSpeedMultiplier = 0.7f;
 
-        [Header("Alien")]
+        [Header("Basic Alien")]
         [SerializeField]
-        private string alienId = "debug-runner";
+        private string basicAlienId = "debug-basic";
 
         [SerializeField]
-        private float alienHealth = 60;
+        private float basicAlienHealth = 60;
 
         [SerializeField]
-        private float alienSpeedCellsPerSecond = 1.6f;
+        private float basicAlienSpeedCellsPerSecond = 1.45f;
 
         [SerializeField]
-        private int alienReward = 15;
+        private int basicAlienReward = 15;
 
         [SerializeField]
-        private float alienDodgeChance;
+        private float basicAlienDodgeChance;
+
+        [Header("Fast Alien")]
+        [SerializeField]
+        private string fastAlienId = "debug-fast";
+
+        [SerializeField]
+        private float fastAlienHealth = 38;
+
+        [SerializeField]
+        private float fastAlienSpeedCellsPerSecond = 2.25f;
+
+        [SerializeField]
+        private int fastAlienReward = 12;
+
+        [SerializeField]
+        private float fastAlienDodgeChance = 0.12f;
+
+        [Header("Armoured Alien")]
+        [SerializeField]
+        private string armouredAlienId = "debug-armoured";
+
+        [SerializeField]
+        private float armouredAlienHealth = 115;
+
+        [SerializeField]
+        private float armouredAlienSpeedCellsPerSecond = 0.95f;
+
+        [SerializeField]
+        private int armouredAlienReward = 26;
+
+        [SerializeField]
+        private float armouredAlienDodgeChance;
+
+        [SerializeField]
+        private DamageType armouredAlienResistanceDamageType = DamageType.Kinetic;
+
+        [SerializeField]
+        private float armouredAlienResistance = 0.35f;
 
         [Header("Alien Upgrade")]
         [SerializeField]
@@ -215,6 +259,21 @@ namespace Project147.GameData.Debug
             get { return System.Math.Max(1, maxAlienLevel); }
         }
 
+        public string BasicAlienId
+        {
+            get { return basicAlienId; }
+        }
+
+        public string FastAlienId
+        {
+            get { return fastAlienId; }
+        }
+
+        public string ArmouredAlienId
+        {
+            get { return armouredAlienId; }
+        }
+
         public WaveDefinition CreateWaveDefinition(int completedWaves)
         {
             if (completedWaves < 0)
@@ -222,8 +281,29 @@ namespace Project147.GameData.Debug
                 throw new System.ArgumentOutOfRangeException(nameof(completedWaves), "Completed waves cannot be negative.");
             }
 
+            var totalAliens = startingWaveAlienCount + completedWaves * extraAliensPerWave;
+            var fastAliens = completedWaves <= 0 ? 0 : System.Math.Max(1, totalAliens / 4);
+            var armouredAliens = completedWaves < 2 ? 0 : System.Math.Max(1, totalAliens / 5);
+            var basicAliens = totalAliens - fastAliens - armouredAliens;
+            var groups = new List<WaveSpawnGroup>();
+
+            if (basicAliens > 0)
+            {
+                groups.Add(new WaveSpawnGroup(basicAlienId, basicAliens));
+            }
+
+            if (fastAliens > 0)
+            {
+                groups.Add(new WaveSpawnGroup(fastAlienId, fastAliens));
+            }
+
+            if (armouredAliens > 0)
+            {
+                groups.Add(new WaveSpawnGroup(armouredAlienId, armouredAliens));
+            }
+
             return new WaveDefinition(
-                startingWaveAlienCount + completedWaves * extraAliensPerWave,
+                new WaveComposition(groups),
                 secondsBetweenSpawns,
                 waveClearScrapReward);
         }
@@ -254,6 +334,8 @@ namespace Project147.GameData.Debug
                 towerTargetingMode,
                 towerCriticalChance,
                 towerCriticalDamageMultiplier,
+                0,
+                0,
                 new[] { CreateTowerStatusEffectDefinition() });
         }
 
@@ -268,7 +350,9 @@ namespace Project147.GameData.Debug
                 secondTowerDamageType,
                 secondTowerTargetingMode,
                 secondTowerCriticalChance,
-                secondTowerCriticalDamageMultiplier);
+                secondTowerCriticalDamageMultiplier,
+                secondTowerSplashRadius,
+                secondTowerSplashDamageMultiplier);
         }
 
         public TowerUpgradeDefinition CreateTowerUpgradeDefinition()
@@ -311,12 +395,17 @@ namespace Project147.GameData.Debug
 
         public AlienDefinition CreateAlienDefinition(int completedWaves)
         {
+            return CreateAlienDefinition(basicAlienId, completedWaves);
+        }
+
+        public AlienDefinition CreateAlienDefinition(string alienId, int completedWaves)
+        {
             if (completedWaves < 0)
             {
                 throw new System.ArgumentOutOfRangeException(nameof(completedWaves), "Completed waves cannot be negative.");
             }
 
-            var definition = CreateBaseAlienDefinition();
+            var definition = CreateBaseAlienDefinition(alienId);
             var upgrade = CreateAlienUpgradeDefinition();
             var upgradeCount = System.Math.Min(completedWaves, MaxAlienLevel - 1);
 
@@ -328,15 +417,45 @@ namespace Project147.GameData.Debug
             return definition;
         }
 
-        private AlienDefinition CreateBaseAlienDefinition()
+        private AlienDefinition CreateBaseAlienDefinition(string alienId)
         {
-            return new AlienDefinition(
-                alienId,
-                alienHealth,
-                alienSpeedCellsPerSecond,
-                alienReward,
-                new System.Collections.Generic.Dictionary<DamageType, float>(),
-                alienDodgeChance);
+            if (alienId == basicAlienId)
+            {
+                return new AlienDefinition(
+                    basicAlienId,
+                    basicAlienHealth,
+                    basicAlienSpeedCellsPerSecond,
+                    basicAlienReward,
+                    new Dictionary<DamageType, float>(),
+                    basicAlienDodgeChance);
+            }
+
+            if (alienId == fastAlienId)
+            {
+                return new AlienDefinition(
+                    fastAlienId,
+                    fastAlienHealth,
+                    fastAlienSpeedCellsPerSecond,
+                    fastAlienReward,
+                    new Dictionary<DamageType, float>(),
+                    fastAlienDodgeChance);
+            }
+
+            if (alienId == armouredAlienId)
+            {
+                return new AlienDefinition(
+                    armouredAlienId,
+                    armouredAlienHealth,
+                    armouredAlienSpeedCellsPerSecond,
+                    armouredAlienReward,
+                    new Dictionary<DamageType, float>
+                    {
+                        { armouredAlienResistanceDamageType, armouredAlienResistance }
+                    },
+                    armouredAlienDodgeChance);
+            }
+
+            throw new System.ArgumentException($"Unknown alien id '{alienId}'.", nameof(alienId));
         }
     }
 }

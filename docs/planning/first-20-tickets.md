@@ -2,6 +2,8 @@
 
 These tickets are intentionally small. Each should leave the project in a better-tested state.
 
+This file records the foundation work. The active next-task list is `current-roadmap.md`.
+
 ## Current Progress
 
 - Unity project created in `game/` using the Universal 3D template.
@@ -33,6 +35,8 @@ These tickets are intentionally small. Each should leave the project in a better
 - Tower definitions now own their status effects so future tower types can have distinct abilities.
 - Tower loadout model added and first slice now supports switching between two tower types.
 - Debug tower visuals now distinguish railgun and mortar tower types in the scene and HUD.
+- Mortar splash damage added with tested core rules and debug-scene feedback.
+- Mixed wave composition added with basic, fast and armoured debug aliens.
 - Unity Test Runner confirmed available through `Window > General > Test Runner`.
 - Command-line test run not attempted while the Unity project is open in the editor.
 

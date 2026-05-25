@@ -28,7 +28,29 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(tower.DefaultTargetingMode, Is.EqualTo(TowerTargetingMode.First));
             Assert.That(tower.CriticalChance, Is.EqualTo(0));
             Assert.That(tower.CriticalDamageMultiplier, Is.EqualTo(1));
+            Assert.That(tower.SplashRadius, Is.EqualTo(0));
+            Assert.That(tower.SplashDamageMultiplier, Is.EqualTo(0));
             Assert.That(tower.StatusEffects, Is.Empty);
+        }
+
+        [Test]
+        public void Constructor_WhenSplashValuesAreValid_StoresValues()
+        {
+            var tower = new TowerDefinition(
+                "mortar-basic",
+                100,
+                3.5f,
+                1.25f,
+                12,
+                DamageType.Explosive,
+                TowerTargetingMode.Strongest,
+                0,
+                1,
+                1.2f,
+                0.45f);
+
+            Assert.That(tower.SplashRadius, Is.EqualTo(1.2f));
+            Assert.That(tower.SplashDamageMultiplier, Is.EqualTo(0.45f));
         }
 
         [Test]
@@ -68,6 +90,8 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 TowerTargetingMode.First,
                 0,
                 1,
+                0,
+                0,
                 new[] { slow });
 
             Assert.That(tower.StatusEffects, Is.EqualTo(new[] { slow }));
@@ -173,6 +197,41 @@ namespace Project147.Tests.EditMode.GameCore.Combat
         }
 
         [Test]
+        public void Constructor_WhenSplashRadiusIsNegative_Throws()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new TowerDefinition(
+                "mortar-basic",
+                100,
+                3,
+                1,
+                10,
+                DamageType.Explosive,
+                TowerTargetingMode.Strongest,
+                0,
+                1,
+                -0.01f,
+                0.5f));
+        }
+
+        [TestCase(-0.01f)]
+        [TestCase(1.01f)]
+        public void Constructor_WhenSplashDamageMultiplierIsOutsideZeroToOne_Throws(float splashDamageMultiplier)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new TowerDefinition(
+                "mortar-basic",
+                100,
+                3,
+                1,
+                10,
+                DamageType.Explosive,
+                TowerTargetingMode.Strongest,
+                0,
+                1,
+                1,
+                splashDamageMultiplier));
+        }
+
+        [Test]
         public void Constructor_WhenStatusEffectsContainNull_Throws()
         {
             Assert.Throws<ArgumentNullException>(() => new TowerDefinition(
@@ -185,6 +244,8 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 TowerTargetingMode.First,
                 0,
                 1,
+                0,
+                0,
                 new List<AlienStatusEffectDefinition> { null }));
         }
     }

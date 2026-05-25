@@ -6,17 +6,21 @@ The playable first slice proves the core tower-defence loop using debug visuals.
 
 It is not the MVP and it is not final art. It is a playable test bed for the rules built so far.
 
+For the active next-task list, see `current-roadmap.md`.
+
 ## Current Loop
 
 - Player places towers between waves.
 - Player can switch between two debug tower types before placing.
 - Railgun and mortar towers use distinct debug colours and shapes.
+- Railgun applies a short slow effect; mortar deals splash damage to nearby aliens.
 - Hovering a cell previews tower range and whether placement is valid.
 - Towers cost scrap.
 - Clicking an existing tower between waves upgrades it if enough scrap is available.
 - Placement is rejected if it blocks all paths.
 - Player starts waves manually.
-- Aliens spawn, follow the current path and damage the base if they reach the goal.
+- Mixed waves spawn basic, fast and armoured debug aliens.
+- Aliens follow the current path and damage the base if they reach the goal.
 - Later waves spawn upgraded aliens, capped by the debug config.
 - Towers select targets, fire on cooldown, damage aliens and apply a short slow effect.
 - Tower shots draw a short line and briefly flash the alien.
@@ -47,6 +51,8 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Blue: calculated path.
 - Red: placed tower.
 - Purple: alien.
+- Cyan capsule: fast alien.
+- Stone cube: armoured alien.
 - Green range ring: valid tower placement or affordable tower upgrade preview.
 - Red range ring: invalid, unaffordable or max-level tower preview.
 
@@ -54,8 +60,8 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 
 - Towers can only be placed between waves.
 - Towers can only be upgraded between waves.
-- There is one tower type.
-- There is one alien type.
+- There are two debug tower types.
+- There are three debug alien types.
 - First-slice tuning is in one debug config asset, not final production content data.
 - There is no polished UI.
 - There is no save system.

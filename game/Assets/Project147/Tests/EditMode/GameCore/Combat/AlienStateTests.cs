@@ -17,6 +17,8 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(state.Definition, Is.SameAs(definition));
             Assert.That(state.Level, Is.EqualTo(1));
             Assert.That(state.CurrentHealth, Is.EqualTo(100));
+            Assert.That(state.ActiveStatusEffects, Is.Empty);
+            Assert.That(state.MovementSpeedMultiplier, Is.EqualTo(1));
             Assert.That(state.IsAlive, Is.True);
         }
 
@@ -117,6 +119,60 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(result.IsAlive, Is.False);
         }
 
+        [Test]
+        public void ApplyStatusEffect_WhenDefinitionIsNull_Throws()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100));
+
+            Assert.Throws<ArgumentNullException>(() => state.ApplyStatusEffect(null));
+        }
+
+        [Test]
+        public void ApplyStatusEffect_AddsActiveEffectAndUpdatesMovementMultiplier()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100));
+            var slow = CreateSlow("frost-slow", 2, 0.6f);
+
+            var result = state.ApplyStatusEffect(slow);
+
+            Assert.That(result.ActiveStatusEffects, Has.Count.EqualTo(1));
+            Assert.That(result.MovementSpeedMultiplier, Is.EqualTo(0.6f));
+            Assert.That(state.ActiveStatusEffects, Is.Empty);
+        }
+
+        [Test]
+        public void MovementSpeedMultiplier_WhenMultipleSlowsAreActive_UsesStrongestSlow()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100))
+                .ApplyStatusEffect(CreateSlow("light-slow", 2, 0.8f))
+                .ApplyStatusEffect(CreateSlow("heavy-slow", 2, 0.5f));
+
+            Assert.That(state.MovementSpeedMultiplier, Is.EqualTo(0.5f));
+        }
+
+        [Test]
+        public void TickStatusEffects_ReducesDurationsAndRemovesExpiredEffects()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100))
+                .ApplyStatusEffect(CreateSlow("short-slow", 0.5f, 0.5f))
+                .ApplyStatusEffect(CreateSlow("long-slow", 2, 0.8f));
+
+            var result = state.TickStatusEffects(1);
+
+            Assert.That(result.ActiveStatusEffects, Has.Count.EqualTo(1));
+            Assert.That(result.ActiveStatusEffects[0].Definition.Id, Is.EqualTo("long-slow"));
+            Assert.That(result.ActiveStatusEffects[0].RemainingSeconds, Is.EqualTo(1));
+            Assert.That(result.MovementSpeedMultiplier, Is.EqualTo(0.8f));
+        }
+
+        [Test]
+        public void TickStatusEffects_WhenDeltaIsNegative_Throws()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100));
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => state.TickStatusEffects(-0.01f));
+        }
+
         private static AlienDefinition CreateAlien(float maxHealth)
         {
             return new AlienDefinition(
@@ -125,6 +181,18 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 1,
                 5,
                 new Dictionary<DamageType, float>());
+        }
+
+        private static AlienStatusEffectDefinition CreateSlow(
+            string id,
+            float durationSeconds,
+            float movementSpeedMultiplier)
+        {
+            return new AlienStatusEffectDefinition(
+                id,
+                AlienStatusEffectType.Slow,
+                durationSeconds,
+                movementSpeedMultiplier);
         }
     }
 }

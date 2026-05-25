@@ -82,6 +82,16 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private float towerUpgradeCriticalDamageMultiplierBonus = 0.15f;
 
+        [Header("Tower Status Effect")]
+        [SerializeField]
+        private string towerStatusEffectId = "debug-frost-slow";
+
+        [SerializeField]
+        private float towerStatusEffectDurationSeconds = 1.4f;
+
+        [SerializeField]
+        private float towerStatusEffectMovementSpeedMultiplier = 0.7f;
+
         [Header("Alien")]
         [SerializeField]
         private string alienId = "debug-runner";
@@ -205,6 +215,15 @@ namespace Project147.GameData.Debug
                 towerUpgradeRangeBonus,
                 towerUpgradeCriticalChanceBonus,
                 towerUpgradeCriticalDamageMultiplierBonus);
+        }
+
+        public AlienStatusEffectDefinition CreateTowerStatusEffectDefinition()
+        {
+            return new AlienStatusEffectDefinition(
+                towerStatusEffectId,
+                AlienStatusEffectType.Slow,
+                towerStatusEffectDurationSeconds,
+                towerStatusEffectMovementSpeedMultiplier);
         }
 
         public AlienUpgradeDefinition CreateAlienUpgradeDefinition()

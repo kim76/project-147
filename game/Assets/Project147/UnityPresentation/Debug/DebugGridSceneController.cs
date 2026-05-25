@@ -81,6 +81,7 @@ namespace Project147.UnityPresentation.Debug
         private AttackResolver attackResolver;
         private TowerDefinition towerDefinition;
         private TowerUpgradeDefinition towerUpgradeDefinition;
+        private AlienStatusEffectDefinition towerStatusEffectDefinition;
         private BaseState currentBase;
         private CurrencyWallet wallet;
         private bool waveActive;
@@ -244,6 +245,7 @@ namespace Project147.UnityPresentation.Debug
             attackResolver = new AttackResolver(new DamageResolver());
             towerDefinition = config.CreateTowerDefinition();
             towerUpgradeDefinition = config.CreateTowerUpgradeDefinition();
+            towerStatusEffectDefinition = config.CreateTowerStatusEffectDefinition();
         }
 
         private void TryUpgradeTower(GridCoordinate coordinate)
@@ -348,6 +350,7 @@ namespace Project147.UnityPresentation.Debug
                 }
 
                 UpdateAlienHitFlash(alien, deltaSeconds);
+                alien.State = alien.State.TickStatusEffects(deltaSeconds);
 
                 if (MoveAlien(alien, deltaSeconds))
                 {
@@ -387,7 +390,7 @@ namespace Project147.UnityPresentation.Debug
             }
 
             var target = ToWorldPosition(alien.Path[alien.NextPathIndex], 0.35f);
-            var speed = alien.State.Definition.SpeedCellsPerSecond * cellSize;
+            var speed = alien.State.Definition.SpeedCellsPerSecond * alien.State.MovementSpeedMultiplier * cellSize;
             alien.GameObject.transform.localPosition = Vector3.MoveTowards(
                 alien.GameObject.transform.localPosition,
                 target,
@@ -432,6 +435,12 @@ namespace Project147.UnityPresentation.Debug
                 var attack = attackResolver.Resolve(tower.State.Definition, alien.State);
                 alien.State = attack.Target;
                 tower.State = tower.State.MarkFired();
+
+                if (!attack.Damage.WasDodged && attack.Damage.FinalAmount > 0 && alien.State.IsAlive)
+                {
+                    alien.State = alien.State.ApplyStatusEffect(towerStatusEffectDefinition);
+                }
+
                 ShowShotFeedback(tower.Coordinate, alien);
             }
         }
@@ -770,7 +779,11 @@ namespace Project147.UnityPresentation.Debug
 
         private void OnGUI()
         {
-            if (currentBase == null || wallet == null || towerDefinition == null || towerUpgradeDefinition == null)
+            if (currentBase == null
+                || wallet == null
+                || towerDefinition == null
+                || towerUpgradeDefinition == null
+                || towerStatusEffectDefinition == null)
             {
                 return;
             }

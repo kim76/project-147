@@ -16,8 +16,9 @@ It is not the MVP and it is not final art. It is a playable test bed for the rul
 - Player starts waves manually.
 - Aliens spawn, follow the current path and damage the base if they reach the goal.
 - Later waves spawn upgraded aliens, capped by the debug config.
-- Towers select targets, fire on cooldown and damage aliens.
+- Towers select targets, fire on cooldown, damage aliens and apply a short slow effect.
 - Tower shots draw a short line and briefly flash the alien.
+- Status effects expire automatically.
 - Killed aliens award scrap.
 - Clearing waves awards bonus scrap.
 - The slice ends in victory after all waves or defeat when the base reaches zero health.

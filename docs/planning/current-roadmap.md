@@ -21,6 +21,7 @@ The debug first slice has:
 - Mixed enemy waves with basic, fast and armoured debug aliens.
 - Alien upgrades across later waves.
 - Freeze Pulse player ability with cooldown and debug feedback.
+- Orbital Strike player ability with cooldown, resistance-aware damage and debug feedback.
 - Between-wave reward choices drawn as a random 3-option offer from a larger reward pool.
 - Reward effects for extra scrap, base repair, next-tower discount and next-wave tower damage.
 - Next-wave intel showing upcoming enemy composition and simple tags before the wave starts.
@@ -35,10 +36,10 @@ Before the next development slice:
 1. Run Edit Mode tests in Unity.
 2. Confirm the new choice and wave-intel tests appear and pass.
 3. Press Play.
-4. Confirm the `Next Wave` panel appears before starting a wave.
-5. Clear a non-final wave.
-6. Confirm the reward panel shows 3 choices from the larger pool.
-7. Choose `Overclock` if offered and confirm the modifier appears for the next wave.
+4. Start a wave with active aliens.
+5. Press `Orbital Strike`.
+6. Confirm active aliens flash, orange strike rings appear and the cooldown begins.
+7. Confirm the `Next Wave` and reward panels still behave as before.
 
 ## Next Slice Candidates
 
@@ -67,6 +68,8 @@ Deliverables:
 - Done: add ability resolver that applies slow to living aliens.
 - Done: wire one HUD button in the debug scene.
 - Done: add simple debug visual feedback.
+- Done: add Orbital Strike damage ability with tested resistance-aware damage.
+- Done: wire a second HUD ability button in the debug scene.
 
 Why next: this starts the special-abilities direction without committing to final UI or art.
 
@@ -114,8 +117,8 @@ Why next: this starts the “addictive” part without monetisation or content b
 ## Recommended Order
 
 1. Verify wave intel, random reward offers and Overclock in Unity.
-2. Generate concept boards for final art direction.
-3. Add one more player ability only after the choice loop feels stable.
+2. Verify Orbital Strike in Unity.
+3. Generate concept boards for final art direction.
 4. Add one more strategic reward type, such as enemy debuff or tower firing-rate boost.
 5. Split debug tuning into separate ScriptableObject assets only when the current single asset becomes painful.
 

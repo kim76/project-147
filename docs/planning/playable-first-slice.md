@@ -26,6 +26,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Towers select targets, fire on cooldown, damage aliens and apply a short slow effect.
 - Tower shots draw a short line and briefly flash the alien.
 - Freeze Pulse can be triggered during a wave to slow all active aliens.
+- Orbital Strike can be triggered during a wave to damage all active aliens.
 - Status effects expire automatically.
 - Killed aliens award scrap.
 - Clearing waves awards bonus scrap.
@@ -47,6 +48,7 @@ For the active next-task list, see `current-roadmap.md`.
 7. After a non-final wave, choose one reward from the reward panel.
 8. Continue placing or upgrading towers between waves. If you picked the construction credit, the next tower cost is reduced.
 9. If you picked `Overclock`, the next wave gets boosted tower damage.
+10. Use `Freeze Pulse` or `Orbital Strike` during active waves when their cooldowns are ready.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -65,6 +67,7 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Green range ring: valid tower placement or affordable tower upgrade preview.
 - Red range ring: invalid, unaffordable or max-level tower preview.
 - Cyan pulse ring: Freeze Pulse ability.
+- Orange strike ring: Orbital Strike ability.
 
 ## Deliberate Limits
 
@@ -80,5 +83,6 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Reward choices are debug-tuned and not final progression design.
 - The tower discount reward only affects the next placed tower, not upgrades.
 - Overclock affects damage only, not fire rate.
+- Orbital Strike is a debug ability, not final balance.
 
 These limits are intentional. The slice exists to prove the loop before expanding content.

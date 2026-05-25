@@ -23,6 +23,18 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private float movementSpeedMultiplier = 0.35f;
 
+        [SerializeField]
+        private string orbitalStrikeId = "debug-orbital-strike";
+
+        [SerializeField]
+        private float orbitalStrikeCooldownSeconds = 18;
+
+        [SerializeField]
+        private float orbitalStrikeDamage = 35;
+
+        [SerializeField]
+        private DamageType orbitalStrikeDamageType = DamageType.Energy;
+
         public PlayerAbilityDefinition CreateFreezePulseDefinition()
         {
             return new PlayerAbilityDefinition(
@@ -33,6 +45,15 @@ namespace Project147.GameData.Debug
                     AlienStatusEffectType.Slow,
                     durationSeconds,
                     movementSpeedMultiplier));
+        }
+
+        public PlayerAbilityDefinition CreateOrbitalStrikeDefinition()
+        {
+            return new PlayerAbilityDefinition(
+                orbitalStrikeId,
+                orbitalStrikeCooldownSeconds,
+                orbitalStrikeDamage,
+                orbitalStrikeDamageType);
         }
     }
 }

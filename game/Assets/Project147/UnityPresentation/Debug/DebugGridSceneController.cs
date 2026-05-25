@@ -81,6 +81,7 @@ namespace Project147.UnityPresentation.Debug
         private readonly HashSet<GridCoordinate> placedTowers = new HashSet<GridCoordinate>();
 
         private readonly FreezePulseResolver freezePulseResolver = new FreezePulseResolver();
+        private readonly OrbitalStrikeResolver orbitalStrikeResolver = new OrbitalStrikeResolver(new DamageResolver());
         private readonly RunChoiceResolver runChoiceResolver = new RunChoiceResolver();
         private readonly RunChoiceOfferSelector runChoiceOfferSelector =
             new RunChoiceOfferSelector(new RandomChoiceIndexPicker());
@@ -91,6 +92,7 @@ namespace Project147.UnityPresentation.Debug
         private AttackResolver attackResolver;
         private SplashDamageResolver splashDamageResolver;
         private PlayerAbilityState freezePulseState;
+        private PlayerAbilityState orbitalStrikeState;
         private TowerLoadout towerLoadout;
         private TowerUpgradeDefinition towerUpgradeDefinition;
         private RewardCalculator rewardCalculator;
@@ -126,6 +128,11 @@ namespace Project147.UnityPresentation.Debug
             if (freezePulseState != null)
             {
                 freezePulseState = freezePulseState.Tick(Time.deltaTime);
+            }
+
+            if (orbitalStrikeState != null)
+            {
+                orbitalStrikeState = orbitalStrikeState.Tick(Time.deltaTime);
             }
 
             UpdateWaveSpawning(Time.deltaTime);
@@ -249,6 +256,7 @@ namespace Project147.UnityPresentation.Debug
             wallet = new CurrencyWallet(config.StartingCurrency);
             runModifiers = new RunModifierState();
             freezePulseState = new PlayerAbilityState(config.CreateFreezePulseAbilityDefinition());
+            orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
             eventFeed = new LevelEventFeed(EventFeedCapacity).Add("Ready. Place towers, then start wave.");
             waveActive = false;
             won = false;
@@ -294,6 +302,7 @@ namespace Project147.UnityPresentation.Debug
             rewardCalculator = new RewardCalculator(config.PerfectWaveScrapBonus);
             towerLoadout = new TowerLoadout(config.CreateTowerDefinitions());
             freezePulseState = new PlayerAbilityState(config.CreateFreezePulseAbilityDefinition());
+            orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
             towerUpgradeDefinition = config.CreateTowerUpgradeDefinition();
         }
 
@@ -419,6 +428,61 @@ namespace Project147.UnityPresentation.Debug
 
             ShowFreezePulseFeedback();
             RecordEvent($"Freeze Pulse slowed {results.Count} alien(s).");
+        }
+
+        private void TryActivateOrbitalStrike()
+        {
+            if (won || lost)
+            {
+                return;
+            }
+
+            if (!waveActive)
+            {
+                RecordEvent("Orbital Strike can only be used during a wave.");
+                return;
+            }
+
+            if (!orbitalStrikeState.CanActivate)
+            {
+                RecordEvent($"Orbital Strike cooling down: {orbitalStrikeState.RemainingCooldownSeconds:0.0}s.");
+                return;
+            }
+
+            var targets = new List<AlienState>();
+
+            foreach (var alien in activeAliens)
+            {
+                if (alien.State.IsAlive)
+                {
+                    targets.Add(alien.State);
+                }
+            }
+
+            if (targets.Count == 0)
+            {
+                RecordEvent("Orbital Strike needs active aliens.");
+                return;
+            }
+
+            var results = orbitalStrikeResolver.Resolve(orbitalStrikeState.Definition, targets);
+            orbitalStrikeState = orbitalStrikeState.Activate();
+
+            foreach (var result in results)
+            {
+                var alien = FindRuntimeAlien(result.Source);
+
+                if (alien == null)
+                {
+                    continue;
+                }
+
+                alien.State = result.Target;
+                FlashAlien(alien);
+                ShowOrbitalStrikeFeedback(alien.GameObject.transform.localPosition);
+            }
+
+            RecordEvent($"Orbital Strike hit {results.Count} alien(s).");
         }
 
         private void SelectRunChoice(int choiceIndex)
@@ -988,6 +1052,34 @@ namespace Project147.UnityPresentation.Debug
             Destroy(pulse, 0.18f);
         }
 
+        private void ShowOrbitalStrikeFeedback(Vector3 impactPosition)
+        {
+            var strike = new GameObject("Debug Orbital Strike");
+            strike.transform.SetParent(transform, false);
+
+            var line = strike.AddComponent<LineRenderer>();
+            line.loop = true;
+            line.useWorldSpace = false;
+            line.positionCount = 48;
+            line.widthMultiplier = 0.075f;
+            line.material = DebugActorVisualFactory.CreateDebugMaterial(new Color(1f, 0.62f, 0.08f, 0.95f));
+
+            var centre = impactPosition;
+            centre.y = 0.72f;
+            var radius = cellSize * 0.42f;
+
+            for (var index = 0; index < line.positionCount; index++)
+            {
+                var radians = index / (float)line.positionCount * Mathf.PI * 2;
+                var x = centre.x + Mathf.Cos(radians) * radius;
+                var z = centre.z + Mathf.Sin(radians) * radius;
+                line.SetPosition(index, new Vector3(x, centre.y, z));
+            }
+
+            shotObjects.Add(strike);
+            Destroy(strike, 0.16f);
+        }
+
         private void FlashAlien(RuntimeAlien alien)
         {
             if (alien.Renderer == null || alienHitMaterial == null)
@@ -1092,14 +1184,15 @@ namespace Project147.UnityPresentation.Debug
                 || towerLoadout == null
                 || towerUpgradeDefinition == null
                 || rewardCalculator == null
-                || freezePulseState == null)
+                || freezePulseState == null
+                || orbitalStrikeState == null)
             {
                 return;
             }
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 384), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 424), "Project 147 First Slice");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}");
             top += 22;
@@ -1149,6 +1242,22 @@ namespace Project147.UnityPresentation.Debug
 
             GUI.enabled = previousEnabled;
             GUI.Label(new Rect(left + 144, top + 4, 130, 24), BuildFreezePulseStatusText());
+            top += 34;
+
+            previousEnabled = GUI.enabled;
+            GUI.enabled = waveActive
+                && !won
+                && !lost
+                && activeAliens.Count > 0
+                && orbitalStrikeState.CanActivate;
+
+            if (GUI.Button(new Rect(left + 12, top, 120, 28), BuildOrbitalStrikeButtonText()))
+            {
+                TryActivateOrbitalStrike();
+            }
+
+            GUI.enabled = previousEnabled;
+            GUI.Label(new Rect(left + 144, top + 4, 130, 24), BuildOrbitalStrikeStatusText());
             top += 34;
 
             var startWaveEnabled = !waveActive && !won && !lost && !HasPendingRunChoice;
@@ -1216,6 +1325,20 @@ namespace Project147.UnityPresentation.Debug
             return freezePulseState.CanActivate
                 ? "Ability ready"
                 : $"Cooldown {freezePulseState.RemainingCooldownSeconds:0.0}s";
+        }
+
+        private string BuildOrbitalStrikeButtonText()
+        {
+            return orbitalStrikeState.CanActivate
+                ? "Orbital Strike"
+                : $"Strike {Mathf.CeilToInt(orbitalStrikeState.RemainingCooldownSeconds)}s";
+        }
+
+        private string BuildOrbitalStrikeStatusText()
+        {
+            return orbitalStrikeState.CanActivate
+                ? $"{orbitalStrikeState.Definition.DamageAmount:0} {orbitalStrikeState.Definition.DamageType} dmg"
+                : $"Cooldown {orbitalStrikeState.RemainingCooldownSeconds:0.0}s";
         }
 
         private void DrawRunChoicePanel(int left, int top)

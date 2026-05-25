@@ -35,6 +35,16 @@ namespace Project147.Tests.EditMode.GameCore.Abilities
         }
 
         [Test]
+        public void Resolve_WhenAbilityHasNoStatusEffect_Throws()
+        {
+            var resolver = new FreezePulseResolver();
+
+            Assert.Throws<ArgumentException>(() => resolver.Resolve(
+                new PlayerAbilityDefinition("orbital-strike", 18, 35, DamageType.Energy),
+                new[] { CreateAlienState() }));
+        }
+
+        [Test]
         public void Resolve_AppliesAbilityStatusEffectToLivingTargets()
         {
             var resolver = new FreezePulseResolver();

@@ -9,6 +9,35 @@ namespace Project147.GameCore.Abilities
             string id,
             float cooldownSeconds,
             AlienStatusEffectDefinition statusEffect)
+            : this(id, cooldownSeconds, statusEffect, 0, DamageType.Kinetic)
+        {
+            if (statusEffect == null)
+            {
+                throw new ArgumentNullException(nameof(statusEffect));
+            }
+        }
+
+        public PlayerAbilityDefinition(
+            string id,
+            float cooldownSeconds,
+            float damageAmount,
+            DamageType damageType)
+            : this(id, cooldownSeconds, null, damageAmount, damageType)
+        {
+            if (damageAmount <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(damageAmount),
+                    "Player ability damage must be greater than zero.");
+            }
+        }
+
+        private PlayerAbilityDefinition(
+            string id,
+            float cooldownSeconds,
+            AlienStatusEffectDefinition statusEffect,
+            float damageAmount,
+            DamageType damageType)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -22,9 +51,18 @@ namespace Project147.GameCore.Abilities
                     "Player ability cooldown must be greater than zero.");
             }
 
+            if (damageAmount < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(damageAmount),
+                    "Player ability damage cannot be negative.");
+            }
+
             Id = id;
             CooldownSeconds = cooldownSeconds;
-            StatusEffect = statusEffect ?? throw new ArgumentNullException(nameof(statusEffect));
+            StatusEffect = statusEffect;
+            DamageAmount = damageAmount;
+            DamageType = damageType;
         }
 
         public string Id { get; }
@@ -32,5 +70,19 @@ namespace Project147.GameCore.Abilities
         public float CooldownSeconds { get; }
 
         public AlienStatusEffectDefinition StatusEffect { get; }
+
+        public float DamageAmount { get; }
+
+        public DamageType DamageType { get; }
+
+        public bool HasStatusEffect
+        {
+            get { return StatusEffect != null; }
+        }
+
+        public bool HasDamage
+        {
+            get { return DamageAmount > 0; }
+        }
     }
 }

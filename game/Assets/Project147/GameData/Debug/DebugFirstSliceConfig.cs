@@ -53,9 +53,9 @@ namespace Project147.GameData.Debug
             1.4f,
             0.7f);
 
-        [Header("Player Ability")]
+        [Header("Player Abilities")]
         [SerializeField]
-        private DebugAbilityTuning freezePulse = new DebugAbilityTuning();
+        private DebugAbilityTuning abilities = new DebugAbilityTuning();
 
         [Header("Run Choices")]
         [SerializeField]
@@ -170,7 +170,12 @@ namespace Project147.GameData.Debug
 
         public PlayerAbilityDefinition CreateFreezePulseAbilityDefinition()
         {
-            return freezePulse.CreateFreezePulseDefinition();
+            return abilities.CreateFreezePulseDefinition();
+        }
+
+        public PlayerAbilityDefinition CreateOrbitalStrikeAbilityDefinition()
+        {
+            return abilities.CreateOrbitalStrikeDefinition();
         }
 
         public IReadOnlyList<RunChoiceDefinition> CreateRunChoiceDefinitions()

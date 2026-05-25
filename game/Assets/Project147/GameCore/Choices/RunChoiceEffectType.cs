@@ -4,6 +4,7 @@ namespace Project147.GameCore.Choices
     {
         AddScrap = 0,
         RepairBase = 1,
-        AddNextTowerDiscount = 2
+        AddNextTowerDiscount = 2,
+        AddNextWaveTowerDamagePercent = 3
     }
 }

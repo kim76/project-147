@@ -31,6 +31,7 @@ namespace Project147.GameCore.Level
                 throw new ArgumentOutOfRangeException(nameof(clearReward), "Wave clear reward cannot be negative.");
             }
 
+            Composition = composition;
             SpawnEntries = composition.BuildSpawnEntries();
             AlienCount = SpawnEntries.Count;
             SecondsBetweenSpawns = secondsBetweenSpawns;
@@ -38,6 +39,8 @@ namespace Project147.GameCore.Level
         }
 
         public int AlienCount { get; }
+
+        public WaveComposition Composition { get; }
 
         public IReadOnlyList<WaveSpawnEntry> SpawnEntries { get; }
 

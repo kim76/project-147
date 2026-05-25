@@ -12,6 +12,7 @@ namespace Project147.UnityPresentation.Debug
     public sealed class DebugGridSceneController : MonoBehaviour
     {
         private const int EventFeedCapacity = 7;
+        private const int RunChoiceOfferSize = 3;
 
         [SerializeField]
         private int width = 8;
@@ -81,6 +82,9 @@ namespace Project147.UnityPresentation.Debug
 
         private readonly FreezePulseResolver freezePulseResolver = new FreezePulseResolver();
         private readonly RunChoiceResolver runChoiceResolver = new RunChoiceResolver();
+        private readonly RunChoiceOfferSelector runChoiceOfferSelector =
+            new RunChoiceOfferSelector(new RandomChoiceIndexPicker());
+        private readonly WaveIntelBuilder waveIntelBuilder = new WaveIntelBuilder();
         private readonly GridPathfinder pathfinder = new GridPathfinder();
         private readonly TowerTargetSelector targetSelector = new TowerTargetSelector();
         private TowerPlacementValidator placementValidator;
@@ -355,6 +359,7 @@ namespace Project147.UnityPresentation.Debug
             }
 
             waveActive = true;
+            runModifiers = runModifiers.StartWave();
             waveStartBaseHealth = currentBase.CurrentHealth;
             currentWaveDefinition = config.CreateWaveDefinition(completedWaves);
             waveSpawnState = new WaveSpawnState(currentWaveDefinition);
@@ -582,27 +587,30 @@ namespace Project147.UnityPresentation.Debug
                     continue;
                 }
 
-                var attack = attackResolver.Resolve(tower.State.Definition, alien.State);
+                var effectiveTowerDefinition = BuildEffectiveTowerDefinition(tower.State.Definition);
+                var attack = attackResolver.Resolve(effectiveTowerDefinition, alien.State);
                 alien.State = attack.Target;
                 tower.State = tower.State.MarkFired();
 
                 if (!attack.Damage.WasDodged && attack.Damage.FinalAmount > 0 && alien.State.IsAlive)
                 {
-                    foreach (var statusEffect in tower.State.Definition.StatusEffects)
+                    foreach (var statusEffect in effectiveTowerDefinition.StatusEffects)
                     {
                         alien.State = alien.State.ApplyStatusEffect(statusEffect);
                     }
                 }
 
-                ApplySplashDamage(tower, alien, attack.Damage);
+                ApplySplashDamage(tower, effectiveTowerDefinition, alien, attack.Damage);
                 ShowShotFeedback(tower.Coordinate, alien);
             }
         }
 
-        private void ApplySplashDamage(RuntimeTower tower, RuntimeAlien primaryAlien, DamageResult primaryDamage)
+        private void ApplySplashDamage(
+            RuntimeTower tower,
+            TowerDefinition definition,
+            RuntimeAlien primaryAlien,
+            DamageResult primaryDamage)
         {
-            var definition = tower.State.Definition;
-
             if (primaryDamage.WasDodged
                 || primaryDamage.FinalAmount <= 0
                 || definition.SplashRadius <= 0
@@ -723,6 +731,7 @@ namespace Project147.UnityPresentation.Debug
             waveActive = false;
             currentWaveDefinition = null;
             waveSpawnState = null;
+            runModifiers = runModifiers.EndWave();
 
             if (completedWaves >= config.TotalWaves)
             {
@@ -731,7 +740,9 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
-            pendingRunChoices = config.CreateRunChoiceDefinitions();
+            pendingRunChoices = runChoiceOfferSelector.SelectOffer(
+                config.CreateRunChoiceDefinitions(),
+                RunChoiceOfferSize);
             RecordEvent("Choose a reward before the next wave.");
         }
 
@@ -1120,6 +1131,8 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Wave: {completedWaves}/{config.TotalWaves}  Alien cap: L{config.MaxAlienLevel}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Active aliens: {activeAliens.Count}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 260, 24), BuildRunModifierStatusText());
             top += 30;
 
             var previousEnabled = GUI.enabled;
@@ -1171,7 +1184,8 @@ namespace Project147.UnityPresentation.Debug
 
             GUI.Label(new Rect(left + 12, top, 260, 24), status);
             DrawEventFeed(left + 296, 16);
-            DrawRunChoicePanel(left + 296, 232);
+            DrawWaveIntelPanel(left + 296, 232);
+            DrawRunChoicePanel(left + 296, 356);
         }
 
         private string BuildSelectedTowerAbilityText()
@@ -1228,6 +1242,29 @@ namespace Project147.UnityPresentation.Debug
             }
         }
 
+        private void DrawWaveIntelPanel(int left, int top)
+        {
+            if (won || lost || waveActive || completedWaves >= config.TotalWaves)
+            {
+                return;
+            }
+
+            var nextWave = config.CreateWaveDefinition(completedWaves);
+            var intel = waveIntelBuilder.Build(
+                completedWaves,
+                nextWave,
+                config.FastAlienId,
+                config.ArmouredAlienId);
+
+            GUI.Box(new Rect(left, top, 360, 112), "Next Wave");
+            top += 28;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Wave {intel.WaveNumber}: {intel.TotalAliens} aliens  Reward {intel.ClearReward}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Types: {BuildWaveIntelEntriesText(intel)}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Tags: {BuildWaveIntelTagsText(intel)}");
+        }
+
         private void DrawEventFeed(int left, int top)
         {
             if (eventFeed == null)
@@ -1271,6 +1308,8 @@ namespace Project147.UnityPresentation.Debug
                     return $"+{choice.Amount} base";
                 case RunChoiceEffectType.AddNextTowerDiscount:
                     return $"-{choice.Amount} next tower";
+                case RunChoiceEffectType.AddNextWaveTowerDamagePercent:
+                    return $"+{choice.Amount}% next wave dmg";
                 default:
                     return $"{choice.Amount}";
             }
@@ -1290,6 +1329,76 @@ namespace Project147.UnityPresentation.Debug
             return currentCost == SelectedTower.Cost
                 ? $"Tower cost: {currentCost}"
                 : $"Tower cost: {currentCost} (was {SelectedTower.Cost})";
+        }
+
+        private string BuildRunModifierStatusText()
+        {
+            if (runModifiers == null)
+            {
+                return "Modifiers: none";
+            }
+
+            var parts = new List<string>();
+
+            if (runModifiers.HasNextTowerDiscount)
+            {
+                parts.Add($"-{runModifiers.NextTowerDiscountAmount} next tower");
+            }
+
+            if (runModifiers.HasPendingWaveTowerDamageBoost)
+            {
+                parts.Add($"+{runModifiers.PendingWaveTowerDamagePercent}% next wave dmg");
+            }
+
+            if (runModifiers.HasActiveWaveTowerDamageBoost)
+            {
+                parts.Add($"+{runModifiers.ActiveWaveTowerDamagePercent}% wave dmg");
+            }
+
+            return parts.Count == 0
+                ? "Modifiers: none"
+                : $"Modifiers: {string.Join(", ", parts)}";
+        }
+
+        private TowerDefinition BuildEffectiveTowerDefinition(TowerDefinition definition)
+        {
+            if (runModifiers == null || !runModifiers.HasActiveWaveTowerDamageBoost)
+            {
+                return definition;
+            }
+
+            return new TowerDefinition(
+                definition.Id,
+                definition.Cost,
+                definition.Range,
+                definition.FireRatePerSecond,
+                definition.Damage * runModifiers.ActiveWaveTowerDamageMultiplier,
+                definition.DamageType,
+                definition.DefaultTargetingMode,
+                definition.CriticalChance,
+                definition.CriticalDamageMultiplier,
+                definition.SplashRadius,
+                definition.SplashDamageMultiplier,
+                definition.StatusEffects);
+        }
+
+        private static string BuildWaveIntelEntriesText(WaveIntelSummary intel)
+        {
+            var parts = new List<string>();
+
+            foreach (var entry in intel.Entries)
+            {
+                parts.Add($"{entry.Count} {FormatAlienLabel(entry.AlienId)}");
+            }
+
+            return string.Join(", ", parts);
+        }
+
+        private static string BuildWaveIntelTagsText(WaveIntelSummary intel)
+        {
+            return intel.Tags.Count == 0
+                ? "Basic"
+                : string.Join(", ", intel.Tags);
         }
 
         private string BuildWaveSummary(WaveDefinition wave)

@@ -109,6 +109,30 @@ namespace Project147.Tests.EditMode.GameCore.Choices
         }
 
         [Test]
+        public void Apply_WhenChoiceAddsNextWaveTowerDamagePercent_ReturnsModifiersWithPendingBoost()
+        {
+            var resolver = new RunChoiceResolver();
+            var baseState = new BaseState(10);
+            var wallet = new CurrencyWallet(100);
+            var runModifiers = new RunModifierState().AddNextWaveTowerDamagePercent(10);
+
+            var result = resolver.Apply(
+                new RunChoiceDefinition(
+                    "overclock",
+                    "Overclock",
+                    RunChoiceEffectType.AddNextWaveTowerDamagePercent,
+                    25),
+                baseState,
+                wallet,
+                runModifiers);
+
+            Assert.That(result.BaseState, Is.SameAs(baseState));
+            Assert.That(result.Wallet, Is.SameAs(wallet));
+            Assert.That(result.RunModifiers.PendingWaveTowerDamagePercent, Is.EqualTo(35));
+            Assert.That(runModifiers.PendingWaveTowerDamagePercent, Is.EqualTo(10));
+        }
+
+        [Test]
         public void Apply_WhenChoiceEffectIsUnknown_Throws()
         {
             var resolver = new RunChoiceResolver();

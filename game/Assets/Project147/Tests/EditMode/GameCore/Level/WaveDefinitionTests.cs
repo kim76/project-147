@@ -29,6 +29,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
             var wave = new WaveDefinition(composition, 0.75f, 25);
 
             Assert.That(wave.AlienCount, Is.EqualTo(3));
+            Assert.That(wave.Composition, Is.SameAs(composition));
             Assert.That(wave.SpawnEntries[0].AlienId, Is.EqualTo("basic"));
             Assert.That(wave.SpawnEntries[1].AlienId, Is.EqualTo("fast"));
             Assert.That(wave.SpawnEntries[2].AlienId, Is.EqualTo("basic"));

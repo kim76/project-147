@@ -21,7 +21,9 @@ The debug first slice has:
 - Mixed enemy waves with basic, fast and armoured debug aliens.
 - Alien upgrades across later waves.
 - Freeze Pulse player ability with cooldown and debug feedback.
-- Between-wave reward choices for extra scrap, base repair or a next-tower discount.
+- Between-wave reward choices drawn as a random 3-option offer from a larger reward pool.
+- Reward effects for extra scrap, base repair, next-tower discount and next-wave tower damage.
+- Next-wave intel showing upcoming enemy composition and simple tags before the wave starts.
 - First-slice tuning grouped by level, towers, aliens, upgrades and abilities.
 - First-pass in-scene visual profiles for towers and aliens.
 - Debug HUD, hover range preview, shot feedback and event feed.
@@ -31,11 +33,12 @@ The debug first slice has:
 Before the next development slice:
 
 1. Run Edit Mode tests in Unity.
-2. Confirm the new choice tests appear and pass.
+2. Confirm the new choice and wave-intel tests appear and pass.
 3. Press Play.
-4. Clear a non-final wave.
-5. Confirm the reward panel appears.
-6. Choose a reward and confirm the next wave can then start.
+4. Confirm the `Next Wave` panel appears before starting a wave.
+5. Clear a non-final wave.
+6. Confirm the reward panel shows 3 choices from the larger pool.
+7. Choose `Overclock` if offered and confirm the modifier appears for the next wave.
 
 ## Next Slice Candidates
 
@@ -102,17 +105,18 @@ Deliverables:
 - Done: after a non-final wave, offer reward choices before the next wave.
 - Done: add tested choice definitions and application rules.
 - Done: support extra scrap, base repair and next-tower discount effects.
-- Done: display a temporary debug choice panel.
+- Done: support an Overclock reward for next-wave tower damage.
+- Done: display a temporary debug choice panel with 3 random options.
 - Done: block the next wave until a reward is chosen.
 
 Why next: this starts the “addictive” part without monetisation or content bloat.
 
 ## Recommended Order
 
-1. Verify between-wave choices in Unity.
+1. Verify wave intel, random reward offers and Overclock in Unity.
 2. Generate concept boards for final art direction.
 3. Add one more player ability only after the choice loop feels stable.
-4. Add one more strategic reward type, such as temporary tower damage or enemy debuff.
+4. Add one more strategic reward type, such as enemy debuff or tower firing-rate boost.
 5. Split debug tuning into separate ScriptableObject assets only when the current single asset becomes painful.
 
 ## Not Yet

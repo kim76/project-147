@@ -13,6 +13,9 @@ namespace Project147.Tests.EditMode.GameCore.Choices
 
             Assert.That(state.HasNextTowerDiscount, Is.False);
             Assert.That(state.NextTowerDiscountAmount, Is.EqualTo(0));
+            Assert.That(state.HasPendingWaveTowerDamageBoost, Is.False);
+            Assert.That(state.HasActiveWaveTowerDamageBoost, Is.False);
+            Assert.That(state.ActiveWaveTowerDamageMultiplier, Is.EqualTo(1));
         }
 
         [Test]
@@ -72,12 +75,73 @@ namespace Project147.Tests.EditMode.GameCore.Choices
         [Test]
         public void ConsumeNextTowerDiscount_ReturnsStateWithoutDiscount()
         {
-            var state = new RunModifierState().AddNextTowerDiscount(30);
+            var state = new RunModifierState()
+                .AddNextTowerDiscount(30)
+                .AddNextWaveTowerDamagePercent(25)
+                .StartWave();
 
             var result = state.ConsumeNextTowerDiscount();
 
             Assert.That(result.HasNextTowerDiscount, Is.False);
             Assert.That(result.NextTowerDiscountAmount, Is.EqualTo(0));
+            Assert.That(result.PendingWaveTowerDamagePercent, Is.EqualTo(0));
+            Assert.That(result.ActiveWaveTowerDamagePercent, Is.EqualTo(25));
+        }
+
+        [Test]
+        public void AddNextWaveTowerDamagePercent_ReturnsStateWithPendingBoost()
+        {
+            var state = new RunModifierState();
+
+            var result = state.AddNextWaveTowerDamagePercent(25);
+
+            Assert.That(result.HasPendingWaveTowerDamageBoost, Is.True);
+            Assert.That(result.PendingWaveTowerDamagePercent, Is.EqualTo(25));
+            Assert.That(result.HasActiveWaveTowerDamageBoost, Is.False);
+        }
+
+        [Test]
+        public void AddNextWaveTowerDamagePercent_WhenCalledTwice_StacksPendingBoost()
+        {
+            var state = new RunModifierState()
+                .AddNextWaveTowerDamagePercent(25)
+                .AddNextWaveTowerDamagePercent(10);
+
+            Assert.That(state.PendingWaveTowerDamagePercent, Is.EqualTo(35));
+        }
+
+        [Test]
+        public void AddNextWaveTowerDamagePercent_WhenPercentIsNegative_Throws()
+        {
+            var state = new RunModifierState();
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => state.AddNextWaveTowerDamagePercent(-1));
+        }
+
+        [Test]
+        public void StartWave_MovesPendingDamageBoostToActiveBoost()
+        {
+            var state = new RunModifierState().AddNextWaveTowerDamagePercent(25);
+
+            var result = state.StartWave();
+
+            Assert.That(result.HasPendingWaveTowerDamageBoost, Is.False);
+            Assert.That(result.HasActiveWaveTowerDamageBoost, Is.True);
+            Assert.That(result.ActiveWaveTowerDamagePercent, Is.EqualTo(25));
+            Assert.That(result.ActiveWaveTowerDamageMultiplier, Is.EqualTo(1.25f).Within(0.0001f));
+        }
+
+        [Test]
+        public void EndWave_ClearsActiveDamageBoost()
+        {
+            var state = new RunModifierState()
+                .AddNextWaveTowerDamagePercent(25)
+                .StartWave();
+
+            var result = state.EndWave();
+
+            Assert.That(result.HasActiveWaveTowerDamageBoost, Is.False);
+            Assert.That(result.ActiveWaveTowerDamageMultiplier, Is.EqualTo(1));
         }
     }
 }

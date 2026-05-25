@@ -41,6 +41,7 @@ This file records the foundation work. The active next-task list is `current-roa
 - Debug first-slice tuning split into grouped tuning classes.
 - Debug actor visuals moved into reusable first-pass visual profiles.
 - Between-wave reward choices added with tested scrap, base-repair and next-tower discount effects.
+- Wave intel, random 3-option reward offers and next-wave tower damage boost added.
 - Unity Test Runner confirmed available through `Window > General > Test Runner`.
 - Command-line test run not attempted while the Unity project is open in the editor.
 

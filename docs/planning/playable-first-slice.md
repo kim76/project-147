@@ -19,6 +19,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Clicking an existing tower between waves upgrades it if enough scrap is available.
 - Placement is rejected if it blocks all paths.
 - Player starts waves manually.
+- A `Next Wave` panel previews enemy counts and tags before each wave.
 - Mixed waves spawn basic, fast and armoured debug aliens.
 - Aliens follow the current path and damage the base if they reach the goal.
 - Later waves spawn upgraded aliens, capped by the debug config.
@@ -30,7 +31,8 @@ For the active next-task list, see `current-roadmap.md`.
 - Clearing waves awards bonus scrap.
 - Clearing a wave without taking base damage awards a perfect-wave scrap bonus.
 - Clearing a non-final wave offers a reward choice before the next wave can start.
-- Reward choices can currently add scrap, repair the base or discount the next placed tower.
+- Reward choices show as a random 3-option offer from a larger pool.
+- Reward choices can currently add scrap, repair the base, discount the next placed tower or boost next-wave tower damage.
 - A debug event feed shows important placement, upgrade, reward, leak and win/loss events.
 - The slice ends in victory after all waves or defeat when the base reaches zero health.
 
@@ -41,9 +43,10 @@ For the active next-task list, see `current-roadmap.md`.
 3. Recreate the debug scene from `Project147 > Debug > Create Grid Scene`.
 4. Press Play.
 5. Place towers by clicking open cells.
-6. Press `Start Wave` in the debug HUD.
+6. Read the `Next Wave` panel, then press `Start Wave` in the debug HUD.
 7. After a non-final wave, choose one reward from the reward panel.
 8. Continue placing or upgrading towers between waves. If you picked the construction credit, the next tower cost is reduced.
+9. If you picked `Overclock`, the next wave gets boosted tower damage.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -76,5 +79,6 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - There is no final art.
 - Reward choices are debug-tuned and not final progression design.
 - The tower discount reward only affects the next placed tower, not upgrades.
+- Overclock affects damage only, not fire rate.
 
 These limits are intentional. The slice exists to prove the loop before expanding content.

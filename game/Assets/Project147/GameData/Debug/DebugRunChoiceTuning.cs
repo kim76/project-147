@@ -20,6 +20,9 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private int nextTowerDiscount = 30;
 
+        [SerializeField]
+        private int nextWaveTowerDamagePercent = 25;
+
         public IReadOnlyList<RunChoiceDefinition> CreateDefinitions()
         {
             return new[]
@@ -43,7 +46,12 @@ namespace Project147.GameData.Debug
                     "construction-credit",
                     "Construction Credit",
                     RunChoiceEffectType.AddNextTowerDiscount,
-                    nextTowerDiscount)
+                    nextTowerDiscount),
+                new RunChoiceDefinition(
+                    "overclock",
+                    "Overclock",
+                    RunChoiceEffectType.AddNextWaveTowerDamagePercent,
+                    nextWaveTowerDamagePercent)
             };
         }
     }

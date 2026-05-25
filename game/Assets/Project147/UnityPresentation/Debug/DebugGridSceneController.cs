@@ -9,6 +9,8 @@ namespace Project147.UnityPresentation.Debug
 {
     public sealed class DebugGridSceneController : MonoBehaviour
     {
+        private const int EventFeedCapacity = 7;
+
         [SerializeField]
         private int width = 8;
 
@@ -85,6 +87,7 @@ namespace Project147.UnityPresentation.Debug
         private RewardCalculator rewardCalculator;
         private BaseState currentBase;
         private CurrencyWallet wallet;
+        private LevelEventFeed eventFeed;
         private bool waveActive;
         private bool won;
         private bool lost;
@@ -119,7 +122,7 @@ namespace Project147.UnityPresentation.Debug
         {
             if (waveActive || won || lost)
             {
-                UnityEngine.Debug.Log("Towers can only be placed between waves in this first slice.");
+                RecordEvent("Towers can only be placed between waves.");
                 return;
             }
 
@@ -131,7 +134,7 @@ namespace Project147.UnityPresentation.Debug
 
             if (!wallet.CanSpend(towerDefinition.Cost))
             {
-                UnityEngine.Debug.Log("Not enough scrap for tower.");
+                RecordEvent("Not enough scrap for tower.");
                 return;
             }
 
@@ -143,7 +146,7 @@ namespace Project147.UnityPresentation.Debug
 
             if (!result.IsValid)
             {
-                UnityEngine.Debug.Log($"Cannot place tower at {coordinate}: {result.FailureReason}.");
+                RecordEvent($"Cannot place tower at {coordinate}: {result.FailureReason}.");
                 return;
             }
 
@@ -153,6 +156,7 @@ namespace Project147.UnityPresentation.Debug
             towers.Add(new RuntimeTower(coordinate, new TowerState(towerDefinition), towerObject));
             RebuildTiles();
             HidePlacementPreviewIfAny();
+            RecordEvent($"Placed tower at {coordinate}. Scrap: {wallet.Balance}.");
         }
 
         public void ShowPlacementPreview(GridCoordinate coordinate)
@@ -210,6 +214,7 @@ namespace Project147.UnityPresentation.Debug
             towers.Clear();
             currentBase = new BaseState(config.BaseHealth);
             wallet = new CurrencyWallet(config.StartingCurrency);
+            eventFeed = new LevelEventFeed(EventFeedCapacity).Add("Ready. Place towers, then start wave.");
             waveActive = false;
             won = false;
             lost = false;
@@ -260,19 +265,19 @@ namespace Project147.UnityPresentation.Debug
 
             if (tower == null)
             {
-                UnityEngine.Debug.Log($"No tower found at {coordinate}.");
+                RecordEvent($"No tower found at {coordinate}.");
                 return;
             }
 
             if (tower.State.Level >= config.MaxTowerLevel)
             {
-                UnityEngine.Debug.Log($"Tower at {coordinate} is already level {tower.State.Level}.");
+                RecordEvent($"Tower at {coordinate} is already level {tower.State.Level}.");
                 return;
             }
 
             if (!wallet.CanSpend(towerUpgradeDefinition.Cost))
             {
-                UnityEngine.Debug.Log("Not enough scrap for tower upgrade.");
+                RecordEvent("Not enough scrap for tower upgrade.");
                 return;
             }
 
@@ -280,7 +285,7 @@ namespace Project147.UnityPresentation.Debug
             tower.State = tower.State.Upgrade(towerUpgradeDefinition);
             UpdateTowerObject(tower);
             HidePlacementPreviewIfAny();
-            UnityEngine.Debug.Log($"Upgraded tower at {coordinate} to level {tower.State.Level}.");
+            RecordEvent($"Upgraded tower at {coordinate} to level {tower.State.Level}.");
         }
 
         private void StartNextWave()
@@ -294,6 +299,7 @@ namespace Project147.UnityPresentation.Debug
             waveStartBaseHealth = currentBase.CurrentHealth;
             currentWaveDefinition = config.CreateWaveDefinition(completedWaves);
             waveSpawnState = new WaveSpawnState(currentWaveDefinition);
+            RecordEvent($"Wave {completedWaves + 1} started: {currentWaveDefinition.AlienCount} aliens.");
         }
 
         private void UpdateWaveSpawning(float deltaSeconds)
@@ -319,7 +325,7 @@ namespace Project147.UnityPresentation.Debug
 
             if (path.Count == 0)
             {
-                UnityEngine.Debug.Log("No path exists for alien spawn.");
+                RecordEvent("No path exists for alien spawn.");
                 return;
             }
 
@@ -353,7 +359,9 @@ namespace Project147.UnityPresentation.Debug
                 {
                     Destroy(alien.GameObject);
                     activeAliens.RemoveAt(index);
-                    wallet = wallet.Add(rewardCalculator.CalculateAlienKillReward(alien.State.Definition).Amount);
+                    var reward = rewardCalculator.CalculateAlienKillReward(alien.State.Definition);
+                    wallet = wallet.Add(reward.Amount);
+                    RecordEvent($"Alien destroyed. +{reward.Amount} scrap.");
                     continue;
                 }
 
@@ -365,11 +373,13 @@ namespace Project147.UnityPresentation.Debug
                     currentBase = currentBase.ApplyLeakDamage(1);
                     Destroy(alien.GameObject);
                     activeAliens.RemoveAt(index);
+                    RecordEvent($"Alien leaked. Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}.");
 
                     if (currentBase.IsDestroyed)
                     {
                         lost = true;
                         waveActive = false;
+                        RecordEvent("Defeat. Base destroyed.");
                     }
                 }
             }
@@ -514,9 +524,14 @@ namespace Project147.UnityPresentation.Debug
             }
 
             completedWaves++;
-            wallet = wallet.Add(rewardCalculator.CalculateWaveClearReward(
+            var wasPerfectWave = currentBase.CurrentHealth == waveStartBaseHealth;
+            var reward = rewardCalculator.CalculateWaveClearReward(
                 currentWaveDefinition,
-                currentBase.CurrentHealth == waveStartBaseHealth).Amount);
+                wasPerfectWave);
+            wallet = wallet.Add(reward.Amount);
+            RecordEvent(wasPerfectWave
+                ? $"Wave cleared perfectly. +{reward.Amount} scrap."
+                : $"Wave cleared. +{reward.Amount} scrap.");
             waveActive = false;
             currentWaveDefinition = null;
             waveSpawnState = null;
@@ -524,6 +539,7 @@ namespace Project147.UnityPresentation.Debug
             if (completedWaves >= config.TotalWaves)
             {
                 won = true;
+                RecordEvent("Victory. All waves cleared.");
             }
         }
 
@@ -841,6 +857,30 @@ namespace Project147.UnityPresentation.Debug
             }
 
             GUI.Label(new Rect(left + 12, top, 260, 24), status);
+            DrawEventFeed(left + 296, 16);
+        }
+
+        private void DrawEventFeed(int left, int top)
+        {
+            if (eventFeed == null)
+            {
+                return;
+            }
+
+            GUI.Box(new Rect(left, top, 360, 204), "Event Feed");
+            top += 28;
+
+            foreach (var entry in eventFeed.Entries)
+            {
+                GUI.Label(new Rect(left + 12, top, 336, 22), entry);
+                top += 22;
+            }
+        }
+
+        private void RecordEvent(string message)
+        {
+            eventFeed = (eventFeed ?? new LevelEventFeed(EventFeedCapacity)).Add(message);
+            UnityEngine.Debug.Log(message);
         }
 
         private Vector3 ToWorldPosition(GridCoordinate coordinate, float y)

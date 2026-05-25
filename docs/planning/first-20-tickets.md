@@ -29,6 +29,7 @@ These tickets are intentionally small. Each should leave the project in a better
 - Alien upgrade definitions added with tested health, speed, reward, dodge and resistance changes.
 - Basic alien status effects added with tested slow duration and movement-speed rules.
 - Reward calculation moved into tested GameCore level models with alien kill, wave clear and perfect-wave rewards.
+- Debug event feed added for visible tower, reward, leak and win/loss feedback.
 - Unity Test Runner confirmed available through `Window > General > Test Runner`.
 - Command-line test run not attempted while the Unity project is open in the editor.
 

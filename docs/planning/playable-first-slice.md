@@ -15,6 +15,7 @@ It is not the MVP and it is not final art. It is a playable test bed for the rul
 - Placement is rejected if it blocks all paths.
 - Player starts waves manually.
 - Aliens spawn, follow the current path and damage the base if they reach the goal.
+- Later waves spawn upgraded aliens, capped by the debug config.
 - Towers select targets, fire on cooldown and damage aliens.
 - Tower shots draw a short line and briefly flash the alien.
 - Killed aliens award scrap.

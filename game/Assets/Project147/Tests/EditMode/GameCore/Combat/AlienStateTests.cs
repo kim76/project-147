@@ -15,6 +15,7 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             var state = new AlienState(definition);
 
             Assert.That(state.Definition, Is.SameAs(definition));
+            Assert.That(state.Level, Is.EqualTo(1));
             Assert.That(state.CurrentHealth, Is.EqualTo(100));
             Assert.That(state.IsAlive, Is.True);
         }
@@ -83,6 +84,39 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.Throws<ArgumentOutOfRangeException>(() => state.Heal(-1));
         }
 
+        [Test]
+        public void Upgrade_WhenUpgradeDefinitionIsNull_Throws()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100));
+
+            Assert.Throws<ArgumentNullException>(() => state.Upgrade(null));
+        }
+
+        [Test]
+        public void Upgrade_AppliesUpgradeAndIncrementsLevel()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100)).ApplyDamage(25);
+            var upgrade = new AlienUpgradeDefinition("runner-evasion-1", 1.5f, 1.1f, 1.2f, 0.1f, DamageType.Kinetic, 0);
+
+            var result = state.Upgrade(upgrade);
+
+            Assert.That(result.Level, Is.EqualTo(2));
+            Assert.That(result.Definition.MaxHealth, Is.EqualTo(150));
+            Assert.That(result.CurrentHealth, Is.EqualTo(125));
+        }
+
+        [Test]
+        public void Upgrade_WhenAlienIsDead_DoesNotReviveAlien()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100)).ApplyDamage(100);
+            var upgrade = new AlienUpgradeDefinition("runner-evasion-1", 1.5f, 1.1f, 1.2f, 0.1f, DamageType.Kinetic, 0);
+
+            var result = state.Upgrade(upgrade);
+
+            Assert.That(result.CurrentHealth, Is.EqualTo(0));
+            Assert.That(result.IsAlive, Is.False);
+        }
+
         private static AlienDefinition CreateAlien(float maxHealth)
         {
             return new AlienDefinition(
@@ -94,4 +128,3 @@ namespace Project147.Tests.EditMode.GameCore.Combat
         }
     }
 }
-

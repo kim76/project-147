@@ -81,7 +81,6 @@ namespace Project147.UnityPresentation.Debug
         private AttackResolver attackResolver;
         private TowerDefinition towerDefinition;
         private TowerUpgradeDefinition towerUpgradeDefinition;
-        private AlienDefinition alienDefinition;
         private BaseState currentBase;
         private CurrencyWallet wallet;
         private bool waveActive;
@@ -245,7 +244,6 @@ namespace Project147.UnityPresentation.Debug
             attackResolver = new AttackResolver(new DamageResolver());
             towerDefinition = config.CreateTowerDefinition();
             towerUpgradeDefinition = config.CreateTowerUpgradeDefinition();
-            alienDefinition = config.CreateAlienDefinition();
         }
 
         private void TryUpgradeTower(GridCoordinate coordinate)
@@ -328,7 +326,11 @@ namespace Project147.UnityPresentation.Debug
                 renderer.sharedMaterial = alienMaterial;
             }
 
-            activeAliens.Add(new RuntimeAlien(alienObject, new AlienState(alienDefinition), path, renderer));
+            activeAliens.Add(new RuntimeAlien(
+                alienObject,
+                new AlienState(config.CreateAlienDefinition(completedWaves)),
+                path,
+                renderer));
         }
 
         private void UpdateAliens(float deltaSeconds)
@@ -775,7 +777,7 @@ namespace Project147.UnityPresentation.Debug
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 200), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 222), "Project 147 First Slice");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}");
             top += 22;
@@ -783,7 +785,9 @@ namespace Project147.UnityPresentation.Debug
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Upgrade: {towerUpgradeDefinition.Cost}  Max tower level: {config.MaxTowerLevel}");
             top += 22;
-            GUI.Label(new Rect(left + 12, top, 260, 24), $"Wave: {completedWaves}/{config.TotalWaves}  Active aliens: {activeAliens.Count}");
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Wave: {completedWaves}/{config.TotalWaves}  Alien cap: L{config.MaxAlienLevel}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Active aliens: {activeAliens.Count}");
             top += 30;
 
             if (!waveActive && !won && !lost && GUI.Button(new Rect(left + 12, top, 120, 28), "Start Wave"))

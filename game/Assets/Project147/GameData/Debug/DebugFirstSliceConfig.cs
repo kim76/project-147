@@ -98,6 +98,31 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private float alienDodgeChance;
 
+        [Header("Alien Upgrade")]
+        [SerializeField]
+        private int maxAlienLevel = 3;
+
+        [SerializeField]
+        private string alienUpgradeId = "debug-runner-upgrade";
+
+        [SerializeField]
+        private float alienUpgradeHealthMultiplier = 1.2f;
+
+        [SerializeField]
+        private float alienUpgradeSpeedMultiplier = 1.05f;
+
+        [SerializeField]
+        private float alienUpgradeRewardMultiplier = 1.15f;
+
+        [SerializeField]
+        private float alienUpgradeDodgeChanceBonus = 0.02f;
+
+        [SerializeField]
+        private DamageType alienUpgradeResistanceDamageType = DamageType.Kinetic;
+
+        [SerializeField]
+        private float alienUpgradeResistanceBonus = 0.05f;
+
         public int StartingCurrency
         {
             get { return startingCurrency; }
@@ -136,6 +161,11 @@ namespace Project147.GameData.Debug
         public int MaxTowerLevel
         {
             get { return maxTowerLevel; }
+        }
+
+        public int MaxAlienLevel
+        {
+            get { return System.Math.Max(1, maxAlienLevel); }
         }
 
         public WaveDefinition CreateWaveDefinition(int completedWaves)
@@ -177,7 +207,43 @@ namespace Project147.GameData.Debug
                 towerUpgradeCriticalDamageMultiplierBonus);
         }
 
+        public AlienUpgradeDefinition CreateAlienUpgradeDefinition()
+        {
+            return new AlienUpgradeDefinition(
+                alienUpgradeId,
+                alienUpgradeHealthMultiplier,
+                alienUpgradeSpeedMultiplier,
+                alienUpgradeRewardMultiplier,
+                alienUpgradeDodgeChanceBonus,
+                alienUpgradeResistanceDamageType,
+                alienUpgradeResistanceBonus);
+        }
+
         public AlienDefinition CreateAlienDefinition()
+        {
+            return CreateAlienDefinition(0);
+        }
+
+        public AlienDefinition CreateAlienDefinition(int completedWaves)
+        {
+            if (completedWaves < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(completedWaves), "Completed waves cannot be negative.");
+            }
+
+            var definition = CreateBaseAlienDefinition();
+            var upgrade = CreateAlienUpgradeDefinition();
+            var upgradeCount = System.Math.Min(completedWaves, MaxAlienLevel - 1);
+
+            for (var index = 0; index < upgradeCount; index++)
+            {
+                definition = upgrade.ApplyTo(definition);
+            }
+
+            return definition;
+        }
+
+        private AlienDefinition CreateBaseAlienDefinition()
         {
             return new AlienDefinition(
                 alienId,

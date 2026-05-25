@@ -35,6 +35,9 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private float targetableAfterPathProgress;
 
+        [SerializeField]
+        private float healthRegenerationPerSecond;
+
         public DebugAlienTuning(
             string id,
             float health,
@@ -44,7 +47,8 @@ namespace Project147.GameData.Debug
             DamageType resistanceDamageType,
             float resistance,
             float shieldCapacity = 0,
-            float targetableAfterPathProgress = 0)
+            float targetableAfterPathProgress = 0,
+            float healthRegenerationPerSecond = 0)
         {
             this.id = id;
             this.health = health;
@@ -55,6 +59,7 @@ namespace Project147.GameData.Debug
             this.resistance = resistance;
             this.shieldCapacity = shieldCapacity;
             this.targetableAfterPathProgress = targetableAfterPathProgress;
+            this.healthRegenerationPerSecond = healthRegenerationPerSecond;
         }
 
         public string Id
@@ -79,7 +84,8 @@ namespace Project147.GameData.Debug
                 resistances,
                 dodgeChance,
                 shieldCapacity,
-                targetableAfterPathProgress);
+                targetableAfterPathProgress,
+                healthRegenerationPerSecond);
         }
     }
 }

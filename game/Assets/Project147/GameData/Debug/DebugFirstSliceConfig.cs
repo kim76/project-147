@@ -15,6 +15,16 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private DebugLevelTuning level = new DebugLevelTuning();
 
+        [Header("Layouts")]
+        [SerializeField]
+        private DebugLevelLayoutTuning relayYardLayout = CreateRelayYardLayout();
+
+        [SerializeField]
+        private DebugLevelLayoutTuning switchbackLayout = CreateSwitchbackLayout();
+
+        [SerializeField]
+        private DebugLevelLayoutTuning twinLaneLayout = CreateTwinLaneLayout();
+
         [Header("Towers")]
         [SerializeField]
         private DebugTowerTuning railgunTower = new DebugTowerTuning(
@@ -48,13 +58,49 @@ namespace Project147.GameData.Debug
         private DebugTowerTuning energyTower = CreateDefaultEnergyTowerTuning();
 
         [SerializeField]
+        private DebugTowerTuning chemicalTower = CreateDefaultChemicalTowerTuning();
+
+        [SerializeField]
         private DebugTowerUpgradeTuning towerUpgrade = new DebugTowerUpgradeTuning();
+
+        [SerializeField]
+        private DebugTowerUpgradeTuning damageTowerUpgrade = new DebugTowerUpgradeTuning(
+            "debug-upgrade-damage",
+            75,
+            1.55f,
+            1f,
+            0,
+            0.03f,
+            0.1f);
+
+        [SerializeField]
+        private DebugTowerUpgradeTuning rapidTowerUpgrade = new DebugTowerUpgradeTuning(
+            "debug-upgrade-rapid",
+            75,
+            1.08f,
+            1.35f,
+            0,
+            0.03f,
+            0.05f);
+
+        [SerializeField]
+        private DebugTowerUpgradeTuning rangeTowerUpgrade = new DebugTowerUpgradeTuning(
+            "debug-upgrade-range",
+            75,
+            1.12f,
+            1.05f,
+            0.45f,
+            0.08f,
+            0.2f);
 
         [SerializeField]
         private DebugStatusEffectTuning railgunSlow = new DebugStatusEffectTuning(
             "debug-frost-slow",
             1.4f,
             0.7f);
+
+        [SerializeField]
+        private DebugStatusEffectTuning chemicalPoison = CreateDefaultChemicalPoisonTuning();
 
         [Header("Player Abilities")]
         [SerializeField]
@@ -103,6 +149,9 @@ namespace Project147.GameData.Debug
 
         [SerializeField]
         private DebugAlienTuning burrowerAlien = CreateDefaultBurrowerAlienTuning();
+
+        [SerializeField]
+        private DebugAlienTuning regeneratorAlien = CreateDefaultRegeneratorAlienTuning();
 
         [SerializeField]
         private DebugAlienUpgradeTuning alienUpgrade = new DebugAlienUpgradeTuning();
@@ -167,6 +216,11 @@ namespace Project147.GameData.Debug
             get { return BurrowerAlien.Id; }
         }
 
+        public string RegeneratorAlienId
+        {
+            get { return RegeneratorAlien.Id; }
+        }
+
         public WaveDefinition CreateWaveDefinition(int completedWaves)
         {
             return level.CreateWaveDefinition(
@@ -176,7 +230,23 @@ namespace Project147.GameData.Debug
                 ArmouredAlienId,
                 ShieldedAlienId,
                 BurrowerAlienId,
+                RegeneratorAlienId,
                 BossAlienId);
+        }
+
+        public LevelLayoutDefinition CreateLevelLayout()
+        {
+            return CreateLevelLayouts()[0];
+        }
+
+        public IReadOnlyList<LevelLayoutDefinition> CreateLevelLayouts()
+        {
+            return new[]
+            {
+                RelayYardLayout.CreateDefinition(),
+                SwitchbackLayout.CreateDefinition(),
+                TwinLaneLayout.CreateDefinition()
+            };
         }
 
         public TowerDefinition CreateTowerDefinition()
@@ -190,13 +260,24 @@ namespace Project147.GameData.Debug
             {
                 railgunTower.CreateDefinition(new[] { CreateTowerStatusEffectDefinition() }),
                 mortarTower.CreateDefinition(),
-                EnergyTower.CreateDefinition()
+                EnergyTower.CreateDefinition(),
+                ChemicalTower.CreateDefinition(new[] { CreateChemicalStatusEffectDefinition() })
             };
         }
 
         public TowerUpgradeDefinition CreateTowerUpgradeDefinition()
         {
-            return towerUpgrade.CreateDefinition();
+            return CreateTowerUpgradeDefinitions()[0];
+        }
+
+        public IReadOnlyList<TowerUpgradeDefinition> CreateTowerUpgradeDefinitions()
+        {
+            return new[]
+            {
+                DamageTowerUpgrade.CreateDefinition(),
+                RapidTowerUpgrade.CreateDefinition(),
+                RangeTowerUpgrade.CreateDefinition()
+            };
         }
 
         public PlayerAbilityDefinition CreateFreezePulseAbilityDefinition()
@@ -217,6 +298,11 @@ namespace Project147.GameData.Debug
         public AlienStatusEffectDefinition CreateTowerStatusEffectDefinition()
         {
             return railgunSlow.CreateDefinition();
+        }
+
+        public AlienStatusEffectDefinition CreateChemicalStatusEffectDefinition()
+        {
+            return ChemicalPoison.CreateDefinition();
         }
 
         public AlienUpgradeDefinition CreateAlienUpgradeDefinition()
@@ -280,6 +366,11 @@ namespace Project147.GameData.Debug
                 return BurrowerAlien.CreateDefinition();
             }
 
+            if (alienId == RegeneratorAlienId)
+            {
+                return RegeneratorAlien.CreateDefinition();
+            }
+
             if (alienId == BossAlienId)
             {
                 return BossAlien.CreateDefinition();
@@ -303,9 +394,118 @@ namespace Project147.GameData.Debug
             get { return energyTower ?? CreateDefaultEnergyTowerTuning(); }
         }
 
+        private DebugLevelLayoutTuning RelayYardLayout
+        {
+            get { return relayYardLayout ?? CreateRelayYardLayout(); }
+        }
+
+        private DebugLevelLayoutTuning SwitchbackLayout
+        {
+            get { return switchbackLayout ?? CreateSwitchbackLayout(); }
+        }
+
+        private DebugLevelLayoutTuning TwinLaneLayout
+        {
+            get { return twinLaneLayout ?? CreateTwinLaneLayout(); }
+        }
+
+        private DebugTowerUpgradeTuning DamageTowerUpgrade
+        {
+            get { return damageTowerUpgrade ?? towerUpgrade ?? new DebugTowerUpgradeTuning(); }
+        }
+
+        private DebugTowerUpgradeTuning RapidTowerUpgrade
+        {
+            get { return rapidTowerUpgrade ?? towerUpgrade ?? new DebugTowerUpgradeTuning(); }
+        }
+
+        private DebugTowerUpgradeTuning RangeTowerUpgrade
+        {
+            get { return rangeTowerUpgrade ?? towerUpgrade ?? new DebugTowerUpgradeTuning(); }
+        }
+
+        private DebugTowerTuning ChemicalTower
+        {
+            get { return chemicalTower ?? CreateDefaultChemicalTowerTuning(); }
+        }
+
+        private DebugStatusEffectTuning ChemicalPoison
+        {
+            get { return chemicalPoison ?? CreateDefaultChemicalPoisonTuning(); }
+        }
+
         private DebugAlienTuning BurrowerAlien
         {
             get { return burrowerAlien ?? CreateDefaultBurrowerAlienTuning(); }
+        }
+
+        private DebugAlienTuning RegeneratorAlien
+        {
+            get { return regeneratorAlien ?? CreateDefaultRegeneratorAlienTuning(); }
+        }
+
+        private static DebugLevelLayoutTuning CreateRelayYardLayout()
+        {
+            return new DebugLevelLayoutTuning(
+                "debug-relay-yard",
+                8,
+                5,
+                new Vector2Int(0, 2),
+                new Vector2Int(7, 2),
+                new[]
+                {
+                    new Vector2Int(2, 1),
+                    new Vector2Int(2, 2),
+                    new Vector2Int(2, 3),
+                    new Vector2Int(5, 1),
+                    new Vector2Int(5, 2),
+                    new Vector2Int(5, 3)
+                });
+        }
+
+        private static DebugLevelLayoutTuning CreateSwitchbackLayout()
+        {
+            return new DebugLevelLayoutTuning(
+                "debug-switchback",
+                9,
+                6,
+                new Vector2Int(0, 1),
+                new Vector2Int(8, 4),
+                new[]
+                {
+                    new Vector2Int(2, 0),
+                    new Vector2Int(2, 1),
+                    new Vector2Int(2, 2),
+                    new Vector2Int(4, 3),
+                    new Vector2Int(4, 4),
+                    new Vector2Int(4, 5),
+                    new Vector2Int(6, 0),
+                    new Vector2Int(6, 1),
+                    new Vector2Int(6, 2)
+                });
+        }
+
+        private static DebugLevelLayoutTuning CreateTwinLaneLayout()
+        {
+            return new DebugLevelLayoutTuning(
+                "debug-twin-lane",
+                9,
+                5,
+                new Vector2Int(0, 2),
+                new Vector2Int(8, 2),
+                new[]
+                {
+                    new Vector2Int(1, 1),
+                    new Vector2Int(1, 3),
+                    new Vector2Int(3, 0),
+                    new Vector2Int(3, 1),
+                    new Vector2Int(3, 3),
+                    new Vector2Int(3, 4),
+                    new Vector2Int(5, 1),
+                    new Vector2Int(5, 3),
+                    new Vector2Int(7, 1),
+                    new Vector2Int(7, 3)
+                });
         }
 
         private static DebugTowerTuning CreateDefaultEnergyTowerTuning()
@@ -322,6 +522,32 @@ namespace Project147.GameData.Debug
                 1.6f,
                 0,
                 0);
+        }
+
+        private static DebugTowerTuning CreateDefaultChemicalTowerTuning()
+        {
+            return new DebugTowerTuning(
+                "debug-chemical",
+                60,
+                2.1f,
+                1.05f,
+                16,
+                DamageType.Chemical,
+                TowerTargetingMode.Weakest,
+                0.05f,
+                1.5f,
+                0,
+                0);
+        }
+
+        private static DebugStatusEffectTuning CreateDefaultChemicalPoisonTuning()
+        {
+            return new DebugStatusEffectTuning(
+                "debug-acid-burn",
+                3f,
+                1f,
+                AlienStatusEffectType.Poison,
+                6f);
         }
 
         private static DebugAlienTuning CreateDefaultShieldedAlienTuning()
@@ -349,6 +575,21 @@ namespace Project147.GameData.Debug
                 0.1f,
                 0,
                 3);
+        }
+
+        private static DebugAlienTuning CreateDefaultRegeneratorAlienTuning()
+        {
+            return new DebugAlienTuning(
+                "debug-regenerator",
+                88,
+                1.15f,
+                28,
+                0.02f,
+                DamageType.Chemical,
+                0.2f,
+                0,
+                0,
+                5);
         }
 
         private static DebugAlienTuning CreateDefaultBossAlienTuning()

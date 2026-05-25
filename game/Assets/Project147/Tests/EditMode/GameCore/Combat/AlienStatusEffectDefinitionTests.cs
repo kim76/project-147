@@ -19,6 +19,21 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(effect.Type, Is.EqualTo(AlienStatusEffectType.Slow));
             Assert.That(effect.DurationSeconds, Is.EqualTo(2.5f));
             Assert.That(effect.MovementSpeedMultiplier, Is.EqualTo(0.6f));
+            Assert.That(effect.DamagePerSecond, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Constructor_WhenDamagePerSecondIsValid_StoresValue()
+        {
+            var effect = new AlienStatusEffectDefinition(
+                "acid-burn",
+                AlienStatusEffectType.Poison,
+                3,
+                1,
+                6);
+
+            Assert.That(effect.Type, Is.EqualTo(AlienStatusEffectType.Poison));
+            Assert.That(effect.DamagePerSecond, Is.EqualTo(6));
         }
 
         [TestCase(null)]
@@ -53,6 +68,17 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 AlienStatusEffectType.Slow,
                 2,
                 multiplier));
+        }
+
+        [Test]
+        public void Constructor_WhenDamagePerSecondIsNegative_Throws()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new AlienStatusEffectDefinition(
+                "acid-burn",
+                AlienStatusEffectType.Poison,
+                2,
+                1,
+                -0.01f));
         }
     }
 }

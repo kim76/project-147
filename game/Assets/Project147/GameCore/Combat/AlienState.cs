@@ -154,9 +154,15 @@ namespace Project147.GameCore.Combat
             }
 
             var effects = new List<AlienStatusEffectState>();
+            var damage = 0f;
 
             foreach (var effect in ActiveStatusEffects)
             {
+                if (effect.Definition.Type == AlienStatusEffectType.Poison)
+                {
+                    damage += Math.Min(deltaSeconds, effect.RemainingSeconds) * effect.Definition.DamagePerSecond;
+                }
+
                 var updatedEffect = effect.Tick(deltaSeconds);
 
                 if (!updatedEffect.IsExpired)
@@ -165,7 +171,25 @@ namespace Project147.GameCore.Combat
                 }
             }
 
-            return new AlienState(Definition, Level, CurrentHealth, CurrentShield, effects);
+            var state = new AlienState(Definition, Level, CurrentHealth, CurrentShield, effects);
+            return damage > 0 ? state.ApplyDamage(damage) : state;
+        }
+
+        public AlienState Tick(float deltaSeconds)
+        {
+            if (deltaSeconds < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(deltaSeconds), "Delta seconds cannot be negative.");
+            }
+
+            var state = TickStatusEffects(deltaSeconds);
+
+            if (!state.IsAlive || state.Definition.HealthRegenerationPerSecond <= 0)
+            {
+                return state;
+            }
+
+            return state.Heal(deltaSeconds * state.Definition.HealthRegenerationPerSecond);
         }
     }
 }

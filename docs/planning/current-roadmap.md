@@ -2,162 +2,195 @@
 
 ## Purpose
 
-This is the working next-task list for Project 147.
+This is the active roadmap for Project 147.
 
-Use this file to see what we are doing next. Use `first-20-tickets.md` as historical foundation progress, not as the active plan.
+Use this file for what is coming next. Use `first-20-tickets.md` as historical foundation progress.
 
-## Current State
+## Current Playable Slice
 
-The debug first slice has:
+The first playable slice currently has:
 
 - Grid placement with no-complete-block validation.
-- Manual waves.
-- Base health, leaks, victory and defeat.
+- Manual waves, base health, leaks, victory and defeat.
 - Scrap economy for tower placement, kills, wave clear and perfect waves.
-- Tower upgrading between waves.
-- Tower selling between waves with a tested partial refund rule.
-- Per-tower targeting mode changes between waves.
-- Tested 1x/2x/3x game speed control for wave pacing.
-- Tested pause/resume state for active waves without using Unity global time scale.
-- Three debug towers:
-  - Railgun: faster, applies a short slow effect.
-  - Mortar: slower, explosive splash damage.
-  - Energy: direct single-target energy profile.
-- Mixed enemy waves with basic, fast, armoured, shielded, burrower and boss debug aliens.
-- Alien upgrades across later waves.
-- A final-wave boss alien with distinct stats, wave-intel tag and first-pass visual profile.
-- Shielded aliens with tested shield-first damage behaviour.
-- Burrower aliens with tested early-path tower untargetability.
-- Freeze Pulse player ability with cooldown and debug feedback.
-- Orbital Strike player ability with cooldown, resistance-aware damage and debug feedback.
-- Between-wave reward choices drawn as a random 3-option offer from a larger reward pool.
-- Reward effects for extra scrap, base repair, next-tower discount, next-wave tower damage and next-wave tower fire rate.
-- Next-wave intel showing upcoming enemy composition and simple tags before the wave starts.
-- End-of-run summary for outcome, stars, waves, kills, leaks, scrap, rewards and ability use.
-- Session progress tracking for completed runs, victories, best stars and best wave performance.
-- First-slice tuning grouped by level, towers, aliens, upgrades and abilities.
-- First-pass in-scene visual profiles for towers and aliens.
-- Debug HUD, hover range preview, shot feedback and event feed.
+- Tower selling with a tested partial refund rule.
+- Per-tower targeting mode changes.
+- Selectable tower upgrade paths.
+- Multiple selectable debug level layouts.
+- Tested 1x/2x/3x game speed control.
+- Active-wave pause/resume without Unity global time scale.
+- Four debug towers: railgun, mortar, energy and chemical.
+- Poison damage over time for chemical towers.
+- Mixed waves with basic, fast, armoured, shielded, burrower, regenerator and boss aliens.
+- Shield-first damage for shielded aliens.
+- Early-path untargetability for burrowers.
+- Health regeneration for regenerator aliens.
+- Freeze Pulse and Orbital Strike player abilities.
+- Between-wave reward choices.
+- Next-wave intel with enemy tags.
+- End-of-run summary and session progress tracking.
+- Per-level-layout session progress tracking.
+- First-pass code-native visuals for towers and aliens.
 
-## Immediate Verification
+## Morning Verification
 
-Before the next development slice:
+After pulling/opening the latest work:
 
-1. Run Edit Mode tests in Unity.
-2. Confirm the new boss wave and wave-intel tests appear and pass.
-3. Press Play.
-4. Progress to the final wave.
-5. Confirm the `Next Wave` panel shows a `Boss` tag before the final wave.
-6. Confirm later waves show `Shielded` and `Burrower` tags before those aliens appear.
-7. Select tower `3/3` and confirm the energy tower appears visually different.
-8. Start a burrower wave and confirm brown low-profile aliens are not shot immediately at spawn.
-9. Start the final wave and confirm a large purple boss alien appears.
-10. Confirm victory still triggers after the boss wave is cleared.
-11. Confirm the run summary panel appears with stars, kill, reward and ability counts.
-12. Confirm the `Session Progress` panel updates after victory or defeat and survives pressing `Restart`.
-13. Toggle `Sell Mode`, click an existing tower between waves and confirm scrap increases and the path recalculates.
-14. Toggle `Target`, click an existing tower between waves and confirm its targeting mode cycles.
-15. Click `Speed` to cycle 1x/2x/3x and confirm waves visibly run faster.
-16. During a wave, click `Pause` and confirm aliens, cooldowns and firing stop until `Resume`.
+1. Run all Edit Mode tests.
+2. Press Play in the debug scene.
+3. Switch level layouts before placing a tower and confirm the board changes.
+4. Select tower `4/4` and confirm it is the chemical tower with poison text.
+5. Cycle upgrade paths and confirm the selected upgrade name changes.
+6. Place towers, then click an existing tower between waves to upgrade using the selected path.
+7. Start later waves and confirm `Regenerator` appears in next-wave intel.
+8. Confirm green halo regenerator aliens appear.
+9. Confirm burrowers are still not shot immediately at spawn.
+10. Confirm the final boss wave still completes into victory or defeat.
 
 ## Next Slice Candidates
 
-### 1. Make Enemies Visibly Different
+### 1. Better Tower Upgrade Strategy
 
-Goal: introduce enemy variety without adding messy scene-only logic.
+Goal: make upgrading feel like a choice, not a flat stat bump.
 
-Deliverables:
+Done:
 
-- Done: add basic, fast and armoured alien definitions to the debug config.
-- Done: add a boss alien definition to the debug config.
-- Done: add a shielded alien definition to the debug config.
-- Done: add a burrower alien definition to the debug config.
-- Done: add a tested alien wave composition model.
-- Done: spawn mixed waves instead of one repeated alien.
-- Done: show visual differences for basic, fast, armoured, shielded, burrower and boss aliens.
-- Done: show enemy type in event/debug information where useful.
-- Done: tag boss waves in next-wave intel.
-- Done: tag shielded waves in next-wave intel.
-- Done: tag burrower waves in next-wave intel.
+- Add selectable upgrade paths.
+- Keep upgrade path selection tested in pure GameCore.
+- Wire selected upgrade path into the debug HUD.
 
-Why next: tower variety is now meaningful, but enemy variety is still too flat.
+Next:
 
-### 2. Add Player Ability Prototype
+- Track each tower's upgrade history.
+- Show each placed tower's selected path and level more clearly.
+- Add status-effect upgrade paths, such as longer slow or stronger poison.
+- Fix selling so refund is based on actual upgrade spend, not a same-cost assumption.
 
-Goal: introduce the first special ability in a controlled, testable way.
+### 2. Better Alien Progression
 
-Deliverables:
+Goal: make waves feel strategically different.
 
-- Done: add Freeze Pulse ability definition.
-- Done: add cooldown rules in GameCore with tests.
-- Done: add ability resolver that applies slow to living aliens.
-- Done: wire one HUD button in the debug scene.
-- Done: add simple debug visual feedback.
-- Done: add Orbital Strike damage ability with tested resistance-aware damage.
-- Done: wire a second HUD ability button in the debug scene.
+Done:
 
-Why next: this starts the special-abilities direction without committing to final UI or art.
+- Add shields.
+- Add burrower untargetability.
+- Add regeneration.
+- Add resistances, dodge and alien upgrades.
 
-### 3. Improve Wave And Level Data
+Next:
 
-Goal: stop the debug config from becoming a giant dumping ground.
+- Add clearer trait text in wave intel.
+- Add wave difficulty ratings.
+- Add enemy-side upgrade choices for health, speed, resistance, dodge, shields and regeneration.
+- Add counterplay prompts, such as chemical counters regeneration or energy counters shields.
 
-Deliverables:
+### 3. Defence Loadout
 
-- Done: extract debug tuning into smaller level, tower, alien, upgrade and ability tuning classes.
-- Done: keep `DebugFirstSliceConfig` as the Unity-facing entry point.
-- Done: add config-level tests for defaults.
-- Done: keep the debug scene consuming tested models.
+Goal: move from a debug tower carousel to an intentional pre-run tower selection.
 
-Why next: the first-slice config is becoming too broad. This is where we keep quality high instead of accepting future pain.
+Next:
 
-### 4. Add First-Pass Visual Profiles
+- Add a tested tower unlock model.
+- Add a tested loadout slot model.
+- Restrict each run to a chosen subset of towers.
+- Add a simple pre-run debug panel for changing the loadout.
 
-Goal: make the slice easier to read without pretending debug art is final production art.
+### 4. Multiple Levels
 
-Deliverables:
+Goal: prove the game works on more than one board shape.
 
-- Done: move actor construction out of the scene controller.
-- Done: add reusable first-pass tower visual profiles.
-- Done: add reusable first-pass alien visual profiles.
-- Done: keep visuals code-native for now so they remain fast to iterate.
+Done:
 
-Why next: the game needs a clearer visual language, but final art should wait until the loop survives more iteration.
+- Add tested level layout definitions.
+- Add three selectable debug layouts.
+- Wire level switching into the debug scene before a run starts.
 
-### 5. Add Basic In-Run Choice
+Next:
 
-Goal: make each run less automatic.
+- Add level-specific starting scrap, base health and wave count.
+- Add layout-specific wave tuning.
+- Add level completion stars per layout.
 
-Deliverables:
+### 5. Campaign Progression
 
-- Done: after a non-final wave, offer reward choices before the next wave.
-- Done: add tested choice definitions and application rules.
-- Done: support extra scrap, base repair and next-tower discount effects.
-- Done: support an Overclock reward for next-wave tower damage.
-- Done: support a Rapid Loader reward for next-wave tower fire rate.
-- Done: display a temporary debug choice panel with 3 random options.
-- Done: block the next wave until a reward is chosen.
+Goal: make runs feed into longer-term progress.
 
-Why next: this starts the “addictive” part without monetisation or content bloat.
+Done:
 
-## Recommended Order
+- Track completed runs, victories, best stars and best wave.
+- Track session progress separately for each debug layout.
 
-1. Verify the final-wave boss in Unity.
-2. Verify the post-run summary in Unity.
-3. Generate concept boards for final art direction.
-4. Done: add one lightweight progression layer that uses the star rating.
-5. Done: add an enemy-side mechanic such as burrowers.
-6. Split debug tuning into separate ScriptableObject assets only when the current single asset becomes painful.
+Next:
+
+- Add unlock rules based on stars.
+- Add local save/load for progress.
+- Add a simple campaign selection screen later, after the debug scene proves the rules.
+
+### 6. Alien-Side Prototype
+
+Goal: support playing as the invading alien side.
+
+Next:
+
+- Add an alien squad loadout model.
+- Add alien squad budget rules.
+- Add alien spawn-order planning.
+- Add a simple automated defence opponent.
+- Reuse existing tower, targeting and damage rules rather than building a separate game.
+
+### 7. More Special Abilities
+
+Goal: make both sides feel expressive.
+
+Next:
+
+- Add a defensive shield burst.
+- Add a tower overcharge ability.
+- Add alien decoy or sabotage ability.
+- Add alien tunnel burst ability.
+- Keep ability effects in GameCore and scene feedback in UnityPresentation.
+
+### 8. Game Feel
+
+Goal: make the prototype easier to read and more fun to play.
+
+Next:
+
+- Add health bars.
+- Add poison, shield and regeneration indicators.
+- Add clearer hit feedback.
+- Add better wave-start and wave-clear feedback.
+- Add placeholder sound hooks only after the visual feedback is readable.
+
+### 9. Data Cleanup
+
+Goal: avoid letting debug config become a dumping ground.
+
+Next:
+
+- Split tower, alien, ability, level and reward tuning into separate assets when iteration becomes painful.
+- Keep ScriptableObjects as data wrappers around tested GameCore models.
+- Do not move logic into Unity scene components.
+
+### 10. Monetisation Preparation
+
+Goal: prepare for monetisation without adding it too early.
+
+Next:
+
+- Define analytics events for retention and balance.
+- Mark natural rewarded-ad moments.
+- Keep purchases, subscriptions and backend work out until the core loop has enough retention signal.
 
 ## Not Yet
 
 Do not start these yet:
 
-- Ads.
+- Ads SDKs.
 - Subscriptions.
 - Store purchases.
 - Backend accounts.
 - Final art pipeline.
 - Polished mobile UI.
 
-These are important, but they should wait until the core loop is fun enough to test honestly.
+These matter, but adding them before the loop is fun would create noise and slow us down.

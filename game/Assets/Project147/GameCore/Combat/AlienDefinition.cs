@@ -15,7 +15,8 @@ namespace Project147.GameCore.Combat
             IReadOnlyDictionary<DamageType, float> resistances,
             float dodgeChance = 0,
             float shieldCapacity = 0,
-            float targetableAfterPathProgress = 0)
+            float targetableAfterPathProgress = 0,
+            float healthRegenerationPerSecond = 0)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -69,6 +70,13 @@ namespace Project147.GameCore.Combat
                     "Targetable path progress cannot be negative.");
             }
 
+            if (healthRegenerationPerSecond < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(healthRegenerationPerSecond),
+                    "Health regeneration cannot be negative.");
+            }
+
             Id = id;
             MaxHealth = maxHealth;
             SpeedCellsPerSecond = speedCellsPerSecond;
@@ -76,6 +84,7 @@ namespace Project147.GameCore.Combat
             DodgeChance = dodgeChance;
             ShieldCapacity = shieldCapacity;
             TargetableAfterPathProgress = targetableAfterPathProgress;
+            HealthRegenerationPerSecond = healthRegenerationPerSecond;
             this.resistances = new Dictionary<DamageType, float>(resistances);
         }
 
@@ -92,6 +101,8 @@ namespace Project147.GameCore.Combat
         public float ShieldCapacity { get; }
 
         public float TargetableAfterPathProgress { get; }
+
+        public float HealthRegenerationPerSecond { get; }
 
         public float GetResistance(DamageType damageType)
         {

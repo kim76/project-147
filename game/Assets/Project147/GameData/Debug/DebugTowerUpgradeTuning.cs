@@ -31,6 +31,28 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private float criticalDamageMultiplierBonus = 0.15f;
 
+        public DebugTowerUpgradeTuning()
+        {
+        }
+
+        public DebugTowerUpgradeTuning(
+            string id,
+            int cost,
+            float damageMultiplier,
+            float fireRateMultiplier,
+            float rangeBonus,
+            float criticalChanceBonus,
+            float criticalDamageMultiplierBonus)
+        {
+            this.id = id;
+            this.cost = cost;
+            this.damageMultiplier = damageMultiplier;
+            this.fireRateMultiplier = fireRateMultiplier;
+            this.rangeBonus = rangeBonus;
+            this.criticalChanceBonus = criticalChanceBonus;
+            this.criticalDamageMultiplierBonus = criticalDamageMultiplierBonus;
+        }
+
         public int MaxTowerLevel
         {
             get { return maxTowerLevel; }

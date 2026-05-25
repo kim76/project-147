@@ -96,14 +96,15 @@ namespace Project147.UnityPresentation.Debug
         private PlayerAbilityState freezePulseState;
         private PlayerAbilityState orbitalStrikeState;
         private TowerLoadout towerLoadout;
-        private TowerUpgradeDefinition towerUpgradeDefinition;
+        private TowerUpgradeLoadout towerUpgradeLoadout;
         private RewardCalculator rewardCalculator;
         private BaseState currentBase;
         private CurrencyWallet wallet;
         private RunModifierState runModifiers;
         private RunSummaryState runSummary;
-        private LevelProgressState levelProgress;
+        private CampaignProgressState campaignProgress;
         private LevelProgressApplicationResult lastProgressResult;
+        private IReadOnlyList<LevelLayoutDefinition> levelLayouts;
         private GameSpeedState gameSpeed;
         private GamePauseState gamePause;
         private LevelEventFeed eventFeed;
@@ -112,6 +113,7 @@ namespace Project147.UnityPresentation.Debug
         private bool lost;
         private bool sellMode;
         private bool retargetMode;
+        private int selectedLevelLayoutIndex;
         private int completedWaves;
         private int waveStartBaseHealth;
         private WaveDefinition currentWaveDefinition;
@@ -224,7 +226,7 @@ namespace Project147.UnityPresentation.Debug
 
         public void ShowPlacementPreview(GridCoordinate coordinate)
         {
-            if (towerLoadout == null || towerUpgradeDefinition == null || currentBase == null || wallet == null)
+            if (towerLoadout == null || towerUpgradeLoadout == null || currentBase == null || wallet == null)
             {
                 return;
             }
@@ -241,7 +243,7 @@ namespace Project147.UnityPresentation.Debug
                 && !sellMode
                 && !retargetMode
                 && tower.State.Level < config.MaxTowerLevel
-                && wallet.CanSpend(towerUpgradeDefinition.Cost);
+                && wallet.CanSpend(SelectedTowerUpgrade.Cost);
             var canSell = tower != null
                 && !waveActive
                 && !won
@@ -285,6 +287,7 @@ namespace Project147.UnityPresentation.Debug
         private void ResetSlice()
         {
             HidePlacementPreviewIfAny();
+            ApplySelectedLevelLayout();
             ClearActors();
             ClearTiles();
             placedTowers.Clear();
@@ -309,6 +312,34 @@ namespace Project147.UnityPresentation.Debug
             waveSpawnState = null;
             pendingRunChoices = new List<RunChoiceDefinition>();
             RebuildTiles();
+        }
+
+        private void ApplySelectedLevelLayout()
+        {
+            if (levelLayouts == null || levelLayouts.Count == 0)
+            {
+                return;
+            }
+
+            if (selectedLevelLayoutIndex < 0 || selectedLevelLayoutIndex >= levelLayouts.Count)
+            {
+                selectedLevelLayoutIndex = 0;
+            }
+
+            var layout = SelectedLevelLayout;
+            width = layout.Width;
+            height = layout.Height;
+            spawn = ToVector2Int(layout.Spawn);
+            goal = ToVector2Int(layout.Goal);
+
+            var cells = new Vector2Int[layout.BlockedCells.Count];
+
+            for (var index = 0; index < layout.BlockedCells.Count; index++)
+            {
+                cells[index] = ToVector2Int(layout.BlockedCells[index]);
+            }
+
+            blockedCells = cells;
         }
 
         private bool CanPreviewPlacement(GridCoordinate coordinate)
@@ -343,10 +374,11 @@ namespace Project147.UnityPresentation.Debug
             splashDamageResolver = new SplashDamageResolver(damageResolver);
             rewardCalculator = new RewardCalculator(config.PerfectWaveScrapBonus);
             towerLoadout = new TowerLoadout(config.CreateTowerDefinitions());
+            levelLayouts = config.CreateLevelLayouts();
             freezePulseState = new PlayerAbilityState(config.CreateFreezePulseAbilityDefinition());
             orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
-            towerUpgradeDefinition = config.CreateTowerUpgradeDefinition();
-            levelProgress = levelProgress ?? new LevelProgressState();
+            towerUpgradeLoadout = new TowerUpgradeLoadout(config.CreateTowerUpgradeDefinitions());
+            campaignProgress = campaignProgress ?? new CampaignProgressState();
             gameSpeed = gameSpeed ?? new GameSpeedState();
             gamePause = gamePause ?? new GamePauseState();
         }
@@ -354,6 +386,16 @@ namespace Project147.UnityPresentation.Debug
         private TowerDefinition SelectedTower
         {
             get { return towerLoadout.SelectedTower; }
+        }
+
+        private LevelLayoutDefinition SelectedLevelLayout
+        {
+            get { return levelLayouts[selectedLevelLayoutIndex]; }
+        }
+
+        private TowerUpgradeDefinition SelectedTowerUpgrade
+        {
+            get { return towerUpgradeLoadout.SelectedUpgrade; }
         }
 
         private float ScaledDeltaSeconds
@@ -391,6 +433,34 @@ namespace Project147.UnityPresentation.Debug
             RecordEvent($"Selected tower: {SelectedTower.Id}.");
         }
 
+        private void SelectPreviousTowerUpgrade()
+        {
+            towerUpgradeLoadout = towerUpgradeLoadout.SelectPrevious();
+            HidePlacementPreviewIfAny();
+            RecordEvent($"Selected upgrade: {SelectedTowerUpgrade.Id}.");
+        }
+
+        private void SelectNextTowerUpgrade()
+        {
+            towerUpgradeLoadout = towerUpgradeLoadout.SelectNext();
+            HidePlacementPreviewIfAny();
+            RecordEvent($"Selected upgrade: {SelectedTowerUpgrade.Id}.");
+        }
+
+        private void SelectPreviousLevelLayout()
+        {
+            selectedLevelLayoutIndex = (selectedLevelLayoutIndex + levelLayouts.Count - 1) % levelLayouts.Count;
+            ResetSlice();
+            RecordEvent($"Selected level: {SelectedLevelLayout.Id}.");
+        }
+
+        private void SelectNextLevelLayout()
+        {
+            selectedLevelLayoutIndex = (selectedLevelLayoutIndex + 1) % levelLayouts.Count;
+            ResetSlice();
+            RecordEvent($"Selected level: {SelectedLevelLayout.Id}.");
+        }
+
         private void TryUpgradeTower(GridCoordinate coordinate)
         {
             var tower = FindRuntimeTower(coordinate);
@@ -407,17 +477,18 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
-            if (!wallet.CanSpend(towerUpgradeDefinition.Cost))
+            if (!wallet.CanSpend(SelectedTowerUpgrade.Cost))
             {
                 RecordEvent("Not enough scrap for tower upgrade.");
                 return;
             }
 
-            wallet = wallet.Spend(towerUpgradeDefinition.Cost);
-            tower.State = tower.State.Upgrade(towerUpgradeDefinition);
+            var selectedUpgrade = SelectedTowerUpgrade;
+            wallet = wallet.Spend(selectedUpgrade.Cost);
+            tower.State = tower.State.Upgrade(selectedUpgrade);
             UpdateTowerObject(tower);
             HidePlacementPreviewIfAny();
-            RecordEvent($"Upgraded tower at {coordinate} to level {tower.State.Level}.");
+            RecordEvent($"Upgraded tower at {coordinate} with {selectedUpgrade.Id} to level {tower.State.Level}.");
         }
 
         private void TrySellTower(GridCoordinate coordinate)
@@ -432,7 +503,7 @@ namespace Project147.UnityPresentation.Debug
 
             var refund = towerSaleCalculator.CalculateRefund(
                 tower.State,
-                towerUpgradeDefinition,
+                SelectedTowerUpgrade,
                 TowerSellRefundMultiplier);
             wallet = wallet.Add(refund);
             towers.Remove(tower);
@@ -683,7 +754,7 @@ namespace Project147.UnityPresentation.Debug
                 }
 
                 UpdateAlienHitFlash(alien, deltaSeconds);
-                alien.State = alien.State.TickStatusEffects(deltaSeconds);
+                alien.State = alien.State.Tick(deltaSeconds);
 
                 if (MoveAlien(alien, deltaSeconds))
                 {
@@ -1038,6 +1109,11 @@ namespace Project147.UnityPresentation.Debug
                 return DebugAlienVisualRole.Burrower;
             }
 
+            if (definition.Id == config.RegeneratorAlienId)
+            {
+                return DebugAlienVisualRole.Regenerator;
+            }
+
             if (definition.Id == config.BossAlienId)
             {
                 return DebugAlienVisualRole.Boss;
@@ -1318,8 +1394,9 @@ namespace Project147.UnityPresentation.Debug
         {
             if (currentBase == null
                 || wallet == null
+                || levelLayouts == null
                 || towerLoadout == null
-                || towerUpgradeDefinition == null
+                || towerUpgradeLoadout == null
                 || rewardCalculator == null
                 || freezePulseState == null
                 || orbitalStrikeState == null
@@ -1332,10 +1409,25 @@ namespace Project147.UnityPresentation.Debug
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 526), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 586), "Project 147 First Slice");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}");
             top += 22;
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Level: {SelectedLevelLayout.Id}");
+            top += 24;
+
+            if (!waveActive && !won && !lost && towers.Count == 0 && completedWaves == 0 && GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
+            {
+                SelectPreviousLevelLayout();
+            }
+
+            if (!waveActive && !won && !lost && towers.Count == 0 && completedWaves == 0 && GUI.Button(new Rect(left + 74, top, 54, 24), ">"))
+            {
+                SelectNextLevelLayout();
+            }
+
+            GUI.Label(new Rect(left + 144, top + 2, 130, 24), $"{selectedLevelLayoutIndex + 1}/{levelLayouts.Count}");
+            top += 30;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Scrap: {wallet.Balance}  {BuildTowerCostText()}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Selected: {SelectedTower.Id}");
@@ -1357,8 +1449,21 @@ namespace Project147.UnityPresentation.Debug
 
             GUI.Label(new Rect(left + 144, top + 2, 130, 24), $"{towerLoadout.SelectedIndex + 1}/{towerLoadout.Towers.Count}");
             top += 30;
-            GUI.Label(new Rect(left + 12, top, 260, 24), $"Upgrade: {towerUpgradeDefinition.Cost}  Max tower level: {config.MaxTowerLevel}");
-            top += 22;
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Upgrade: {SelectedTowerUpgrade.Id}  Cost {SelectedTowerUpgrade.Cost}");
+            top += 24;
+
+            if (!waveActive && !won && !lost && GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
+            {
+                SelectPreviousTowerUpgrade();
+            }
+
+            if (!waveActive && !won && !lost && GUI.Button(new Rect(left + 74, top, 54, 24), ">"))
+            {
+                SelectNextTowerUpgrade();
+            }
+
+            GUI.Label(new Rect(left + 144, top + 2, 130, 24), $"{towerUpgradeLoadout.SelectedIndex + 1}/{towerUpgradeLoadout.Upgrades.Count}");
+            top += 30;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Perfect wave bonus: {config.PerfectWaveScrapBonus}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Wave: {completedWaves}/{config.TotalWaves}  Alien cap: L{config.MaxAlienLevel}");
@@ -1505,7 +1610,13 @@ namespace Project147.UnityPresentation.Debug
             if (SelectedTower.StatusEffects.Count > 0)
             {
                 var effect = SelectedTower.StatusEffects[0];
-                return $"Ability: {effect.Type} {effect.DurationSeconds:0.#}s";
+
+                if (effect.Type == AlienStatusEffectType.Poison)
+                {
+                    return $"Ability: poison {effect.DurationSeconds:0.#}s at {effect.DamagePerSecond:0.#}/s";
+                }
+
+                return $"Ability: slow {effect.DurationSeconds:0.#}s at {effect.MovementSpeedMultiplier:P0} speed";
             }
 
             return "Ability: none";
@@ -1588,7 +1699,8 @@ namespace Project147.UnityPresentation.Debug
                 config.ArmouredAlienId,
                 config.BossAlienId,
                 config.ShieldedAlienId,
-                config.BurrowerAlienId);
+                config.BurrowerAlienId,
+                config.RegeneratorAlienId);
 
             GUI.Box(new Rect(left, top, 360, 112), "Next Wave");
             top += 28;
@@ -1623,13 +1735,17 @@ namespace Project147.UnityPresentation.Debug
 
         private void DrawSessionProgressPanel(int left, int top)
         {
-            if (levelProgress == null)
+            if (campaignProgress == null || levelLayouts == null)
             {
                 return;
             }
 
-            GUI.Box(new Rect(left, top, 260, 134), "Session Progress");
+            var levelProgress = campaignProgress.GetProgress(SelectedLevelLayout.Id);
+
+            GUI.Box(new Rect(left, top, 260, 156), "Session Progress");
             top += 28;
+            GUI.Label(new Rect(left + 12, top, 236, 22), FormatProgressLevelLabel(SelectedLevelLayout.Id));
+            top += 22;
             GUI.Label(new Rect(left + 12, top, 236, 22), $"Runs: {levelProgress.RunsCompleted}  Victories: {levelProgress.Victories}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 236, 22), $"Best stars: {levelProgress.BestStars}/3");
@@ -1666,8 +1782,9 @@ namespace Project147.UnityPresentation.Debug
 
         private void ApplyCompletedRunProgress()
         {
-            lastProgressResult = levelProgress.ApplyRunSummary(runSummary);
-            levelProgress = lastProgressResult.State;
+            var result = campaignProgress.ApplyRunSummary(SelectedLevelLayout.Id, runSummary);
+            campaignProgress = result.Campaign;
+            lastProgressResult = result.LevelResult;
         }
 
         private bool HasPendingRunChoice
@@ -1809,6 +1926,16 @@ namespace Project147.UnityPresentation.Debug
                 : "No new best this run";
         }
 
+        private static string FormatProgressLevelLabel(string levelId)
+        {
+            const string debugPrefix = "debug-";
+            var label = levelId != null && levelId.StartsWith(debugPrefix)
+                ? levelId.Substring(debugPrefix.Length)
+                : levelId;
+
+            return $"Level progress: {label}";
+        }
+
         private string BuildWaveSummary(WaveDefinition wave)
         {
             var counts = new Dictionary<string, int>();
@@ -1858,6 +1985,11 @@ namespace Project147.UnityPresentation.Debug
         private static GridCoordinate ToGridCoordinate(Vector2Int coordinate)
         {
             return new GridCoordinate(coordinate.x, coordinate.y);
+        }
+
+        private static Vector2Int ToVector2Int(GridCoordinate coordinate)
+        {
+            return new Vector2Int(coordinate.Column, coordinate.Row);
         }
 
         private sealed class RuntimeTower

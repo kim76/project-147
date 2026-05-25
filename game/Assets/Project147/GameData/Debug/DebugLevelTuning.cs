@@ -59,6 +59,7 @@ namespace Project147.GameData.Debug
             string armouredAlienId,
             string shieldedAlienId,
             string burrowerAlienId,
+            string regeneratorAlienId,
             string bossAlienId)
         {
             if (completedWaves < 0)
@@ -81,18 +82,25 @@ namespace Project147.GameData.Debug
                 throw new ArgumentException("Burrower alien id is required.", nameof(burrowerAlienId));
             }
 
+            if (string.IsNullOrWhiteSpace(regeneratorAlienId))
+            {
+                throw new ArgumentException("Regenerator alien id is required.", nameof(regeneratorAlienId));
+            }
+
             var totalAliens = startingWaveAlienCount + completedWaves * extraAliensPerWave;
             var hasBoss = completedWaves == totalWaves - 1;
             var fastAliens = completedWaves <= 0 ? 0 : Math.Max(1, totalAliens / 4);
             var armouredAliens = completedWaves < 2 ? 0 : Math.Max(1, totalAliens / 5);
             var shieldedAliens = completedWaves < 3 ? 0 : Math.Max(1, totalAliens / 6);
             var burrowerAliens = completedWaves < 2 ? 0 : Math.Max(1, totalAliens / 6);
+            var regeneratorAliens = completedWaves < 3 ? 0 : Math.Max(1, totalAliens / 7);
             var bossAliens = hasBoss ? 1 : 0;
             var basicAliens = totalAliens
                 - fastAliens
                 - armouredAliens
                 - shieldedAliens
                 - burrowerAliens
+                - regeneratorAliens
                 - bossAliens;
             var groups = new List<WaveSpawnGroup>();
 
@@ -101,6 +109,7 @@ namespace Project147.GameData.Debug
             AddGroup(groups, armouredAlienId, armouredAliens);
             AddGroup(groups, shieldedAlienId, shieldedAliens);
             AddGroup(groups, burrowerAlienId, burrowerAliens);
+            AddGroup(groups, regeneratorAlienId, regeneratorAliens);
             AddGroup(groups, bossAlienId, bossAliens);
 
             return new WaveDefinition(

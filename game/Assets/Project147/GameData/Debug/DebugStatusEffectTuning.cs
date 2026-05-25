@@ -16,23 +16,34 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private float movementSpeedMultiplier;
 
+        [SerializeField]
+        private AlienStatusEffectType type;
+
+        [SerializeField]
+        private float damagePerSecond;
+
         public DebugStatusEffectTuning(
             string id,
             float durationSeconds,
-            float movementSpeedMultiplier)
+            float movementSpeedMultiplier,
+            AlienStatusEffectType type = AlienStatusEffectType.Slow,
+            float damagePerSecond = 0)
         {
             this.id = id;
             this.durationSeconds = durationSeconds;
             this.movementSpeedMultiplier = movementSpeedMultiplier;
+            this.type = type;
+            this.damagePerSecond = damagePerSecond;
         }
 
         public AlienStatusEffectDefinition CreateDefinition()
         {
             return new AlienStatusEffectDefinition(
                 id,
-                AlienStatusEffectType.Slow,
+                type,
                 durationSeconds,
-                movementSpeedMultiplier);
+                movementSpeedMultiplier,
+                damagePerSecond);
         }
     }
 }

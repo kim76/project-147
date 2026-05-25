@@ -27,6 +27,7 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(alien.DodgeChance, Is.EqualTo(0));
             Assert.That(alien.ShieldCapacity, Is.EqualTo(0));
             Assert.That(alien.TargetableAfterPathProgress, Is.EqualTo(0));
+            Assert.That(alien.HealthRegenerationPerSecond, Is.EqualTo(0));
             Assert.That(alien.GetResistance(DamageType.Energy), Is.EqualTo(0.25f));
             Assert.That(alien.GetResistance(DamageType.Kinetic), Is.EqualTo(0));
         }
@@ -74,6 +75,23 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 2);
 
             Assert.That(alien.TargetableAfterPathProgress, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Constructor_WhenHealthRegenerationIsValid_StoresValue()
+        {
+            var alien = new AlienDefinition(
+                "regenerator",
+                50,
+                1.75f,
+                5,
+                new Dictionary<DamageType, float>(),
+                0,
+                0,
+                0,
+                4);
+
+            Assert.That(alien.HealthRegenerationPerSecond, Is.EqualTo(4));
         }
 
         [TestCase(null)]
@@ -183,6 +201,21 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 1,
                 5,
                 new Dictionary<DamageType, float>(),
+                0,
+                0,
+                -1));
+        }
+
+        [Test]
+        public void Constructor_WhenHealthRegenerationIsNegative_Throws()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new AlienDefinition(
+                "runner-basic",
+                50,
+                1,
+                5,
+                new Dictionary<DamageType, float>(),
+                0,
                 0,
                 0,
                 -1));

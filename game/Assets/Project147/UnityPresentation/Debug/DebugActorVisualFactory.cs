@@ -18,6 +18,10 @@ namespace Project147.UnityPresentation.Debug
             {
                 CreateMortarTower(tower.transform);
             }
+            else if (definition.DamageType == DamageType.Chemical)
+            {
+                CreateChemicalTower(tower.transform);
+            }
             else if (definition.DamageType == DamageType.Energy)
             {
                 CreateEnergyTower(tower.transform);
@@ -51,6 +55,8 @@ namespace Project147.UnityPresentation.Debug
                     return CreateShieldedAlien(alien, definition);
                 case DebugAlienVisualRole.Burrower:
                     return CreateBurrowerAlien(alien, definition);
+                case DebugAlienVisualRole.Regenerator:
+                    return CreateRegeneratorAlien(alien, definition);
                 case DebugAlienVisualRole.Boss:
                     return CreateBossAlien(alien, definition);
                 default:
@@ -177,6 +183,42 @@ namespace Project147.UnityPresentation.Debug
                 new Vector3(0.12f, 0.32f, 0.12f),
                 Vector3.zero,
                 new Color(0.88f, 0.96f, 1f, 1f));
+        }
+
+        private static void CreateChemicalTower(Transform parent)
+        {
+            CreatePart(
+                parent,
+                PrimitiveType.Cube,
+                "Chemical Base",
+                new Vector3(0, -0.16f, 0),
+                new Vector3(0.6f, 0.2f, 0.6f),
+                Vector3.zero,
+                new Color(0.12f, 0.28f, 0.16f, 1f));
+            CreatePart(
+                parent,
+                PrimitiveType.Cylinder,
+                "Chemical Tank",
+                new Vector3(-0.14f, 0.24f, 0),
+                new Vector3(0.22f, 0.5f, 0.22f),
+                Vector3.zero,
+                new Color(0.25f, 0.82f, 0.28f, 1f));
+            CreatePart(
+                parent,
+                PrimitiveType.Cylinder,
+                "Chemical Nozzle",
+                new Vector3(0.2f, 0.38f, 0),
+                new Vector3(0.14f, 0.48f, 0.14f),
+                new Vector3(0, 0, 72),
+                new Color(0.08f, 0.1f, 0.08f, 1f));
+            CreatePart(
+                parent,
+                PrimitiveType.Sphere,
+                "Chemical Bubble",
+                new Vector3(-0.14f, 0.56f, 0),
+                new Vector3(0.2f, 0.2f, 0.2f),
+                Vector3.zero,
+                new Color(0.82f, 1f, 0.26f, 1f));
         }
 
         private static DebugActorVisual CreateBasicAlien(
@@ -313,6 +355,36 @@ namespace Project147.UnityPresentation.Debug
                 new Vector3(0.72f, 0.04f, 0.72f),
                 Vector3.zero,
                 new Color(0.24f, 0.18f, 0.14f, 1f));
+            return new DebugActorVisual(root, body.GetComponent<Renderer>(), material);
+        }
+
+        private static DebugActorVisual CreateRegeneratorAlien(GameObject root, AlienDefinition definition)
+        {
+            var material = CreateDebugMaterial(new Color(0.16f, 0.72f, 0.38f, 1f));
+            var body = CreatePart(
+                root.transform,
+                PrimitiveType.Sphere,
+                "Regenerator Body",
+                Vector3.zero,
+                new Vector3(0.5f, 0.5f, 0.5f),
+                Vector3.zero,
+                material);
+            CreatePart(
+                root.transform,
+                PrimitiveType.Cylinder,
+                "Regenerator Halo",
+                new Vector3(0, 0.34f, 0),
+                new Vector3(0.62f, 0.04f, 0.62f),
+                Vector3.zero,
+                new Color(0.68f, 1f, 0.42f, 1f));
+            CreatePart(
+                root.transform,
+                PrimitiveType.Sphere,
+                "Regenerator Core",
+                new Vector3(0, 0.02f, -0.32f),
+                new Vector3(0.16f, 0.16f, 0.16f),
+                Vector3.zero,
+                new Color(0.95f, 1f, 0.35f, 1f));
             return new DebugActorVisual(root, body.GetComponent<Renderer>(), material);
         }
 

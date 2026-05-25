@@ -7,6 +7,7 @@ namespace Project147.UnityPresentation.Debug
         Armoured = 2,
         Shielded = 3,
         Burrower = 4,
-        Boss = 5
+        Regenerator = 5,
+        Boss = 6
     }
 }

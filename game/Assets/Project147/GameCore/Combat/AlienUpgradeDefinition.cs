@@ -105,7 +105,8 @@ namespace Project147.GameCore.Combat
                 resistances,
                 dodgeChance,
                 alien.ShieldCapacity,
-                alien.TargetableAfterPathProgress);
+                alien.TargetableAfterPathProgress,
+                alien.HealthRegenerationPerSecond);
         }
 
         private static Dictionary<DamageType, float> CopyResistances(AlienDefinition alien)

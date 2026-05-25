@@ -211,6 +211,53 @@ namespace Project147.Tests.EditMode.GameCore.Combat
         }
 
         [Test]
+        public void TickStatusEffects_WhenPoisonIsActive_AppliesDamageForActiveDuration()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100))
+                .ApplyStatusEffect(CreatePoison("acid-burn", 2, 6));
+
+            var result = state.TickStatusEffects(1.5f);
+
+            Assert.That(result.CurrentHealth, Is.EqualTo(91));
+            Assert.That(result.ActiveStatusEffects, Has.Count.EqualTo(1));
+        }
+
+        [Test]
+        public void TickStatusEffects_WhenPoisonExpires_OnlyAppliesRemainingDurationDamage()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100))
+                .ApplyStatusEffect(CreatePoison("acid-burn", 1, 6));
+
+            var result = state.TickStatusEffects(3);
+
+            Assert.That(result.CurrentHealth, Is.EqualTo(94));
+            Assert.That(result.ActiveStatusEffects, Is.Empty);
+        }
+
+        [Test]
+        public void Tick_WhenAlienHasRegeneration_HealsOverTime()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100, healthRegenerationPerSecond: 4))
+                .ApplyDamage(20);
+
+            var result = state.Tick(2);
+
+            Assert.That(result.CurrentHealth, Is.EqualTo(88));
+        }
+
+        [Test]
+        public void Tick_WhenAlienIsDead_DoesNotRegenerate()
+        {
+            var state = new AlienState(CreateAlien(maxHealth: 100, healthRegenerationPerSecond: 4))
+                .ApplyDamage(100);
+
+            var result = state.Tick(2);
+
+            Assert.That(result.CurrentHealth, Is.EqualTo(0));
+            Assert.That(result.IsAlive, Is.False);
+        }
+
+        [Test]
         public void TickStatusEffects_WhenDeltaIsNegative_Throws()
         {
             var state = new AlienState(CreateAlien(maxHealth: 100));
@@ -218,7 +265,10 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.Throws<ArgumentOutOfRangeException>(() => state.TickStatusEffects(-0.01f));
         }
 
-        private static AlienDefinition CreateAlien(float maxHealth, float shieldCapacity = 0)
+        private static AlienDefinition CreateAlien(
+            float maxHealth,
+            float shieldCapacity = 0,
+            float healthRegenerationPerSecond = 0)
         {
             return new AlienDefinition(
                 "runner-basic",
@@ -227,7 +277,9 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 5,
                 new Dictionary<DamageType, float>(),
                 0,
-                shieldCapacity);
+                shieldCapacity,
+                0,
+                healthRegenerationPerSecond);
         }
 
         private static AlienStatusEffectDefinition CreateSlow(
@@ -240,6 +292,19 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 AlienStatusEffectType.Slow,
                 durationSeconds,
                 movementSpeedMultiplier);
+        }
+
+        private static AlienStatusEffectDefinition CreatePoison(
+            string id,
+            float durationSeconds,
+            float damagePerSecond)
+        {
+            return new AlienStatusEffectDefinition(
+                id,
+                AlienStatusEffectType.Poison,
+                durationSeconds,
+                1,
+                damagePerSecond);
         }
     }
 }

@@ -8,7 +8,8 @@ namespace Project147.GameCore.Combat
             string id,
             AlienStatusEffectType type,
             float durationSeconds,
-            float movementSpeedMultiplier)
+            float movementSpeedMultiplier,
+            float damagePerSecond = 0)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -29,10 +30,16 @@ namespace Project147.GameCore.Combat
                     "Movement speed multiplier must be greater than zero and no more than one.");
             }
 
+            if (damagePerSecond < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(damagePerSecond), "Damage per second cannot be negative.");
+            }
+
             Id = id;
             Type = type;
             DurationSeconds = durationSeconds;
             MovementSpeedMultiplier = movementSpeedMultiplier;
+            DamagePerSecond = damagePerSecond;
         }
 
         public string Id { get; }
@@ -42,5 +49,7 @@ namespace Project147.GameCore.Combat
         public float DurationSeconds { get; }
 
         public float MovementSpeedMultiplier { get; }
+
+        public float DamagePerSecond { get; }
     }
 }

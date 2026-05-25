@@ -28,6 +28,11 @@ namespace Project147.GameCore.Combat
 
         public float DistanceToTower { get; }
 
+        public bool IsTargetable
+        {
+            get { return PathProgress >= Alien.Definition.TargetableAfterPathProgress; }
+        }
+
         public bool Equals(TargetCandidate other)
         {
             return ReferenceEquals(Alien, other.Alien)
@@ -46,4 +51,3 @@ namespace Project147.GameCore.Combat
         }
     }
 }
-

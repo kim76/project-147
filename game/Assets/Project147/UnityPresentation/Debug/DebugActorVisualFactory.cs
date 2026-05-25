@@ -49,6 +49,8 @@ namespace Project147.UnityPresentation.Debug
                     return CreateArmouredAlien(alien, definition);
                 case DebugAlienVisualRole.Shielded:
                     return CreateShieldedAlien(alien, definition);
+                case DebugAlienVisualRole.Burrower:
+                    return CreateBurrowerAlien(alien, definition);
                 case DebugAlienVisualRole.Boss:
                     return CreateBossAlien(alien, definition);
                 default:
@@ -281,6 +283,36 @@ namespace Project147.UnityPresentation.Debug
                 new Vector3(0.26f, 0.08f, 0.08f),
                 Vector3.zero,
                 new Color(1f, 0.95f, 0.24f, 1f));
+            return new DebugActorVisual(root, body.GetComponent<Renderer>(), material);
+        }
+
+        private static DebugActorVisual CreateBurrowerAlien(GameObject root, AlienDefinition definition)
+        {
+            var material = CreateDebugMaterial(new Color(0.46f, 0.24f, 0.18f, 1f));
+            var body = CreatePart(
+                root.transform,
+                PrimitiveType.Capsule,
+                "Burrower Body",
+                new Vector3(0, -0.08f, 0),
+                new Vector3(0.38f, 0.34f, 0.38f),
+                new Vector3(90, 0, 0),
+                material);
+            CreatePart(
+                root.transform,
+                PrimitiveType.Sphere,
+                "Burrower Nose",
+                new Vector3(0, -0.06f, -0.28f),
+                new Vector3(0.26f, 0.2f, 0.26f),
+                new Vector3(90, 0, 0),
+                new Color(0.92f, 0.6f, 0.22f, 1f));
+            CreatePart(
+                root.transform,
+                PrimitiveType.Cylinder,
+                "Burrower Dust",
+                new Vector3(0, -0.25f, 0),
+                new Vector3(0.72f, 0.04f, 0.72f),
+                Vector3.zero,
+                new Color(0.24f, 0.18f, 0.14f, 1f));
             return new DebugActorVisual(root, body.GetComponent<Renderer>(), material);
         }
 

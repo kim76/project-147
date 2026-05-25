@@ -926,6 +926,11 @@ namespace Project147.UnityPresentation.Debug
                 return DebugAlienVisualRole.Shielded;
             }
 
+            if (definition.Id == config.BurrowerAlienId)
+            {
+                return DebugAlienVisualRole.Burrower;
+            }
+
             if (definition.Id == config.BossAlienId)
             {
                 return DebugAlienVisualRole.Boss;
@@ -1407,7 +1412,8 @@ namespace Project147.UnityPresentation.Debug
                 config.FastAlienId,
                 config.ArmouredAlienId,
                 config.BossAlienId,
-                config.ShieldedAlienId);
+                config.ShieldedAlienId,
+                config.BurrowerAlienId);
 
             GUI.Box(new Rect(left, top, 360, 112), "Next Wave");
             top += 28;

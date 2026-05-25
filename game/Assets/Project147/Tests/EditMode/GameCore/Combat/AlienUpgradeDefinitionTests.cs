@@ -131,7 +131,9 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 {
                     { DamageType.Kinetic, 0.2f }
                 },
-                0.1f);
+                0.1f,
+                20,
+                3);
             var upgrade = new AlienUpgradeDefinition("runner-evasion-1", 1.25f, 1.2f, 1.5f, 0.15f, DamageType.Kinetic, 0.25f);
 
             var result = upgrade.ApplyTo(alien);
@@ -141,6 +143,8 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(result.SpeedCellsPerSecond, Is.EqualTo(1.8f).Within(0.0001f));
             Assert.That(result.Reward, Is.EqualTo(15));
             Assert.That(result.DodgeChance, Is.EqualTo(0.25f).Within(0.0001f));
+            Assert.That(result.ShieldCapacity, Is.EqualTo(20));
+            Assert.That(result.TargetableAfterPathProgress, Is.EqualTo(3));
             Assert.That(result.GetResistance(DamageType.Kinetic), Is.EqualTo(0.45f).Within(0.0001f));
         }
 

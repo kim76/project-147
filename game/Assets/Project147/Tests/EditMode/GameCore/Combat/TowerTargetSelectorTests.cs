@@ -28,13 +28,29 @@ namespace Project147.Tests.EditMode.GameCore.Combat
         [Test]
         public void SelectTarget_IgnoresDeadCandidates()
         {
-            var dead = Candidate(maxHealth: 100, damage: 100, pathProgress: 10, distanceToTower: 1);
-            var alive = Candidate(maxHealth: 100, damage: 0, pathProgress: 5, distanceToTower: 2);
+            var dead = CreateCandidate(maxHealth: 100, damage: 100, pathProgress: 10, distanceToTower: 1);
+            var alive = CreateCandidate(maxHealth: 100, damage: 0, pathProgress: 5, distanceToTower: 2);
             var selector = new TowerTargetSelector();
 
             var result = selector.SelectTarget(new[] { dead, alive }, TowerTargetingMode.First);
 
-            Assert.That(result, Is.EqualTo(alive));
+            Assert.That(result.HasValue, Is.True);
+            AssertTargetCandidate(result.Value, alive);
+        }
+
+        [Test]
+        public void SelectTarget_IgnoresUntargetableCandidates()
+        {
+            var untargetable = Candidate(pathProgress: 1, distanceToTower: 1, currentHealth: 100, targetableAfterPathProgress: 3);
+            var targetable = Candidate(pathProgress: 0.5f, distanceToTower: 2, currentHealth: 80);
+            var selector = new TowerTargetSelector();
+
+            var result = selector.SelectTarget(new[] { untargetable, targetable }, TowerTargetingMode.First);
+
+            Assert.That(untargetable.IsTargetable, Is.False);
+            Assert.That(targetable.IsTargetable, Is.True);
+            Assert.That(result.HasValue, Is.True);
+            AssertTargetCandidate(result.Value, targetable);
         }
 
         [Test]
@@ -46,7 +62,10 @@ namespace Project147.Tests.EditMode.GameCore.Combat
 
             var result = selector.SelectTarget(new[] { early, late }, TowerTargetingMode.First);
 
-            Assert.That(result, Is.EqualTo(late));
+            Assert.That(early.IsTargetable, Is.True);
+            Assert.That(late.IsTargetable, Is.True);
+            Assert.That(result.HasValue, Is.True);
+            AssertTargetCandidate(result.Value, late);
         }
 
         [Test]
@@ -58,7 +77,10 @@ namespace Project147.Tests.EditMode.GameCore.Combat
 
             var result = selector.SelectTarget(new[] { late, early }, TowerTargetingMode.Last);
 
-            Assert.That(result, Is.EqualTo(early));
+            Assert.That(early.IsTargetable, Is.True);
+            Assert.That(late.IsTargetable, Is.True);
+            Assert.That(result.HasValue, Is.True);
+            AssertTargetCandidate(result.Value, early);
         }
 
         [Test]
@@ -70,7 +92,8 @@ namespace Project147.Tests.EditMode.GameCore.Combat
 
             var result = selector.SelectTarget(new[] { far, near }, TowerTargetingMode.Closest);
 
-            Assert.That(result, Is.EqualTo(near));
+            Assert.That(result.HasValue, Is.True);
+            AssertTargetCandidate(result.Value, near);
         }
 
         [Test]
@@ -82,7 +105,10 @@ namespace Project147.Tests.EditMode.GameCore.Combat
 
             var result = selector.SelectTarget(new[] { weak, strong }, TowerTargetingMode.Strongest);
 
-            Assert.That(result, Is.EqualTo(strong));
+            Assert.That(weak.IsTargetable, Is.True);
+            Assert.That(strong.IsTargetable, Is.True);
+            Assert.That(result.HasValue, Is.True);
+            AssertTargetCandidate(result.Value, strong);
         }
 
         [Test]
@@ -94,7 +120,10 @@ namespace Project147.Tests.EditMode.GameCore.Combat
 
             var result = selector.SelectTarget(new[] { strong, weak }, TowerTargetingMode.Weakest);
 
-            Assert.That(result, Is.EqualTo(weak));
+            Assert.That(weak.IsTargetable, Is.True);
+            Assert.That(strong.IsTargetable, Is.True);
+            Assert.That(result.HasValue, Is.True);
+            AssertTargetCandidate(result.Value, weak);
         }
 
         [Test]
@@ -109,28 +138,53 @@ namespace Project147.Tests.EditMode.GameCore.Combat
 
         private static TargetCandidate Candidate(float pathProgress, float distanceToTower, float currentHealth)
         {
-            return Candidate(100, 100 - currentHealth, pathProgress, distanceToTower);
+            return CreateCandidate(100, 100 - currentHealth, pathProgress, distanceToTower);
+        }
+
+        private static void AssertTargetCandidate(TargetCandidate actual, TargetCandidate expected)
+        {
+            Assert.That(actual.PathProgress, Is.EqualTo(expected.PathProgress));
+            Assert.That(actual.DistanceToTower, Is.EqualTo(expected.DistanceToTower));
+            Assert.That(actual.Alien.CurrentHealth, Is.EqualTo(expected.Alien.CurrentHealth));
+            Assert.That(actual.Alien.Definition.Id, Is.EqualTo(expected.Alien.Definition.Id));
         }
 
         private static TargetCandidate Candidate(
+            float pathProgress,
+            float distanceToTower,
+            float currentHealth,
+            float targetableAfterPathProgress)
+        {
+            return CreateCandidate(
+                100,
+                100 - currentHealth,
+                pathProgress,
+                distanceToTower,
+                targetableAfterPathProgress);
+        }
+
+        private static TargetCandidate CreateCandidate(
             float maxHealth,
             float damage,
             float pathProgress,
-            float distanceToTower)
+            float distanceToTower,
+            float targetableAfterPathProgress = 0)
         {
-            var alien = new AlienState(CreateAlien(maxHealth)).ApplyDamage(damage);
+            var alien = new AlienState(CreateAlien(maxHealth, targetableAfterPathProgress)).ApplyDamage(damage);
             return new TargetCandidate(alien, pathProgress, distanceToTower);
         }
 
-        private static AlienDefinition CreateAlien(float maxHealth)
+        private static AlienDefinition CreateAlien(float maxHealth, float targetableAfterPathProgress = 0)
         {
             return new AlienDefinition(
                 "runner-basic",
                 maxHealth,
                 1,
                 5,
-                new Dictionary<DamageType, float>());
+                new Dictionary<DamageType, float>(),
+                0,
+                0,
+                targetableAfterPathProgress);
         }
     }
 }
-

@@ -34,6 +34,7 @@ namespace Project147.Tests.EditMode.GameData.Debug
             Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.FastAlienId), Is.True);
             Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.ArmouredAlienId), Is.True);
             Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.ShieldedAlienId), Is.False);
+            Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.BurrowerAlienId), Is.True);
             Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.BossAlienId), Is.False);
         }
 
@@ -79,6 +80,17 @@ namespace Project147.Tests.EditMode.GameData.Debug
 
             Assert.That(shielded.Id, Is.EqualTo(config.ShieldedAlienId));
             Assert.That(shielded.ShieldCapacity, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void CreateAlienDefinition_WhenBurrowerId_ReturnsBurrowerAlien()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var burrower = config.CreateAlienDefinition(config.BurrowerAlienId, 0);
+
+            Assert.That(burrower.Id, Is.EqualTo(config.BurrowerAlienId));
+            Assert.That(burrower.TargetableAfterPathProgress, Is.GreaterThan(0));
         }
 
         [Test]

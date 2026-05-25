@@ -19,10 +19,11 @@ The debug first slice has:
   - Railgun: faster, applies a short slow effect.
   - Mortar: slower, explosive splash damage.
   - Energy: direct single-target energy profile.
-- Mixed enemy waves with basic, fast, armoured, shielded and boss debug aliens.
+- Mixed enemy waves with basic, fast, armoured, shielded, burrower and boss debug aliens.
 - Alien upgrades across later waves.
 - A final-wave boss alien with distinct stats, wave-intel tag and first-pass visual profile.
 - Shielded aliens with tested shield-first damage behaviour.
+- Burrower aliens with tested early-path tower untargetability.
 - Freeze Pulse player ability with cooldown and debug feedback.
 - Orbital Strike player ability with cooldown, resistance-aware damage and debug feedback.
 - Between-wave reward choices drawn as a random 3-option offer from a larger reward pool.
@@ -43,12 +44,13 @@ Before the next development slice:
 3. Press Play.
 4. Progress to the final wave.
 5. Confirm the `Next Wave` panel shows a `Boss` tag before the final wave.
-6. Confirm later waves show a `Shielded` tag before shielded aliens appear.
+6. Confirm later waves show `Shielded` and `Burrower` tags before those aliens appear.
 7. Select tower `3/3` and confirm the energy tower appears visually different.
-8. Start the final wave and confirm a large purple boss alien appears.
-9. Confirm victory still triggers after the boss wave is cleared.
-10. Confirm the run summary panel appears with stars, kill, reward and ability counts.
-11. Confirm the `Session Progress` panel updates after victory or defeat and survives pressing `Restart`.
+8. Start a burrower wave and confirm brown low-profile aliens are not shot immediately at spawn.
+9. Start the final wave and confirm a large purple boss alien appears.
+10. Confirm victory still triggers after the boss wave is cleared.
+11. Confirm the run summary panel appears with stars, kill, reward and ability counts.
+12. Confirm the `Session Progress` panel updates after victory or defeat and survives pressing `Restart`.
 
 ## Next Slice Candidates
 
@@ -61,12 +63,14 @@ Deliverables:
 - Done: add basic, fast and armoured alien definitions to the debug config.
 - Done: add a boss alien definition to the debug config.
 - Done: add a shielded alien definition to the debug config.
+- Done: add a burrower alien definition to the debug config.
 - Done: add a tested alien wave composition model.
 - Done: spawn mixed waves instead of one repeated alien.
-- Done: show visual differences for basic, fast, armoured, shielded and boss aliens.
+- Done: show visual differences for basic, fast, armoured, shielded, burrower and boss aliens.
 - Done: show enemy type in event/debug information where useful.
 - Done: tag boss waves in next-wave intel.
 - Done: tag shielded waves in next-wave intel.
+- Done: tag burrower waves in next-wave intel.
 
 Why next: tower variety is now meaningful, but enemy variety is still too flat.
 
@@ -134,7 +138,7 @@ Why next: this starts the “addictive” part without monetisation or content b
 2. Verify the post-run summary in Unity.
 3. Generate concept boards for final art direction.
 4. Done: add one lightweight progression layer that uses the star rating.
-5. Add an enemy-side mechanic such as burrowers.
+5. Done: add an enemy-side mechanic such as burrowers.
 6. Split debug tuning into separate ScriptableObject assets only when the current single asset becomes painful.
 
 ## Not Yet

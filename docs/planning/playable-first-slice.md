@@ -20,8 +20,9 @@ For the active next-task list, see `current-roadmap.md`.
 - Placement is rejected if it blocks all paths.
 - Player starts waves manually.
 - A `Next Wave` panel previews enemy counts and tags before each wave.
-- Mixed waves spawn basic, fast, armoured, shielded and boss debug aliens.
+- Mixed waves spawn basic, fast, armoured, shielded, burrower and boss debug aliens.
 - Shielded aliens absorb damage into shields before health.
+- Burrower aliens cannot be targeted by towers until they have travelled several path steps.
 - The final wave includes one boss alien.
 - Aliens follow the current path and damage the base if they reach the goal.
 - Later waves spawn upgraded aliens, capped by the debug config.
@@ -70,6 +71,7 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Cyan capsule: fast alien.
 - Stone cube: armoured alien.
 - Blue alien with pale shell: shielded alien.
+- Brown low-profile alien with dust ring: burrower alien.
 - Large purple alien with crown: boss alien.
 - Red/black tower: railgun.
 - Orange/black tower: mortar.
@@ -84,7 +86,7 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Towers can only be placed between waves.
 - Towers can only be upgraded between waves.
 - There are three debug tower types.
-- There are five debug alien types.
+- There are six debug alien types.
 - First-slice tuning is grouped in one debug config asset, not final production content data.
 - There is no polished UI.
 - There is no save system.

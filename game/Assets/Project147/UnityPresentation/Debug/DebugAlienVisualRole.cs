@@ -6,6 +6,7 @@ namespace Project147.UnityPresentation.Debug
         Fast = 1,
         Armoured = 2,
         Shielded = 3,
-        Boss = 4
+        Burrower = 4,
+        Boss = 5
     }
 }

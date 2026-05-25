@@ -23,7 +23,7 @@ namespace Project147.GameCore.Combat
 
             foreach (var candidate in candidates)
             {
-                if (!candidate.Alien.IsAlive)
+                if (!candidate.Alien.IsAlive || !candidate.IsTargetable)
                 {
                     continue;
                 }

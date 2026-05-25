@@ -102,6 +102,9 @@ namespace Project147.GameData.Debug
         private DebugAlienTuning shieldedAlien = CreateDefaultShieldedAlienTuning();
 
         [SerializeField]
+        private DebugAlienTuning burrowerAlien = CreateDefaultBurrowerAlienTuning();
+
+        [SerializeField]
         private DebugAlienUpgradeTuning alienUpgrade = new DebugAlienUpgradeTuning();
 
         public int StartingCurrency
@@ -159,6 +162,11 @@ namespace Project147.GameData.Debug
             get { return ShieldedAlien.Id; }
         }
 
+        public string BurrowerAlienId
+        {
+            get { return BurrowerAlien.Id; }
+        }
+
         public WaveDefinition CreateWaveDefinition(int completedWaves)
         {
             return level.CreateWaveDefinition(
@@ -167,6 +175,7 @@ namespace Project147.GameData.Debug
                 FastAlienId,
                 ArmouredAlienId,
                 ShieldedAlienId,
+                BurrowerAlienId,
                 BossAlienId);
         }
 
@@ -266,6 +275,11 @@ namespace Project147.GameData.Debug
                 return ShieldedAlien.CreateDefinition();
             }
 
+            if (alienId == BurrowerAlienId)
+            {
+                return BurrowerAlien.CreateDefinition();
+            }
+
             if (alienId == BossAlienId)
             {
                 return BossAlien.CreateDefinition();
@@ -287,6 +301,11 @@ namespace Project147.GameData.Debug
         private DebugTowerTuning EnergyTower
         {
             get { return energyTower ?? CreateDefaultEnergyTowerTuning(); }
+        }
+
+        private DebugAlienTuning BurrowerAlien
+        {
+            get { return burrowerAlien ?? CreateDefaultBurrowerAlienTuning(); }
         }
 
         private static DebugTowerTuning CreateDefaultEnergyTowerTuning()
@@ -316,6 +335,20 @@ namespace Project147.GameData.Debug
                 DamageType.Kinetic,
                 0.1f,
                 65);
+        }
+
+        private static DebugAlienTuning CreateDefaultBurrowerAlienTuning()
+        {
+            return new DebugAlienTuning(
+                "debug-burrower",
+                52,
+                1.65f,
+                22,
+                0.08f,
+                DamageType.Explosive,
+                0.1f,
+                0,
+                3);
         }
 
         private static DebugAlienTuning CreateDefaultBossAlienTuning()

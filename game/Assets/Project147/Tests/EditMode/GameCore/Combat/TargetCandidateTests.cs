@@ -17,6 +17,27 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(candidate.Alien, Is.SameAs(alien));
             Assert.That(candidate.PathProgress, Is.EqualTo(3.5f));
             Assert.That(candidate.DistanceToTower, Is.EqualTo(2.25f));
+            Assert.That(candidate.IsTargetable, Is.True);
+        }
+
+        [Test]
+        public void IsTargetable_WhenPathProgressIsBelowAlienThreshold_ReturnsFalse()
+        {
+            var alien = new AlienState(CreateAlien(100, targetableAfterPathProgress: 3));
+
+            var candidate = new TargetCandidate(alien, 2.5f, 1);
+
+            Assert.That(candidate.IsTargetable, Is.False);
+        }
+
+        [Test]
+        public void IsTargetable_WhenPathProgressMeetsAlienThreshold_ReturnsTrue()
+        {
+            var alien = new AlienState(CreateAlien(100, targetableAfterPathProgress: 3));
+
+            var candidate = new TargetCandidate(alien, 3, 1);
+
+            Assert.That(candidate.IsTargetable, Is.True);
         }
 
         [Test]
@@ -43,15 +64,17 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 -1));
         }
 
-        private static AlienDefinition CreateAlien(float maxHealth)
+        private static AlienDefinition CreateAlien(float maxHealth, float targetableAfterPathProgress = 0)
         {
             return new AlienDefinition(
                 "runner-basic",
                 maxHealth,
                 1,
                 5,
-                new Dictionary<DamageType, float>());
+                new Dictionary<DamageType, float>(),
+                0,
+                0,
+                targetableAfterPathProgress);
         }
     }
 }
-

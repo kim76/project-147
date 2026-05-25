@@ -151,7 +151,7 @@ namespace Project147.UnityPresentation.Debug
 
             wallet = wallet.Spend(SelectedTower.Cost);
             placedTowers.Add(coordinate);
-            var towerObject = CreateTowerObject(coordinate);
+            var towerObject = CreateTowerObject(coordinate, SelectedTower);
             towers.Add(new RuntimeTower(coordinate, new TowerState(SelectedTower), towerObject));
             RebuildTiles();
             HidePlacementPreviewIfAny();
@@ -636,23 +636,81 @@ namespace Project147.UnityPresentation.Debug
             tileObjects.Add(tile);
         }
 
-        private GameObject CreateTowerObject(GridCoordinate coordinate)
+        private GameObject CreateTowerObject(GridCoordinate coordinate, TowerDefinition definition)
         {
-            var tower = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            var tower = new GameObject($"Debug Tower {coordinate} {definition.Id}");
             tower.name = $"Debug Tower {coordinate}";
             tower.transform.SetParent(transform, false);
             tower.transform.localPosition = ToWorldPosition(coordinate, 0.45f);
-            tower.transform.localScale = new Vector3(0.45f, 0.65f, 0.45f);
 
-            var renderer = tower.GetComponent<Renderer>();
-
-            if (renderer != null && towerCellMaterial != null)
+            if (definition.DamageType == DamageType.Explosive)
             {
-                renderer.sharedMaterial = towerCellMaterial;
+                CreateTowerPart(
+                    tower.transform,
+                    PrimitiveType.Cube,
+                    "Mortar Base",
+                    new Vector3(0, -0.05f, 0),
+                    new Vector3(0.62f, 0.35f, 0.62f),
+                    new Color(1f, 0.55f, 0.12f, 1f));
+                CreateTowerPart(
+                    tower.transform,
+                    PrimitiveType.Cylinder,
+                    "Mortar Tube",
+                    new Vector3(0, 0.28f, 0),
+                    new Vector3(0.35f, 0.48f, 0.35f),
+                    new Color(0.16f, 0.13f, 0.11f, 1f));
             }
+            else
+            {
+                CreateTowerPart(
+                    tower.transform,
+                    PrimitiveType.Cylinder,
+                    "Railgun Stem",
+                    new Vector3(0, -0.04f, 0),
+                    new Vector3(0.38f, 0.72f, 0.38f),
+                    new Color(0.94f, 0.12f, 0.24f, 1f));
+                CreateTowerPart(
+                    tower.transform,
+                    PrimitiveType.Sphere,
+                    "Railgun Core",
+                    new Vector3(0, 0.42f, 0),
+                    new Vector3(0.52f, 0.52f, 0.52f),
+                    new Color(1f, 0.22f, 0.36f, 1f));
+            }
+
 
             towerObjects.Add(tower);
             return tower;
+        }
+
+        private static void CreateTowerPart(
+            Transform parent,
+            PrimitiveType primitiveType,
+            string name,
+            Vector3 localPosition,
+            Vector3 localScale,
+            Color colour)
+        {
+            var part = GameObject.CreatePrimitive(primitiveType);
+            part.name = name;
+            part.transform.SetParent(parent, false);
+            part.transform.localPosition = localPosition;
+            part.transform.localScale = localScale;
+
+            var renderer = part.GetComponent<Renderer>();
+
+            if (renderer != null)
+            {
+                var material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                material.color = colour;
+
+                if (material.HasProperty("_BaseColor"))
+                {
+                    material.SetColor("_BaseColor", colour);
+                }
+
+                renderer.material = material;
+            }
         }
 
         private void UpdateTowerObject(RuntimeTower tower)
@@ -663,8 +721,8 @@ namespace Project147.UnityPresentation.Debug
             }
 
             var levelBonus = (tower.State.Level - 1) * 0.16f;
-            tower.GameObject.transform.localPosition = ToWorldPosition(tower.Coordinate, 0.45f + levelBonus * 0.5f);
-            tower.GameObject.transform.localScale = new Vector3(0.45f, 0.65f + levelBonus, 0.45f);
+            tower.GameObject.transform.localPosition = ToWorldPosition(tower.Coordinate, 0.45f + levelBonus * 0.25f);
+            tower.GameObject.transform.localScale = Vector3.one * (1 + levelBonus);
         }
 
         private TacticalGrid CreateGrid(GridBounds bounds)
@@ -837,13 +895,15 @@ namespace Project147.UnityPresentation.Debug
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 296), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 320), "Project 147 First Slice");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Scrap: {wallet.Balance}  Tower cost: {SelectedTower.Cost}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Selected: {SelectedTower.Id}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Dmg {SelectedTower.Damage}  Rng {SelectedTower.Range}  Rate {SelectedTower.FireRatePerSecond}");
             top += 30;
 
             if (!waveActive && !won && !lost && GUI.Button(new Rect(left + 12, top, 54, 24), "<"))

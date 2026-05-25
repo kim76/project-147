@@ -32,6 +32,7 @@ These tickets are intentionally small. Each should leave the project in a better
 - Debug event feed added for visible tower, reward, leak and win/loss feedback.
 - Tower definitions now own their status effects so future tower types can have distinct abilities.
 - Tower loadout model added and first slice now supports switching between two tower types.
+- Debug tower visuals now distinguish railgun and mortar tower types in the scene and HUD.
 - Unity Test Runner confirmed available through `Window > General > Test Runner`.
 - Command-line test run not attempted while the Unity project is open in the editor.
 

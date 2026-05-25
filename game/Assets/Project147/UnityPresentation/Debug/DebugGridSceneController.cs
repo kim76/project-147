@@ -906,6 +906,11 @@ namespace Project147.UnityPresentation.Debug
                 return DebugAlienVisualRole.Armoured;
             }
 
+            if (definition.Id == config.BossAlienId)
+            {
+                return DebugAlienVisualRole.Boss;
+            }
+
             return DebugAlienVisualRole.Basic;
         }
 
@@ -1377,7 +1382,8 @@ namespace Project147.UnityPresentation.Debug
                 completedWaves,
                 nextWave,
                 config.FastAlienId,
-                config.ArmouredAlienId);
+                config.ArmouredAlienId,
+                config.BossAlienId);
 
             GUI.Box(new Rect(left, top, 360, 112), "Next Wave");
             top += 28;

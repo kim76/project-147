@@ -50,6 +50,25 @@ namespace Project147.Tests.EditMode.GameCore.Level
         }
 
         [Test]
+        public void Build_WhenWaveContainsBoss_AddsBossTag()
+        {
+            var builder = new WaveIntelBuilder();
+            var wave = new WaveDefinition(
+                new WaveComposition(new[]
+                {
+                    new WaveSpawnGroup("basic", 6),
+                    new WaveSpawnGroup("boss", 1)
+                }),
+                0.5f,
+                25);
+
+            var summary = builder.Build(4, wave, "fast", "armoured", "boss");
+
+            Assert.That(summary.Tags.Contains("Boss"), Is.True);
+            Assert.That(summary.Tags.Contains("Mixed"), Is.True);
+        }
+
+        [Test]
         public void Build_WhenCompletedWavesIsNegative_Throws()
         {
             var builder = new WaveIntelBuilder();

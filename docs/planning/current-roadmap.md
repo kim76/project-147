@@ -18,8 +18,9 @@ The debug first slice has:
 - Two debug towers:
   - Railgun: faster, applies a short slow effect.
   - Mortar: slower, explosive splash damage.
-- Mixed enemy waves with basic, fast and armoured debug aliens.
+- Mixed enemy waves with basic, fast, armoured and boss debug aliens.
 - Alien upgrades across later waves.
+- A final-wave boss alien with distinct stats, wave-intel tag and first-pass visual profile.
 - Freeze Pulse player ability with cooldown and debug feedback.
 - Orbital Strike player ability with cooldown, resistance-aware damage and debug feedback.
 - Between-wave reward choices drawn as a random 3-option offer from a larger reward pool.
@@ -34,13 +35,12 @@ The debug first slice has:
 Before the next development slice:
 
 1. Run Edit Mode tests in Unity.
-2. Confirm the new choice and wave-intel tests appear and pass.
+2. Confirm the new boss wave and wave-intel tests appear and pass.
 3. Press Play.
-4. Start a wave with active aliens.
-5. Press `Orbital Strike`.
-6. Confirm active aliens flash, orange strike rings appear and the cooldown begins.
-7. Confirm the `Next Wave` and reward panels still behave as before.
-8. If `Rapid Loader` appears, choose it and confirm the next wave shows boosted tower rate.
+4. Progress to the final wave.
+5. Confirm the `Next Wave` panel shows a `Boss` tag before the final wave.
+6. Start the final wave and confirm a large purple boss alien appears.
+7. Confirm victory still triggers after the boss wave is cleared.
 
 ## Next Slice Candidates
 
@@ -51,10 +51,12 @@ Goal: introduce enemy variety without adding messy scene-only logic.
 Deliverables:
 
 - Done: add basic, fast and armoured alien definitions to the debug config.
+- Done: add a boss alien definition to the debug config.
 - Done: add a tested alien wave composition model.
 - Done: spawn mixed waves instead of one repeated alien.
-- Done: show visual differences for basic, fast and armoured aliens.
+- Done: show visual differences for basic, fast, armoured and boss aliens.
 - Done: show enemy type in event/debug information where useful.
+- Done: tag boss waves in next-wave intel.
 
 Why next: tower variety is now meaningful, but enemy variety is still too flat.
 
@@ -118,10 +120,10 @@ Why next: this starts the “addictive” part without monetisation or content b
 
 ## Recommended Order
 
-1. Verify wave intel, random reward offers and Overclock in Unity.
-2. Verify Orbital Strike in Unity.
-3. Generate concept boards for final art direction.
-4. Add an enemy-side mechanic such as shields, burrowers or a first boss wave.
+1. Verify the final-wave boss in Unity.
+2. Generate concept boards for final art direction.
+3. Add an enemy-side mechanic such as shields or burrowers.
+4. Add a simple post-run summary screen for kill/reward stats.
 5. Split debug tuning into separate ScriptableObject assets only when the current single asset becomes painful.
 
 ## Not Yet

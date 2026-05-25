@@ -56,22 +56,31 @@ namespace Project147.GameData.Debug
             int completedWaves,
             string basicAlienId,
             string fastAlienId,
-            string armouredAlienId)
+            string armouredAlienId,
+            string bossAlienId)
         {
             if (completedWaves < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(completedWaves), "Completed waves cannot be negative.");
             }
 
+            if (string.IsNullOrWhiteSpace(bossAlienId))
+            {
+                throw new ArgumentException("Boss alien id is required.", nameof(bossAlienId));
+            }
+
             var totalAliens = startingWaveAlienCount + completedWaves * extraAliensPerWave;
+            var hasBoss = completedWaves == totalWaves - 1;
             var fastAliens = completedWaves <= 0 ? 0 : Math.Max(1, totalAliens / 4);
             var armouredAliens = completedWaves < 2 ? 0 : Math.Max(1, totalAliens / 5);
-            var basicAliens = totalAliens - fastAliens - armouredAliens;
+            var bossAliens = hasBoss ? 1 : 0;
+            var basicAliens = totalAliens - fastAliens - armouredAliens - bossAliens;
             var groups = new List<WaveSpawnGroup>();
 
             AddGroup(groups, basicAlienId, basicAliens);
             AddGroup(groups, fastAlienId, fastAliens);
             AddGroup(groups, armouredAlienId, armouredAliens);
+            AddGroup(groups, bossAlienId, bossAliens);
 
             return new WaveDefinition(
                 new WaveComposition(groups),

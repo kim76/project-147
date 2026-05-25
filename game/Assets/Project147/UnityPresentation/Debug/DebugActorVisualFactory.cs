@@ -43,6 +43,8 @@ namespace Project147.UnityPresentation.Debug
                     return CreateFastAlien(alien, definition);
                 case DebugAlienVisualRole.Armoured:
                     return CreateArmouredAlien(alien, definition);
+                case DebugAlienVisualRole.Boss:
+                    return CreateBossAlien(alien, definition);
                 default:
                     return CreateBasicAlien(alien, definition, fallbackMaterial);
             }
@@ -199,6 +201,44 @@ namespace Project147.UnityPresentation.Debug
                 new Vector3(0.28f, 0.08f, 0.08f),
                 Vector3.zero,
                 new Color(0.2f, 0.95f, 0.58f, 1f));
+            return new DebugActorVisual(root, body.GetComponent<Renderer>(), material);
+        }
+
+        private static DebugActorVisual CreateBossAlien(GameObject root, AlienDefinition definition)
+        {
+            var material = CreateDebugMaterial(new Color(0.55f, 0.18f, 0.72f, 1f));
+            var body = CreatePart(
+                root.transform,
+                PrimitiveType.Sphere,
+                "Boss Core",
+                Vector3.zero,
+                new Vector3(0.82f, 0.58f, 0.82f),
+                Vector3.zero,
+                material);
+            CreatePart(
+                root.transform,
+                PrimitiveType.Cube,
+                "Boss Crown",
+                new Vector3(0, 0.42f, 0),
+                new Vector3(0.76f, 0.18f, 0.76f),
+                new Vector3(0, 35, 0),
+                new Color(0.12f, 0.08f, 0.14f, 1f));
+            CreatePart(
+                root.transform,
+                PrimitiveType.Sphere,
+                "Boss Eye",
+                new Vector3(0.26f, 0.08f, -0.37f),
+                new Vector3(0.18f, 0.18f, 0.18f),
+                Vector3.zero,
+                new Color(1f, 0.9f, 0.28f, 1f));
+            CreatePart(
+                root.transform,
+                PrimitiveType.Sphere,
+                "Boss Eye",
+                new Vector3(-0.26f, 0.08f, -0.37f),
+                new Vector3(0.18f, 0.18f, 0.18f),
+                Vector3.zero,
+                new Color(1f, 0.9f, 0.28f, 1f));
             return new DebugActorVisual(root, body.GetComponent<Renderer>(), material);
         }
 

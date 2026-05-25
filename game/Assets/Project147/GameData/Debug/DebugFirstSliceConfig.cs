@@ -93,6 +93,9 @@ namespace Project147.GameData.Debug
             0.35f);
 
         [SerializeField]
+        private DebugAlienTuning bossAlien = CreateDefaultBossAlienTuning();
+
+        [SerializeField]
         private DebugAlienUpgradeTuning alienUpgrade = new DebugAlienUpgradeTuning();
 
         public int StartingCurrency
@@ -140,13 +143,19 @@ namespace Project147.GameData.Debug
             get { return armouredAlien.Id; }
         }
 
+        public string BossAlienId
+        {
+            get { return BossAlien.Id; }
+        }
+
         public WaveDefinition CreateWaveDefinition(int completedWaves)
         {
             return level.CreateWaveDefinition(
                 completedWaves,
                 BasicAlienId,
                 FastAlienId,
-                ArmouredAlienId);
+                ArmouredAlienId,
+                BossAlienId);
         }
 
         public TowerDefinition CreateTowerDefinition()
@@ -239,7 +248,29 @@ namespace Project147.GameData.Debug
                 return armouredAlien.CreateDefinition();
             }
 
+            if (alienId == BossAlienId)
+            {
+                return BossAlien.CreateDefinition();
+            }
+
             throw new ArgumentException($"Unknown alien id '{alienId}'.", nameof(alienId));
+        }
+
+        private DebugAlienTuning BossAlien
+        {
+            get { return bossAlien ?? CreateDefaultBossAlienTuning(); }
+        }
+
+        private static DebugAlienTuning CreateDefaultBossAlienTuning()
+        {
+            return new DebugAlienTuning(
+                "debug-boss",
+                320,
+                0.72f,
+                90,
+                0.05f,
+                DamageType.Explosive,
+                0.25f);
         }
     }
 }

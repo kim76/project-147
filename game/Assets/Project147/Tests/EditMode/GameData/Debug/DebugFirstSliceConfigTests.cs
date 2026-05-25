@@ -32,6 +32,30 @@ namespace Project147.Tests.EditMode.GameData.Debug
             Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.BasicAlienId), Is.True);
             Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.FastAlienId), Is.True);
             Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.ArmouredAlienId), Is.True);
+            Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.BossAlienId), Is.False);
+        }
+
+        [Test]
+        public void CreateWaveDefinition_WhenFinalWave_ReturnsBossAlienId()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var wave = config.CreateWaveDefinition(config.TotalWaves - 1);
+
+            Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.BossAlienId), Is.True);
+            Assert.That(wave.SpawnEntries.Count(entry => entry.AlienId == config.BossAlienId), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void CreateAlienDefinition_WhenBossId_ReturnsBossAlien()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var boss = config.CreateAlienDefinition(config.BossAlienId, 0);
+
+            Assert.That(boss.Id, Is.EqualTo(config.BossAlienId));
+            Assert.That(boss.MaxHealth, Is.GreaterThan(200));
+            Assert.That(boss.Reward, Is.GreaterThan(50));
         }
 
         [Test]

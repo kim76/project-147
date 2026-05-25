@@ -31,6 +31,7 @@ These tickets are intentionally small. Each should leave the project in a better
 - Reward calculation moved into tested GameCore level models with alien kill, wave clear and perfect-wave rewards.
 - Debug event feed added for visible tower, reward, leak and win/loss feedback.
 - Tower definitions now own their status effects so future tower types can have distinct abilities.
+- Tower loadout model added and first slice now supports switching between two tower types.
 - Unity Test Runner confirmed available through `Window > General > Test Runner`.
 - Command-line test run not attempted while the Unity project is open in the editor.
 

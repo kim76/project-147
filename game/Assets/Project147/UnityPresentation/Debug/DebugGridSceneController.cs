@@ -81,7 +81,7 @@ namespace Project147.UnityPresentation.Debug
         private readonly TowerTargetSelector targetSelector = new TowerTargetSelector();
         private TowerPlacementValidator placementValidator;
         private AttackResolver attackResolver;
-        private TowerDefinition towerDefinition;
+        private TowerLoadout towerLoadout;
         private TowerUpgradeDefinition towerUpgradeDefinition;
         private RewardCalculator rewardCalculator;
         private BaseState currentBase;
@@ -131,7 +131,7 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
-            if (!wallet.CanSpend(towerDefinition.Cost))
+            if (!wallet.CanSpend(SelectedTower.Cost))
             {
                 RecordEvent("Not enough scrap for tower.");
                 return;
@@ -149,18 +149,18 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
-            wallet = wallet.Spend(towerDefinition.Cost);
+            wallet = wallet.Spend(SelectedTower.Cost);
             placedTowers.Add(coordinate);
             var towerObject = CreateTowerObject(coordinate);
-            towers.Add(new RuntimeTower(coordinate, new TowerState(towerDefinition), towerObject));
+            towers.Add(new RuntimeTower(coordinate, new TowerState(SelectedTower), towerObject));
             RebuildTiles();
             HidePlacementPreviewIfAny();
-            RecordEvent($"Placed tower at {coordinate}. Scrap: {wallet.Balance}.");
+            RecordEvent($"Placed {SelectedTower.Id} at {coordinate}. Scrap: {wallet.Balance}.");
         }
 
         public void ShowPlacementPreview(GridCoordinate coordinate)
         {
-            if (towerDefinition == null || towerUpgradeDefinition == null || currentBase == null || wallet == null)
+            if (towerLoadout == null || towerUpgradeDefinition == null || currentBase == null || wallet == null)
             {
                 return;
             }
@@ -179,7 +179,7 @@ namespace Project147.UnityPresentation.Debug
             var colour = canPlace || canUpgrade
                 ? new Color(0.25f, 1f, 0.35f, 0.95f)
                 : new Color(1f, 0.2f, 0.2f, 0.95f);
-            var range = tower == null ? towerDefinition.Range : tower.State.Definition.Range;
+            var range = tower == null ? SelectedTower.Range : tower.State.Definition.Range;
             placementPreview.transform.localPosition = ToWorldPosition(coordinate, 0.18f);
             placementPreviewLine.startColor = colour;
             placementPreviewLine.endColor = colour;
@@ -226,7 +226,7 @@ namespace Project147.UnityPresentation.Debug
 
         private bool CanPreviewPlacement(GridCoordinate coordinate)
         {
-            if (waveActive || won || lost || !wallet.CanSpend(towerDefinition.Cost))
+            if (waveActive || won || lost || !wallet.CanSpend(SelectedTower.Cost))
             {
                 return false;
             }
@@ -253,8 +253,27 @@ namespace Project147.UnityPresentation.Debug
             placementValidator = new TowerPlacementValidator(pathfinder);
             attackResolver = new AttackResolver(new DamageResolver());
             rewardCalculator = new RewardCalculator(config.PerfectWaveScrapBonus);
-            towerDefinition = config.CreateTowerDefinition();
+            towerLoadout = new TowerLoadout(config.CreateTowerDefinitions());
             towerUpgradeDefinition = config.CreateTowerUpgradeDefinition();
+        }
+
+        private TowerDefinition SelectedTower
+        {
+            get { return towerLoadout.SelectedTower; }
+        }
+
+        private void SelectPreviousTower()
+        {
+            towerLoadout = towerLoadout.SelectPrevious();
+            HidePlacementPreviewIfAny();
+            RecordEvent($"Selected tower: {SelectedTower.Id}.");
+        }
+
+        private void SelectNextTower()
+        {
+            towerLoadout = towerLoadout.SelectNext();
+            HidePlacementPreviewIfAny();
+            RecordEvent($"Selected tower: {SelectedTower.Id}.");
         }
 
         private void TryUpgradeTower(GridCoordinate coordinate)
@@ -734,7 +753,7 @@ namespace Project147.UnityPresentation.Debug
             placementPreviewLine.positionCount = 72;
             placementPreviewLine.widthMultiplier = 0.06f;
             placementPreviewLine.material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
-            BuildPlacementPreviewCircle(towerDefinition.Range);
+            BuildPlacementPreviewCircle(SelectedTower.Range);
             placementPreview.SetActive(false);
         }
 
@@ -809,7 +828,7 @@ namespace Project147.UnityPresentation.Debug
         {
             if (currentBase == null
                 || wallet == null
-                || towerDefinition == null
+                || towerLoadout == null
                 || towerUpgradeDefinition == null
                 || rewardCalculator == null)
             {
@@ -818,12 +837,27 @@ namespace Project147.UnityPresentation.Debug
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 244), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 296), "Project 147 First Slice");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}");
             top += 22;
-            GUI.Label(new Rect(left + 12, top, 260, 24), $"Scrap: {wallet.Balance}  Tower cost: {towerDefinition.Cost}");
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Scrap: {wallet.Balance}  Tower cost: {SelectedTower.Cost}");
             top += 22;
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Selected: {SelectedTower.Id}");
+            top += 30;
+
+            if (!waveActive && !won && !lost && GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
+            {
+                SelectPreviousTower();
+            }
+
+            if (!waveActive && !won && !lost && GUI.Button(new Rect(left + 74, top, 54, 24), ">"))
+            {
+                SelectNextTower();
+            }
+
+            GUI.Label(new Rect(left + 144, top + 2, 130, 24), $"{towerLoadout.SelectedIndex + 1}/{towerLoadout.Towers.Count}");
+            top += 30;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Upgrade: {towerUpgradeDefinition.Cost}  Max tower level: {config.MaxTowerLevel}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Perfect wave bonus: {config.PerfectWaveScrapBonus}");

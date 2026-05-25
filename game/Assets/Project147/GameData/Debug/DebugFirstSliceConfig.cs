@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Project147.GameCore.Combat;
 using Project147.GameCore.Level;
 using UnityEngine;
@@ -59,6 +60,34 @@ namespace Project147.GameData.Debug
 
         [SerializeField]
         private TowerTargetingMode towerTargetingMode = TowerTargetingMode.First;
+
+        [Header("Second Tower")]
+        [SerializeField]
+        private string secondTowerId = "debug-mortar";
+
+        [SerializeField]
+        private int secondTowerCost = 70;
+
+        [SerializeField]
+        private float secondTowerRange = 2.8f;
+
+        [SerializeField]
+        private float secondTowerFireRatePerSecond = 0.75f;
+
+        [SerializeField]
+        private float secondTowerDamage = 38;
+
+        [SerializeField]
+        private float secondTowerCriticalChance = 0.1f;
+
+        [SerializeField]
+        private float secondTowerCriticalDamageMultiplier = 1.8f;
+
+        [SerializeField]
+        private DamageType secondTowerDamageType = DamageType.Explosive;
+
+        [SerializeField]
+        private TowerTargetingMode secondTowerTargetingMode = TowerTargetingMode.Strongest;
 
         [Header("Tower Upgrade")]
         [SerializeField]
@@ -201,6 +230,20 @@ namespace Project147.GameData.Debug
 
         public TowerDefinition CreateTowerDefinition()
         {
+            return CreateTowerDefinitions()[0];
+        }
+
+        public IReadOnlyList<TowerDefinition> CreateTowerDefinitions()
+        {
+            return new[]
+            {
+                CreateRailgunTowerDefinition(),
+                CreateMortarTowerDefinition()
+            };
+        }
+
+        private TowerDefinition CreateRailgunTowerDefinition()
+        {
             return new TowerDefinition(
                 towerId,
                 towerCost,
@@ -212,6 +255,20 @@ namespace Project147.GameData.Debug
                 towerCriticalChance,
                 towerCriticalDamageMultiplier,
                 new[] { CreateTowerStatusEffectDefinition() });
+        }
+
+        private TowerDefinition CreateMortarTowerDefinition()
+        {
+            return new TowerDefinition(
+                secondTowerId,
+                secondTowerCost,
+                secondTowerRange,
+                secondTowerFireRatePerSecond,
+                secondTowerDamage,
+                secondTowerDamageType,
+                secondTowerTargetingMode,
+                secondTowerCriticalChance,
+                secondTowerCriticalDamageMultiplier);
         }
 
         public TowerUpgradeDefinition CreateTowerUpgradeDefinition()

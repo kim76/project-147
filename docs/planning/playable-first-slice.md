@@ -9,6 +9,7 @@ It is not the MVP and it is not final art. It is a playable test bed for the rul
 ## Current Loop
 
 - Player places towers between waves.
+- Player can switch between two debug tower types before placing.
 - Hovering a cell previews tower range and whether placement is valid.
 - Towers cost scrap.
 - Clicking an existing tower between waves upgrades it if enough scrap is available.

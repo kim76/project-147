@@ -210,7 +210,8 @@ namespace Project147.GameData.Debug
                 towerDamageType,
                 towerTargetingMode,
                 towerCriticalChance,
-                towerCriticalDamageMultiplier);
+                towerCriticalDamageMultiplier,
+                new[] { CreateTowerStatusEffectDefinition() });
         }
 
         public TowerUpgradeDefinition CreateTowerUpgradeDefinition()

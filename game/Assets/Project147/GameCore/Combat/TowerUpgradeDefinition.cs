@@ -102,7 +102,8 @@ namespace Project147.GameCore.Combat
                 tower.DamageType,
                 tower.DefaultTargetingMode,
                 criticalChance,
-                tower.CriticalDamageMultiplier + CriticalDamageMultiplierBonus);
+                tower.CriticalDamageMultiplier + CriticalDamageMultiplierBonus,
+                tower.StatusEffects);
         }
     }
 }

@@ -83,7 +83,6 @@ namespace Project147.UnityPresentation.Debug
         private AttackResolver attackResolver;
         private TowerDefinition towerDefinition;
         private TowerUpgradeDefinition towerUpgradeDefinition;
-        private AlienStatusEffectDefinition towerStatusEffectDefinition;
         private RewardCalculator rewardCalculator;
         private BaseState currentBase;
         private CurrencyWallet wallet;
@@ -256,7 +255,6 @@ namespace Project147.UnityPresentation.Debug
             rewardCalculator = new RewardCalculator(config.PerfectWaveScrapBonus);
             towerDefinition = config.CreateTowerDefinition();
             towerUpgradeDefinition = config.CreateTowerUpgradeDefinition();
-            towerStatusEffectDefinition = config.CreateTowerStatusEffectDefinition();
         }
 
         private void TryUpgradeTower(GridCoordinate coordinate)
@@ -456,7 +454,10 @@ namespace Project147.UnityPresentation.Debug
 
                 if (!attack.Damage.WasDodged && attack.Damage.FinalAmount > 0 && alien.State.IsAlive)
                 {
-                    alien.State = alien.State.ApplyStatusEffect(towerStatusEffectDefinition);
+                    foreach (var statusEffect in tower.State.Definition.StatusEffects)
+                    {
+                        alien.State = alien.State.ApplyStatusEffect(statusEffect);
+                    }
                 }
 
                 ShowShotFeedback(tower.Coordinate, alien);
@@ -810,7 +811,6 @@ namespace Project147.UnityPresentation.Debug
                 || wallet == null
                 || towerDefinition == null
                 || towerUpgradeDefinition == null
-                || towerStatusEffectDefinition == null
                 || rewardCalculator == null)
             {
                 return;

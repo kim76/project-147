@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Project147.GameCore.Combat;
 
@@ -27,6 +28,7 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(tower.DefaultTargetingMode, Is.EqualTo(TowerTargetingMode.First));
             Assert.That(tower.CriticalChance, Is.EqualTo(0));
             Assert.That(tower.CriticalDamageMultiplier, Is.EqualTo(1));
+            Assert.That(tower.StatusEffects, Is.Empty);
         }
 
         [Test]
@@ -45,6 +47,30 @@ namespace Project147.Tests.EditMode.GameCore.Combat
 
             Assert.That(tower.CriticalChance, Is.EqualTo(0.2f));
             Assert.That(tower.CriticalDamageMultiplier, Is.EqualTo(1.75f));
+        }
+
+        [Test]
+        public void Constructor_WhenStatusEffectsAreProvided_StoresValues()
+        {
+            var slow = new AlienStatusEffectDefinition(
+                "frost-slow",
+                AlienStatusEffectType.Slow,
+                2,
+                0.6f);
+
+            var tower = new TowerDefinition(
+                "frost-basic",
+                100,
+                3.5f,
+                1.25f,
+                12,
+                DamageType.Frost,
+                TowerTargetingMode.First,
+                0,
+                1,
+                new[] { slow });
+
+            Assert.That(tower.StatusEffects, Is.EqualTo(new[] { slow }));
         }
 
         [TestCase(null)]
@@ -144,6 +170,22 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 TowerTargetingMode.First,
                 0.2f,
                 criticalDamageMultiplier));
+        }
+
+        [Test]
+        public void Constructor_WhenStatusEffectsContainNull_Throws()
+        {
+            Assert.Throws<ArgumentNullException>(() => new TowerDefinition(
+                "railgun-basic",
+                100,
+                3,
+                1,
+                10,
+                DamageType.Kinetic,
+                TowerTargetingMode.First,
+                0,
+                1,
+                new List<AlienStatusEffectDefinition> { null }));
         }
     }
 }

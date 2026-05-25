@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Project147.GameCore.Combat
 {
@@ -13,7 +14,8 @@ namespace Project147.GameCore.Combat
             DamageType damageType,
             TowerTargetingMode defaultTargetingMode,
             float criticalChance = 0,
-            float criticalDamageMultiplier = 1)
+            float criticalDamageMultiplier = 1,
+            IReadOnlyList<AlienStatusEffectDefinition> statusEffects = null)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -52,6 +54,16 @@ namespace Project147.GameCore.Combat
                     "Critical damage multiplier must be at least one.");
             }
 
+            statusEffects = statusEffects ?? new List<AlienStatusEffectDefinition>();
+
+            foreach (var statusEffect in statusEffects)
+            {
+                if (statusEffect == null)
+                {
+                    throw new ArgumentNullException(nameof(statusEffects), "Tower status effects cannot contain null values.");
+                }
+            }
+
             Id = id;
             Cost = cost;
             Range = range;
@@ -61,6 +73,7 @@ namespace Project147.GameCore.Combat
             DefaultTargetingMode = defaultTargetingMode;
             CriticalChance = criticalChance;
             CriticalDamageMultiplier = criticalDamageMultiplier;
+            StatusEffects = new List<AlienStatusEffectDefinition>(statusEffects);
         }
 
         public string Id { get; }
@@ -80,5 +93,7 @@ namespace Project147.GameCore.Combat
         public float CriticalChance { get; }
 
         public float CriticalDamageMultiplier { get; }
+
+        public IReadOnlyList<AlienStatusEffectDefinition> StatusEffects { get; }
     }
 }

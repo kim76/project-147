@@ -152,6 +152,32 @@ namespace Project147.Tests.EditMode.GameCore.Combat
         }
 
         [Test]
+        public void ApplyTo_PreservesTowerStatusEffects()
+        {
+            var slow = new AlienStatusEffectDefinition(
+                "frost-slow",
+                AlienStatusEffectType.Slow,
+                2,
+                0.6f);
+            var tower = new TowerDefinition(
+                "frost-basic",
+                100,
+                3,
+                2,
+                20,
+                DamageType.Frost,
+                TowerTargetingMode.First,
+                0,
+                1,
+                new[] { slow });
+            var upgrade = new TowerUpgradeDefinition("frost-upgrade-1", 75, 1.25f, 1.1f, 0, 0, 0);
+
+            var result = upgrade.ApplyTo(tower);
+
+            Assert.That(result.StatusEffects, Is.EqualTo(new[] { slow }));
+        }
+
+        [Test]
         public void ApplyTo_WhenCriticalChanceWouldExceedOne_Throws()
         {
             var tower = new TowerDefinition(

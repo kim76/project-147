@@ -24,6 +24,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Later waves spawn upgraded aliens, capped by the debug config.
 - Towers select targets, fire on cooldown, damage aliens and apply a short slow effect.
 - Tower shots draw a short line and briefly flash the alien.
+- Freeze Pulse can be triggered during a wave to slow all active aliens.
 - Status effects expire automatically.
 - Killed aliens award scrap.
 - Clearing waves awards bonus scrap.
@@ -55,6 +56,7 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Stone cube: armoured alien.
 - Green range ring: valid tower placement or affordable tower upgrade preview.
 - Red range ring: invalid, unaffordable or max-level tower preview.
+- Cyan pulse ring: Freeze Pulse ability.
 
 ## Deliberate Limits
 

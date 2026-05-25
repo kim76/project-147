@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Project147.GameCore.Abilities;
 using Project147.GameCore.Combat;
 using Project147.GameCore.Level;
 using UnityEngine;
@@ -129,6 +130,22 @@ namespace Project147.GameData.Debug
 
         [SerializeField]
         private float towerStatusEffectMovementSpeedMultiplier = 0.7f;
+
+        [Header("Player Ability")]
+        [SerializeField]
+        private string freezePulseAbilityId = "debug-freeze-pulse";
+
+        [SerializeField]
+        private float freezePulseCooldownSeconds = 12;
+
+        [SerializeField]
+        private string freezePulseStatusEffectId = "debug-freeze-pulse-slow";
+
+        [SerializeField]
+        private float freezePulseDurationSeconds = 2.2f;
+
+        [SerializeField]
+        private float freezePulseMovementSpeedMultiplier = 0.35f;
 
         [Header("Basic Alien")]
         [SerializeField]
@@ -365,6 +382,18 @@ namespace Project147.GameData.Debug
                 towerUpgradeRangeBonus,
                 towerUpgradeCriticalChanceBonus,
                 towerUpgradeCriticalDamageMultiplierBonus);
+        }
+
+        public PlayerAbilityDefinition CreateFreezePulseAbilityDefinition()
+        {
+            return new PlayerAbilityDefinition(
+                freezePulseAbilityId,
+                freezePulseCooldownSeconds,
+                new AlienStatusEffectDefinition(
+                    freezePulseStatusEffectId,
+                    AlienStatusEffectType.Slow,
+                    freezePulseDurationSeconds,
+                    freezePulseMovementSpeedMultiplier));
         }
 
         public AlienStatusEffectDefinition CreateTowerStatusEffectDefinition()

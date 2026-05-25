@@ -37,6 +37,7 @@ This file records the foundation work. The active next-task list is `current-roa
 - Debug tower visuals now distinguish railgun and mortar tower types in the scene and HUD.
 - Mortar splash damage added with tested core rules and debug-scene feedback.
 - Mixed wave composition added with basic, fast and armoured debug aliens.
+- Freeze Pulse player ability added with tested cooldown, targeting and debug-scene feedback.
 - Unity Test Runner confirmed available through `Window > General > Test Runner`.
 - Command-line test run not attempted while the Unity project is open in the editor.
 

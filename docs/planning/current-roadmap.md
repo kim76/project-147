@@ -20,6 +20,7 @@ The debug first slice has:
   - Mortar: slower, explosive splash damage.
 - Mixed enemy waves with basic, fast and armoured debug aliens.
 - Alien upgrades across later waves.
+- Freeze Pulse player ability with cooldown and debug feedback.
 - Debug HUD, hover range preview, shot feedback and event feed.
 
 ## Immediate Verification
@@ -27,11 +28,11 @@ The debug first slice has:
 Before the next development slice:
 
 1. Run Edit Mode tests in Unity.
-2. Confirm the new splash damage tests appear and pass.
+2. Confirm the new ability tests appear and pass.
 3. Press Play.
-4. Select the mortar.
-5. Place it near a route where aliens cluster.
-6. Start a wave and confirm the event feed reports mortar splash hits.
+4. Start a wave with active aliens.
+5. Press `Freeze Pulse`.
+6. Confirm the event feed reports slowed aliens and the cooldown begins.
 
 ## Next Slice Candidates
 
@@ -55,10 +56,11 @@ Goal: introduce the first special ability in a controlled, testable way.
 
 Deliverables:
 
-- Add one ability definition, probably an orbital strike or freeze pulse.
-- Add cooldown and cost rules in GameCore with tests.
-- Wire one HUD button in the debug scene.
-- Add simple debug visual feedback.
+- Done: add Freeze Pulse ability definition.
+- Done: add cooldown rules in GameCore with tests.
+- Done: add ability resolver that applies slow to living aliens.
+- Done: wire one HUD button in the debug scene.
+- Done: add simple debug visual feedback.
 
 Why next: this starts the special-abilities direction without committing to final UI or art.
 
@@ -89,11 +91,10 @@ Why next: this starts the “addictive” part without monetisation or content b
 
 ## Recommended Order
 
-1. Verify mortar splash and mixed enemies.
-2. Add one player ability.
-3. Add one between-wave choice.
-4. Clean up debug tuning into smaller data assets if the config keeps growing.
-5. Replace debug shapes with first-pass generated concept visuals.
+1. Verify Freeze Pulse.
+2. Add one between-wave choice.
+3. Clean up debug tuning into smaller data assets if the config keeps growing.
+4. Replace debug shapes with first-pass generated concept visuals.
 
 ## Not Yet
 

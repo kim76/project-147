@@ -23,6 +23,9 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private int nextWaveTowerDamagePercent = 25;
 
+        [SerializeField]
+        private int nextWaveTowerFireRatePercent = 20;
+
         public IReadOnlyList<RunChoiceDefinition> CreateDefinitions()
         {
             return new[]
@@ -51,7 +54,12 @@ namespace Project147.GameData.Debug
                     "overclock",
                     "Overclock",
                     RunChoiceEffectType.AddNextWaveTowerDamagePercent,
-                    nextWaveTowerDamagePercent)
+                    nextWaveTowerDamagePercent),
+                new RunChoiceDefinition(
+                    "rapid-loader",
+                    "Rapid Loader",
+                    RunChoiceEffectType.AddNextWaveTowerFireRatePercent,
+                    nextWaveTowerFireRatePercent)
             };
         }
     }

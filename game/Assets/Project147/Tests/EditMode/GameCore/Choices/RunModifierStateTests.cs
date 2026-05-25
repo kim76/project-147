@@ -16,6 +16,9 @@ namespace Project147.Tests.EditMode.GameCore.Choices
             Assert.That(state.HasPendingWaveTowerDamageBoost, Is.False);
             Assert.That(state.HasActiveWaveTowerDamageBoost, Is.False);
             Assert.That(state.ActiveWaveTowerDamageMultiplier, Is.EqualTo(1));
+            Assert.That(state.HasPendingWaveTowerFireRateBoost, Is.False);
+            Assert.That(state.HasActiveWaveTowerFireRateBoost, Is.False);
+            Assert.That(state.ActiveWaveTowerFireRateMultiplier, Is.EqualTo(1));
         }
 
         [Test]
@@ -86,6 +89,8 @@ namespace Project147.Tests.EditMode.GameCore.Choices
             Assert.That(result.NextTowerDiscountAmount, Is.EqualTo(0));
             Assert.That(result.PendingWaveTowerDamagePercent, Is.EqualTo(0));
             Assert.That(result.ActiveWaveTowerDamagePercent, Is.EqualTo(25));
+            Assert.That(result.PendingWaveTowerFireRatePercent, Is.EqualTo(0));
+            Assert.That(result.ActiveWaveTowerFireRatePercent, Is.EqualTo(0));
         }
 
         [Test]
@@ -121,7 +126,9 @@ namespace Project147.Tests.EditMode.GameCore.Choices
         [Test]
         public void StartWave_MovesPendingDamageBoostToActiveBoost()
         {
-            var state = new RunModifierState().AddNextWaveTowerDamagePercent(25);
+            var state = new RunModifierState()
+                .AddNextWaveTowerDamagePercent(25)
+                .AddNextWaveTowerFireRatePercent(20);
 
             var result = state.StartWave();
 
@@ -129,6 +136,10 @@ namespace Project147.Tests.EditMode.GameCore.Choices
             Assert.That(result.HasActiveWaveTowerDamageBoost, Is.True);
             Assert.That(result.ActiveWaveTowerDamagePercent, Is.EqualTo(25));
             Assert.That(result.ActiveWaveTowerDamageMultiplier, Is.EqualTo(1.25f).Within(0.0001f));
+            Assert.That(result.HasPendingWaveTowerFireRateBoost, Is.False);
+            Assert.That(result.HasActiveWaveTowerFireRateBoost, Is.True);
+            Assert.That(result.ActiveWaveTowerFireRatePercent, Is.EqualTo(20));
+            Assert.That(result.ActiveWaveTowerFireRateMultiplier, Is.EqualTo(1.2f).Within(0.0001f));
         }
 
         [Test]
@@ -142,6 +153,38 @@ namespace Project147.Tests.EditMode.GameCore.Choices
 
             Assert.That(result.HasActiveWaveTowerDamageBoost, Is.False);
             Assert.That(result.ActiveWaveTowerDamageMultiplier, Is.EqualTo(1));
+            Assert.That(result.HasActiveWaveTowerFireRateBoost, Is.False);
+            Assert.That(result.ActiveWaveTowerFireRateMultiplier, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void AddNextWaveTowerFireRatePercent_ReturnsStateWithPendingBoost()
+        {
+            var state = new RunModifierState();
+
+            var result = state.AddNextWaveTowerFireRatePercent(20);
+
+            Assert.That(result.HasPendingWaveTowerFireRateBoost, Is.True);
+            Assert.That(result.PendingWaveTowerFireRatePercent, Is.EqualTo(20));
+            Assert.That(result.HasActiveWaveTowerFireRateBoost, Is.False);
+        }
+
+        [Test]
+        public void AddNextWaveTowerFireRatePercent_WhenCalledTwice_StacksPendingBoost()
+        {
+            var state = new RunModifierState()
+                .AddNextWaveTowerFireRatePercent(20)
+                .AddNextWaveTowerFireRatePercent(10);
+
+            Assert.That(state.PendingWaveTowerFireRatePercent, Is.EqualTo(30));
+        }
+
+        [Test]
+        public void AddNextWaveTowerFireRatePercent_WhenPercentIsNegative_Throws()
+        {
+            var state = new RunModifierState();
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => state.AddNextWaveTowerFireRatePercent(-1));
         }
     }
 }

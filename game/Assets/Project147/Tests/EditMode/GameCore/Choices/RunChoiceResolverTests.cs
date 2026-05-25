@@ -133,6 +133,30 @@ namespace Project147.Tests.EditMode.GameCore.Choices
         }
 
         [Test]
+        public void Apply_WhenChoiceAddsNextWaveTowerFireRatePercent_ReturnsModifiersWithPendingBoost()
+        {
+            var resolver = new RunChoiceResolver();
+            var baseState = new BaseState(10);
+            var wallet = new CurrencyWallet(100);
+            var runModifiers = new RunModifierState().AddNextWaveTowerFireRatePercent(5);
+
+            var result = resolver.Apply(
+                new RunChoiceDefinition(
+                    "rapid-loader",
+                    "Rapid Loader",
+                    RunChoiceEffectType.AddNextWaveTowerFireRatePercent,
+                    20),
+                baseState,
+                wallet,
+                runModifiers);
+
+            Assert.That(result.BaseState, Is.SameAs(baseState));
+            Assert.That(result.Wallet, Is.SameAs(wallet));
+            Assert.That(result.RunModifiers.PendingWaveTowerFireRatePercent, Is.EqualTo(25));
+            Assert.That(runModifiers.PendingWaveTowerFireRatePercent, Is.EqualTo(5));
+        }
+
+        [Test]
         public void Apply_WhenChoiceEffectIsUnknown_Throws()
         {
             var resolver = new RunChoiceResolver();

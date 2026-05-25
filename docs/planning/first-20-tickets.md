@@ -43,6 +43,7 @@ This file records the foundation work. The active next-task list is `current-roa
 - Between-wave reward choices added with tested scrap, base-repair and next-tower discount effects.
 - Wave intel, random 3-option reward offers and next-wave tower damage boost added.
 - Orbital Strike player ability added with tested resistance-aware damage.
+- Rapid Loader reward added for next-wave tower fire-rate boosts.
 - Unity Test Runner confirmed available through `Window > General > Test Runner`.
 - Command-line test run not attempted while the Unity project is open in the editor.
 

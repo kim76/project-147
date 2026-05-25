@@ -1433,6 +1433,8 @@ namespace Project147.UnityPresentation.Debug
                     return $"-{choice.Amount} next tower";
                 case RunChoiceEffectType.AddNextWaveTowerDamagePercent:
                     return $"+{choice.Amount}% next wave dmg";
+                case RunChoiceEffectType.AddNextWaveTowerFireRatePercent:
+                    return $"+{choice.Amount}% next wave rate";
                 default:
                     return $"{choice.Amount}";
             }
@@ -1473,9 +1475,19 @@ namespace Project147.UnityPresentation.Debug
                 parts.Add($"+{runModifiers.PendingWaveTowerDamagePercent}% next wave dmg");
             }
 
+            if (runModifiers.HasPendingWaveTowerFireRateBoost)
+            {
+                parts.Add($"+{runModifiers.PendingWaveTowerFireRatePercent}% next wave rate");
+            }
+
             if (runModifiers.HasActiveWaveTowerDamageBoost)
             {
                 parts.Add($"+{runModifiers.ActiveWaveTowerDamagePercent}% wave dmg");
+            }
+
+            if (runModifiers.HasActiveWaveTowerFireRateBoost)
+            {
+                parts.Add($"+{runModifiers.ActiveWaveTowerFireRatePercent}% wave rate");
             }
 
             return parts.Count == 0
@@ -1485,7 +1497,9 @@ namespace Project147.UnityPresentation.Debug
 
         private TowerDefinition BuildEffectiveTowerDefinition(TowerDefinition definition)
         {
-            if (runModifiers == null || !runModifiers.HasActiveWaveTowerDamageBoost)
+            if (runModifiers == null
+                || (!runModifiers.HasActiveWaveTowerDamageBoost
+                    && !runModifiers.HasActiveWaveTowerFireRateBoost))
             {
                 return definition;
             }
@@ -1494,7 +1508,7 @@ namespace Project147.UnityPresentation.Debug
                 definition.Id,
                 definition.Cost,
                 definition.Range,
-                definition.FireRatePerSecond,
+                definition.FireRatePerSecond * runModifiers.ActiveWaveTowerFireRateMultiplier,
                 definition.Damage * runModifiers.ActiveWaveTowerDamageMultiplier,
                 definition.DamageType,
                 definition.DefaultTargetingMode,

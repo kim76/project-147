@@ -5,14 +5,16 @@ namespace Project147.GameCore.Choices
     public sealed class RunModifierState
     {
         public RunModifierState()
-            : this(0, 0, 0)
+            : this(0, 0, 0, 0, 0)
         {
         }
 
         private RunModifierState(
             int nextTowerDiscountAmount,
             int pendingWaveTowerDamagePercent,
-            int activeWaveTowerDamagePercent)
+            int activeWaveTowerDamagePercent,
+            int pendingWaveTowerFireRatePercent,
+            int activeWaveTowerFireRatePercent)
         {
             if (nextTowerDiscountAmount < 0)
             {
@@ -35,9 +37,25 @@ namespace Project147.GameCore.Choices
                     "Active wave tower damage percent cannot be negative.");
             }
 
+            if (pendingWaveTowerFireRatePercent < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(pendingWaveTowerFireRatePercent),
+                    "Pending wave tower fire-rate percent cannot be negative.");
+            }
+
+            if (activeWaveTowerFireRatePercent < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(activeWaveTowerFireRatePercent),
+                    "Active wave tower fire-rate percent cannot be negative.");
+            }
+
             NextTowerDiscountAmount = nextTowerDiscountAmount;
             PendingWaveTowerDamagePercent = pendingWaveTowerDamagePercent;
             ActiveWaveTowerDamagePercent = activeWaveTowerDamagePercent;
+            PendingWaveTowerFireRatePercent = pendingWaveTowerFireRatePercent;
+            ActiveWaveTowerFireRatePercent = activeWaveTowerFireRatePercent;
         }
 
         public int NextTowerDiscountAmount { get; }
@@ -45,6 +63,10 @@ namespace Project147.GameCore.Choices
         public int PendingWaveTowerDamagePercent { get; }
 
         public int ActiveWaveTowerDamagePercent { get; }
+
+        public int PendingWaveTowerFireRatePercent { get; }
+
+        public int ActiveWaveTowerFireRatePercent { get; }
 
         public bool HasNextTowerDiscount
         {
@@ -61,9 +83,24 @@ namespace Project147.GameCore.Choices
             get { return ActiveWaveTowerDamagePercent > 0; }
         }
 
+        public bool HasPendingWaveTowerFireRateBoost
+        {
+            get { return PendingWaveTowerFireRatePercent > 0; }
+        }
+
+        public bool HasActiveWaveTowerFireRateBoost
+        {
+            get { return ActiveWaveTowerFireRatePercent > 0; }
+        }
+
         public float ActiveWaveTowerDamageMultiplier
         {
             get { return 1 + ActiveWaveTowerDamagePercent / 100f; }
+        }
+
+        public float ActiveWaveTowerFireRateMultiplier
+        {
+            get { return 1 + ActiveWaveTowerFireRatePercent / 100f; }
         }
 
         public int CalculateTowerCost(int originalCost)
@@ -86,7 +123,9 @@ namespace Project147.GameCore.Choices
             return new RunModifierState(
                 NextTowerDiscountAmount + amount,
                 PendingWaveTowerDamagePercent,
-                ActiveWaveTowerDamagePercent);
+                ActiveWaveTowerDamagePercent,
+                PendingWaveTowerFireRatePercent,
+                ActiveWaveTowerFireRatePercent);
         }
 
         public RunModifierState AddNextWaveTowerDamagePercent(int percent)
@@ -101,7 +140,26 @@ namespace Project147.GameCore.Choices
             return new RunModifierState(
                 NextTowerDiscountAmount,
                 PendingWaveTowerDamagePercent + percent,
-                ActiveWaveTowerDamagePercent);
+                ActiveWaveTowerDamagePercent,
+                PendingWaveTowerFireRatePercent,
+                ActiveWaveTowerFireRatePercent);
+        }
+
+        public RunModifierState AddNextWaveTowerFireRatePercent(int percent)
+        {
+            if (percent < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(percent),
+                    "Next wave tower fire-rate percent cannot be negative.");
+            }
+
+            return new RunModifierState(
+                NextTowerDiscountAmount,
+                PendingWaveTowerDamagePercent,
+                ActiveWaveTowerDamagePercent,
+                PendingWaveTowerFireRatePercent + percent,
+                ActiveWaveTowerFireRatePercent);
         }
 
         public RunModifierState ConsumeNextTowerDiscount()
@@ -109,17 +167,29 @@ namespace Project147.GameCore.Choices
             return new RunModifierState(
                 0,
                 PendingWaveTowerDamagePercent,
-                ActiveWaveTowerDamagePercent);
+                ActiveWaveTowerDamagePercent,
+                PendingWaveTowerFireRatePercent,
+                ActiveWaveTowerFireRatePercent);
         }
 
         public RunModifierState StartWave()
         {
-            return new RunModifierState(NextTowerDiscountAmount, 0, PendingWaveTowerDamagePercent);
+            return new RunModifierState(
+                NextTowerDiscountAmount,
+                0,
+                PendingWaveTowerDamagePercent,
+                0,
+                PendingWaveTowerFireRatePercent);
         }
 
         public RunModifierState EndWave()
         {
-            return new RunModifierState(NextTowerDiscountAmount, PendingWaveTowerDamagePercent, 0);
+            return new RunModifierState(
+                NextTowerDiscountAmount,
+                PendingWaveTowerDamagePercent,
+                0,
+                PendingWaveTowerFireRatePercent,
+                0);
         }
     }
 }

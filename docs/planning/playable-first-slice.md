@@ -33,7 +33,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Clearing a wave without taking base damage awards a perfect-wave scrap bonus.
 - Clearing a non-final wave offers a reward choice before the next wave can start.
 - Reward choices show as a random 3-option offer from a larger pool.
-- Reward choices can currently add scrap, repair the base, discount the next placed tower or boost next-wave tower damage.
+- Reward choices can currently add scrap, repair the base, discount the next placed tower, boost next-wave tower damage or boost next-wave tower fire rate.
 - A debug event feed shows important placement, upgrade, reward, leak and win/loss events.
 - The slice ends in victory after all waves or defeat when the base reaches zero health.
 
@@ -48,7 +48,8 @@ For the active next-task list, see `current-roadmap.md`.
 7. After a non-final wave, choose one reward from the reward panel.
 8. Continue placing or upgrading towers between waves. If you picked the construction credit, the next tower cost is reduced.
 9. If you picked `Overclock`, the next wave gets boosted tower damage.
-10. Use `Freeze Pulse` or `Orbital Strike` during active waves when their cooldowns are ready.
+10. If you picked `Rapid Loader`, the next wave gets boosted tower fire rate.
+11. Use `Freeze Pulse` or `Orbital Strike` during active waves when their cooldowns are ready.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -83,6 +84,7 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Reward choices are debug-tuned and not final progression design.
 - The tower discount reward only affects the next placed tower, not upgrades.
 - Overclock affects damage only, not fire rate.
+- Rapid Loader affects fire rate only, not damage.
 - Orbital Strike is a debug ability, not final balance.
 
 These limits are intentional. The slice exists to prove the loop before expanding content.

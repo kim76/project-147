@@ -23,7 +23,7 @@ The debug first slice has:
 - Freeze Pulse player ability with cooldown and debug feedback.
 - Orbital Strike player ability with cooldown, resistance-aware damage and debug feedback.
 - Between-wave reward choices drawn as a random 3-option offer from a larger reward pool.
-- Reward effects for extra scrap, base repair, next-tower discount and next-wave tower damage.
+- Reward effects for extra scrap, base repair, next-tower discount, next-wave tower damage and next-wave tower fire rate.
 - Next-wave intel showing upcoming enemy composition and simple tags before the wave starts.
 - First-slice tuning grouped by level, towers, aliens, upgrades and abilities.
 - First-pass in-scene visual profiles for towers and aliens.
@@ -40,6 +40,7 @@ Before the next development slice:
 5. Press `Orbital Strike`.
 6. Confirm active aliens flash, orange strike rings appear and the cooldown begins.
 7. Confirm the `Next Wave` and reward panels still behave as before.
+8. If `Rapid Loader` appears, choose it and confirm the next wave shows boosted tower rate.
 
 ## Next Slice Candidates
 
@@ -109,6 +110,7 @@ Deliverables:
 - Done: add tested choice definitions and application rules.
 - Done: support extra scrap, base repair and next-tower discount effects.
 - Done: support an Overclock reward for next-wave tower damage.
+- Done: support a Rapid Loader reward for next-wave tower fire rate.
 - Done: display a temporary debug choice panel with 3 random options.
 - Done: block the next wave until a reward is chosen.
 
@@ -119,7 +121,7 @@ Why next: this starts the “addictive” part without monetisation or content b
 1. Verify wave intel, random reward offers and Overclock in Unity.
 2. Verify Orbital Strike in Unity.
 3. Generate concept boards for final art direction.
-4. Add one more strategic reward type, such as enemy debuff or tower firing-rate boost.
+4. Add an enemy-side mechanic such as shields, burrowers or a first boss wave.
 5. Split debug tuning into separate ScriptableObject assets only when the current single asset becomes painful.
 
 ## Not Yet

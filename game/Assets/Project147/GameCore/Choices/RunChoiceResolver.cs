@@ -55,6 +55,11 @@ namespace Project147.GameCore.Choices
                         baseState,
                         wallet,
                         runModifiers.AddNextWaveTowerDamagePercent(choice.Amount));
+                case RunChoiceEffectType.AddNextWaveTowerFireRatePercent:
+                    return new RunChoiceApplicationResult(
+                        baseState,
+                        wallet,
+                        runModifiers.AddNextWaveTowerFireRatePercent(choice.Amount));
                 default:
                     throw new ArgumentOutOfRangeException(nameof(choice), "Unknown run choice effect type.");
             }

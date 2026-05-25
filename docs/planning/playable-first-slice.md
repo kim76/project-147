@@ -38,6 +38,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Reward choices can currently add scrap, repair the base, discount the next placed tower, boost next-wave tower damage or boost next-wave tower fire rate.
 - A debug event feed shows important placement, upgrade, reward, leak and win/loss events.
 - Victory and defeat show a run summary with stars, wave, kill, leak, scrap, reward and ability-use counts.
+- Completed runs update session progress with runs, victories, best stars, best waves and best perfect waves.
 - The slice ends in victory after all waves or defeat when the base reaches zero health.
 
 ## How To Run
@@ -54,6 +55,7 @@ For the active next-task list, see `current-roadmap.md`.
 10. If you picked `Rapid Loader`, the next wave gets boosted tower fire rate.
 11. Use `Freeze Pulse` or `Orbital Strike` during active waves when their cooldowns are ready.
 12. On victory or defeat, read the run summary panel.
+13. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -94,5 +96,6 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Rapid Loader affects fire rate only, not damage.
 - Orbital Strike is a debug ability, not final balance.
 - Run summary is debug UI, not final progression UX.
+- Session progress is in-memory only; it is not a save system yet.
 
 These limits are intentional. The slice exists to prove the loop before expanding content.

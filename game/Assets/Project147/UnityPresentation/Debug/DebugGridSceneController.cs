@@ -100,6 +100,8 @@ namespace Project147.UnityPresentation.Debug
         private CurrencyWallet wallet;
         private RunModifierState runModifiers;
         private RunSummaryState runSummary;
+        private LevelProgressState levelProgress;
+        private LevelProgressApplicationResult lastProgressResult;
         private LevelEventFeed eventFeed;
         private bool waveActive;
         private bool won;
@@ -306,6 +308,7 @@ namespace Project147.UnityPresentation.Debug
             freezePulseState = new PlayerAbilityState(config.CreateFreezePulseAbilityDefinition());
             orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
             towerUpgradeDefinition = config.CreateTowerUpgradeDefinition();
+            levelProgress = levelProgress ?? new LevelProgressState();
         }
 
         private TowerDefinition SelectedTower
@@ -583,11 +586,12 @@ namespace Project147.UnityPresentation.Debug
                     activeAliens.RemoveAt(index);
                     RecordEvent($"{FormatAlienLabel(alien.State.Definition.Id)} leaked. Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}.");
 
-                    if (currentBase.IsDestroyed)
+                    if (currentBase.IsDestroyed && !lost)
                     {
                         lost = true;
                         waveActive = false;
                         runSummary = runSummary.Complete(RunOutcome.Defeat);
+                        ApplyCompletedRunProgress();
                         RecordEvent("Defeat. Base destroyed.");
                     }
                 }
@@ -810,6 +814,7 @@ namespace Project147.UnityPresentation.Debug
             {
                 won = true;
                 runSummary = runSummary.Complete(RunOutcome.Victory);
+                ApplyCompletedRunProgress();
                 RecordEvent("Victory. All waves cleared.");
                 return;
             }
@@ -1314,6 +1319,7 @@ namespace Project147.UnityPresentation.Debug
 
             GUI.Label(new Rect(left + 12, top, 260, 24), status);
             DrawEventFeed(left + 296, 16);
+            DrawSessionProgressPanel(left + 668, 16);
             DrawWaveIntelPanel(left + 296, 232);
             DrawRunChoicePanel(left + 296, 356);
             DrawRunSummaryPanel(left + 296, 232);
@@ -1434,6 +1440,26 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Abilities: Freeze {runSummary.FreezePulseUses}  Strike {runSummary.OrbitalStrikeUses}");
         }
 
+        private void DrawSessionProgressPanel(int left, int top)
+        {
+            if (levelProgress == null)
+            {
+                return;
+            }
+
+            GUI.Box(new Rect(left, top, 260, 134), "Session Progress");
+            top += 28;
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Runs: {levelProgress.RunsCompleted}  Victories: {levelProgress.Victories}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Best stars: {levelProgress.BestStars}/3");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Best waves: {levelProgress.BestWavesCleared}/{config.TotalWaves}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Perfect waves: {levelProgress.BestPerfectWaves}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 236, 22), BuildProgressStatusText());
+        }
+
         private void DrawEventFeed(int left, int top)
         {
             if (eventFeed == null)
@@ -1455,6 +1481,12 @@ namespace Project147.UnityPresentation.Debug
         {
             eventFeed = (eventFeed ?? new LevelEventFeed(EventFeedCapacity)).Add(message);
             UnityEngine.Debug.Log(message);
+        }
+
+        private void ApplyCompletedRunProgress()
+        {
+            lastProgressResult = levelProgress.ApplyRunSummary(runSummary);
+            levelProgress = lastProgressResult.State;
         }
 
         private bool HasPendingRunChoice
@@ -1582,6 +1614,18 @@ namespace Project147.UnityPresentation.Debug
             return intel.Tags.Count == 0
                 ? "Basic"
                 : string.Join(", ", intel.Tags);
+        }
+
+        private string BuildProgressStatusText()
+        {
+            if (lastProgressResult == null)
+            {
+                return "No completed runs yet";
+            }
+
+            return lastProgressResult.HasAnyImprovement
+                ? "New best recorded"
+                : "No new best this run";
         }
 
         private string BuildWaveSummary(WaveDefinition wave)

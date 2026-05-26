@@ -424,6 +424,11 @@ namespace Project147.GameData.Debug
             return alienUpgrade.CreateDefinition();
         }
 
+        public IReadOnlyList<AlienUpgradeChoiceDefinition> CreateAlienUpgradeChoiceDefinitions()
+        {
+            return alienUpgrade.CreateChoiceDefinitions();
+        }
+
         public AlienDefinition CreateAlienDefinition()
         {
             return CreateAlienDefinition(0);

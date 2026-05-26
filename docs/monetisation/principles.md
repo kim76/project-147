@@ -44,7 +44,10 @@ The first implementation can be fake or local, but the boundary should exist ear
 Current repo status:
 
 - analytics event names and required properties live in a tested catalogue;
+- a local analytics recorder validates event names and required properties;
 - rewarded-ad opportunities live in a tested catalogue;
+- a local rewarded-ad offer tracker enforces per-run offer limits;
+- debug rewarded-ad prompts can be claimed or skipped without loading a real ad;
 - no live ad, purchase, subscription or backend SDK has been added.
 
 ## Rewarded Ads

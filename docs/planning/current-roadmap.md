@@ -39,6 +39,10 @@ The first playable slice currently has:
 - Local save/load for campaign progress.
 - Tested analytics event catalogue for retention and balance instrumentation.
 - Tested rewarded-ad opportunity catalogue without live ad SDKs.
+- Tested local analytics recorder that validates required event properties.
+- Tested rewarded-ad offer tracker that enforces per-run offer limits.
+- Debug scene records local analytics event counts.
+- Debug scene can show fake rewarded-ad offers after wave clears without a live ad SDK.
 - First-pass code-native visuals for towers and aliens.
 - Health, shield and status markers on active aliens.
 - Upgrade pips on upgraded towers.
@@ -109,10 +113,11 @@ Done:
 - Add simple threat ratings in wave intel.
 - Add counter hints for shielded, regenerator, burrower, armoured and boss waves.
 - Add clearer trait text in wave intel.
+- Add enemy-side upgrade choices for health, speed, resistance, dodge, shields and regeneration.
 
 Next:
 
-- Add enemy-side upgrade choices for health, speed, resistance, dodge, shields and regeneration.
+- Wire alien upgrade choices into the alien-side prototype flow.
 
 ### 3. Defence Loadout
 
@@ -169,6 +174,7 @@ Done:
 
 - Add a tested budgeted alien squad loadout model.
 - Add a tested alien spawn-order planning model.
+- Add a tested alien upgrade choice plan model.
 
 Next:
 
@@ -213,10 +219,15 @@ Next:
 
 Goal: prepare for monetisation without adding it too early.
 
-Next:
+Done:
 
 - Wire analytics event catalogue into a fake/local analytics service.
-- Wire rewarded-ad opportunities into fake debug prompts before adding live SDKs.
+- Wire rewarded-ad opportunities into fake run-limit tracking before adding live SDKs.
+- Add debug-only rewarded-ad prompt surfaces.
+
+Next:
+
+- Add stronger analytics coverage for economy, churn and difficulty tuning.
 - Keep purchases, subscriptions and backend work out until the core loop has enough retention signal.
 
 ## Not Yet

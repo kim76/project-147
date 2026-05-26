@@ -306,5 +306,22 @@ namespace Project147.Tests.EditMode.GameData.Debug
             Assert.That(choices.Any(choice => choice.Id == "rapid-loader"), Is.True);
             Assert.That(choices.All(choice => choice.Amount > 0), Is.True);
         }
+
+        [Test]
+        public void CreateAlienUpgradeChoiceDefinitions_ReturnsAlienSideUpgradeChoices()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var choices = config.CreateAlienUpgradeChoiceDefinitions();
+
+            Assert.That(choices.Count, Is.EqualTo(6));
+            Assert.That(choices.Any(choice => choice.Id == "debug-alien-choice-health"), Is.True);
+            Assert.That(choices.Any(choice => choice.Id == "debug-alien-choice-speed"), Is.True);
+            Assert.That(choices.Any(choice => choice.Id == "debug-alien-choice-dodge"), Is.True);
+            Assert.That(choices.Any(choice => choice.Id == "debug-alien-choice-resistance"), Is.True);
+            Assert.That(choices.Any(choice => choice.Id == "debug-alien-choice-shield"), Is.True);
+            Assert.That(choices.Any(choice => choice.Id == "debug-alien-choice-regeneration"), Is.True);
+            Assert.That(choices.All(choice => choice.Cost > 0), Is.True);
+        }
     }
 }

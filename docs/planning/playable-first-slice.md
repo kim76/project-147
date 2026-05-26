@@ -58,6 +58,9 @@ For the active next-task list, see `current-roadmap.md`.
 - Total stars unlock later debug levels.
 - Campaign progress is saved locally after completed runs and loaded when the debug scene starts.
 - Analytics events and rewarded-ad opportunities are defined as tested catalogues, but no live SDKs are wired in.
+- Local analytics recording and rewarded-ad offer limits are testable without connecting external services.
+- The debug scene shows fake rewarded-ad offers after some wave clears, with claim/skip buttons and per-run limits.
+- Alien-side upgrade choices now cover health, speed, resistance, dodge, shields and regeneration in pure GameCore.
 - The slice ends in victory after all waves or defeat when the base reaches zero health.
 
 ## How To Run
@@ -82,10 +85,12 @@ For the active next-task list, see `current-roadmap.md`.
 18. If you picked `Rapid Loader`, the next wave gets boosted tower fire rate.
 19. Use `Freeze Pulse`, `Orbital Strike`, `Shield Burst` or `Overcharge` during active waves when their cooldowns are ready.
 20. Confirm `Overcharge` changes the modifier line to show active wave damage and fire-rate boosts.
-21. On victory or defeat, read the run summary panel.
-22. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
-23. Stop and restart Play mode to confirm saved progress loads.
-24. Use `Reset Save` to clear debug campaign progress when you want a fresh campaign.
+21. After a wave clear, claim or skip any `Fake Rewarded Ad` panel that appears.
+22. Confirm the `Analytics` and `Fake ads` counts update in the left HUD.
+23. On victory or defeat, read the run summary panel.
+24. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
+25. Stop and restart Play mode to confirm saved progress loads.
+26. Use `Reset Save` to clear debug campaign progress when you want a fresh campaign.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -138,6 +143,8 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - There is no mobile touch polish.
 - There is no final art.
 - There are no live ads, purchase SDKs, subscriptions or backend accounts.
+- Fake rewarded-ad offers are debug-only and do not play real ads.
+- Alien-side upgrade choices are modelled but not yet exposed in the debug scene.
 - Reward choices are debug-tuned and not final progression design.
 - The tower discount reward only affects the next placed tower, not upgrades.
 - Selling refunds 75% of tower and upgrade spend in the debug slice.

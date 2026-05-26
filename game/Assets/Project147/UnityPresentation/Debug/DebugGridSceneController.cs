@@ -7,6 +7,8 @@ using Project147.GameCore.Combat;
 using Project147.GameCore.Grid;
 using Project147.GameCore.Level;
 using Project147.GameData.Debug;
+using Project147.PlatformServices.Analytics;
+using Project147.PlatformServices.Monetisation;
 using Project147.PlatformServices.Save;
 using UnityEngine;
 
@@ -95,9 +97,12 @@ namespace Project147.UnityPresentation.Debug
         private readonly GridPathfinder pathfinder = new GridPathfinder();
         private readonly TowerTargetSelector targetSelector = new TowerTargetSelector();
         private readonly TowerSaleCalculator towerSaleCalculator = new TowerSaleCalculator();
+        private readonly Project147RewardedAdCatalog rewardedAdCatalog = new Project147RewardedAdCatalog();
         private TowerPlacementValidator placementValidator;
         private AttackResolver attackResolver;
         private SplashDamageResolver splashDamageResolver;
+        private InMemoryAnalyticsRecorder analyticsRecorder;
+        private RewardedAdOfferTracker rewardedAdOfferTracker;
         private PlayerAbilityState freezePulseState;
         private PlayerAbilityState orbitalStrikeState;
         private PlayerAbilityState shieldBurstState;
@@ -132,6 +137,8 @@ namespace Project147.UnityPresentation.Debug
         private WaveDefinition currentWaveDefinition;
         private WaveSpawnState waveSpawnState;
         private IReadOnlyList<RunChoiceDefinition> pendingRunChoices;
+        private RewardedAdOpportunityDefinition pendingRewardedAdOpportunity;
+        private int pendingRewardedAdScrapAmount;
         private GameObject placementPreview;
         private LineRenderer placementPreviewLine;
         private GridCoordinate? previewCoordinate;
@@ -252,6 +259,14 @@ namespace Project147.UnityPresentation.Debug
             RecordEvent(discountApplied > 0
                 ? $"Placed {SelectedTower.Id} at {coordinate}. Discount {discountApplied}. Scrap: {wallet.Balance}."
                 : $"Placed {SelectedTower.Id} at {coordinate}. Scrap: {wallet.Balance}.");
+            TrackAnalytics(
+                "tower_placed",
+                new Dictionary<string, string>
+                {
+                    { "level_id", SelectedLevelLayout.Id },
+                    { "tower_id", SelectedTower.Id },
+                    { "scrap_cost", selectedTowerCost.ToString() }
+                });
         }
 
         public void ShowPlacementPreview(GridCoordinate coordinate)
@@ -353,9 +368,20 @@ namespace Project147.UnityPresentation.Debug
             currentWaveDefinition = null;
             waveSpawnState = null;
             pendingRunChoices = new List<RunChoiceDefinition>();
+            pendingRewardedAdOpportunity = null;
+            pendingRewardedAdScrapAmount = 0;
+            rewardedAdOfferTracker = new RewardedAdOfferTracker();
+            analyticsRecorder = new InMemoryAnalyticsRecorder(new Project147AnalyticsCatalog().CreateGameplayEvents());
             combatBannerText = null;
             combatBannerSeconds = 0;
             RebuildTiles();
+            TrackAnalytics(
+                "level_started",
+                new Dictionary<string, string>
+                {
+                    { "level_id", SelectedLevelLayout.Id },
+                    { "loadout_id", towerLoadoutPlans.SelectedPlan.Id }
+                });
         }
 
         private void ApplySelectedLevelLayout()
@@ -426,6 +452,8 @@ namespace Project147.UnityPresentation.Debug
             shieldBurstState = new PlayerAbilityState(config.CreateShieldBurstAbilityDefinition());
             towerOverchargeState = new PlayerAbilityState(config.CreateTowerOverchargeAbilityDefinition());
             towerUpgradeLoadout = new TowerUpgradeLoadout(config.CreateTowerUpgradeDefinitions());
+            analyticsRecorder = new InMemoryAnalyticsRecorder(new Project147AnalyticsCatalog().CreateGameplayEvents());
+            rewardedAdOfferTracker = new RewardedAdOfferTracker();
             campaignProgressStore = CreateCampaignProgressStore();
             campaignProgress = LoadCampaignProgress();
             RefreshLevelUnlockState();
@@ -605,6 +633,15 @@ namespace Project147.UnityPresentation.Debug
             UpdateTowerObject(tower);
             HidePlacementPreviewIfAny();
             RecordEvent($"Upgraded tower at {coordinate} with {selectedUpgrade.Id} to level {tower.State.Level}.");
+            TrackAnalytics(
+                "tower_upgraded",
+                new Dictionary<string, string>
+                {
+                    { "level_id", SelectedLevelLayout.Id },
+                    { "tower_id", tower.State.Definition.Id },
+                    { "upgrade_id", selectedUpgrade.Id },
+                    { "tower_level", tower.State.Level.ToString() }
+                });
         }
 
         private void TrySellTower(GridCoordinate coordinate)
@@ -632,6 +669,14 @@ namespace Project147.UnityPresentation.Debug
             RebuildTiles();
             HidePlacementPreviewIfAny();
             RecordEvent($"Sold tower at {coordinate}. +{refund} scrap.");
+            TrackAnalytics(
+                "tower_sold",
+                new Dictionary<string, string>
+                {
+                    { "level_id", SelectedLevelLayout.Id },
+                    { "tower_id", tower.State.Definition.Id },
+                    { "refund_amount", refund.ToString() }
+                });
         }
 
         private void TryCycleTowerTargetingMode(GridCoordinate coordinate)
@@ -672,6 +717,14 @@ namespace Project147.UnityPresentation.Debug
             waveSpawnState = new WaveSpawnState(currentWaveDefinition);
             ShowCombatBanner($"Wave {completedWaves + 1}");
             RecordEvent($"Wave {completedWaves + 1} started: {BuildWaveSummary(currentWaveDefinition)}.");
+            TrackAnalytics(
+                "wave_started",
+                new Dictionary<string, string>
+                {
+                    { "level_id", SelectedLevelLayout.Id },
+                    { "wave_number", (completedWaves + 1).ToString() },
+                    { "alien_count", currentWaveDefinition.AlienCount.ToString() }
+                });
         }
 
         private void TryActivateFreezePulse()
@@ -728,6 +781,7 @@ namespace Project147.UnityPresentation.Debug
 
             ShowFreezePulseFeedback();
             RecordEvent($"Freeze Pulse slowed {results.Count} alien(s).");
+            TrackAbilityUsed(freezePulseState.Definition.Id);
         }
 
         private void TryActivateOrbitalStrike()
@@ -784,6 +838,7 @@ namespace Project147.UnityPresentation.Debug
             }
 
             RecordEvent($"Orbital Strike hit {results.Count} alien(s).");
+            TrackAbilityUsed(orbitalStrikeState.Definition.Id);
         }
 
         private void TryActivateShieldBurst()
@@ -809,6 +864,7 @@ namespace Project147.UnityPresentation.Debug
             shieldBurstState = shieldBurstState.Activate();
             runSummary = runSummary.RecordShieldBurstUsed();
             RecordEvent($"Shield Burst added {shieldBurstState.Definition.BaseShieldAmount} base shield.");
+            TrackAbilityUsed(shieldBurstState.Definition.Id);
         }
 
         private void TryActivateTowerOvercharge()
@@ -841,6 +897,7 @@ namespace Project147.UnityPresentation.Debug
             runSummary = runSummary.RecordTowerOverchargeUsed();
             RecordEvent(
                 $"Tower Overcharge: +{towerOverchargeState.Definition.TowerDamagePercent}% damage, +{towerOverchargeState.Definition.TowerFireRatePercent}% rate this wave.");
+            TrackAbilityUsed(towerOverchargeState.Definition.Id);
         }
 
         private void SelectRunChoice(int choiceIndex)
@@ -864,6 +921,65 @@ namespace Project147.UnityPresentation.Debug
             runSummary = runSummary.RecordRewardChosen();
             pendingRunChoices = new List<RunChoiceDefinition>();
             RecordEvent($"Chose {choice.Label}: {FormatRunChoiceEffect(choice)}.");
+            TrackAnalytics(
+                "reward_choice_selected",
+                new Dictionary<string, string>
+                {
+                    { "level_id", SelectedLevelLayout.Id },
+                    { "choice_id", choice.Id },
+                    { "wave_number", completedWaves.ToString() }
+                });
+        }
+
+        private void ClaimPendingRewardedAdOffer()
+        {
+            if (!HasPendingRewardedAdOffer)
+            {
+                return;
+            }
+
+            wallet = wallet.Add(pendingRewardedAdScrapAmount);
+            rewardedAdOfferTracker = rewardedAdOfferTracker.RecordOffer(pendingRewardedAdOpportunity);
+            RecordEvent($"Fake rewarded ad claimed: +{pendingRewardedAdScrapAmount} scrap.");
+            ClearPendingRewardedAdOffer();
+        }
+
+        private void SkipPendingRewardedAdOffer()
+        {
+            if (!HasPendingRewardedAdOffer)
+            {
+                return;
+            }
+
+            RecordEvent($"Skipped fake rewarded ad: {pendingRewardedAdOpportunity.Id}.");
+            ClearPendingRewardedAdOffer();
+        }
+
+        private void ClearPendingRewardedAdOffer()
+        {
+            pendingRewardedAdOpportunity = null;
+            pendingRewardedAdScrapAmount = 0;
+        }
+
+        private void OfferRewardedAdIfAvailable(int waveRewardAmount)
+        {
+            var opportunity = rewardedAdCatalog.GetRequiredOpportunity("double-wave-clear-scrap");
+
+            if (!rewardedAdOfferTracker.CanOffer(opportunity))
+            {
+                return;
+            }
+
+            pendingRewardedAdOpportunity = opportunity;
+            pendingRewardedAdScrapAmount = waveRewardAmount;
+            TrackAnalytics(
+                "rewarded_ad_offer_shown",
+                new Dictionary<string, string>
+                {
+                    { "placement_id", opportunity.Id },
+                    { "level_id", SelectedLevelLayout.Id }
+                });
+            RecordEvent($"Fake rewarded ad offer: +{waveRewardAmount} scrap.");
         }
 
         private void UpdateWaveSpawning(float deltaSeconds)
@@ -947,6 +1063,7 @@ namespace Project147.UnityPresentation.Debug
                         ApplyCompletedRunProgress();
                         ShowCombatBanner("Defeat");
                         RecordEvent("Defeat. Base destroyed.");
+                        TrackLevelCompleted();
                     }
                 }
             }
@@ -1252,6 +1369,14 @@ namespace Project147.UnityPresentation.Debug
             RecordEvent(wasPerfectWave
                 ? $"Wave cleared perfectly. +{reward.Amount} scrap."
                 : $"Wave cleared. +{reward.Amount} scrap.");
+            TrackAnalytics(
+                "wave_cleared",
+                new Dictionary<string, string>
+                {
+                    { "level_id", SelectedLevelLayout.Id },
+                    { "wave_number", completedWaves.ToString() },
+                    { "perfect_wave", wasPerfectWave.ToString() }
+                });
             ShowCombatBanner(wasPerfectWave ? "Perfect Wave" : "Wave Clear");
             waveActive = false;
             currentWaveDefinition = null;
@@ -1265,12 +1390,14 @@ namespace Project147.UnityPresentation.Debug
                 ApplyCompletedRunProgress();
                 ShowCombatBanner(lastRunUnlockedLevel ? "Level Unlocked" : "Victory");
                 RecordEvent("Victory. All waves cleared.");
+                TrackLevelCompleted();
                 return;
             }
 
             pendingRunChoices = runChoiceOfferSelector.SelectOffer(
                 config.CreateRunChoiceDefinitions(),
                 RunChoiceOfferSize);
+            OfferRewardedAdIfAvailable(reward.Amount);
             RecordEvent("Choose a reward before the next wave.");
         }
 
@@ -1767,7 +1894,9 @@ namespace Project147.UnityPresentation.Debug
                 || towerOverchargeState == null
                 || runSummary == null
                 || gameSpeed == null
-                || gamePause == null)
+                || gamePause == null
+                || analyticsRecorder == null
+                || rewardedAdOfferTracker == null)
             {
                 return;
             }
@@ -1992,7 +2121,7 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 144, top + 4, 130, 24), BuildTowerOverchargeStatusText());
             top += 34;
 
-            var startWaveEnabled = !waveActive && !won && !lost && !HasPendingRunChoice;
+            var startWaveEnabled = !waveActive && !won && !lost && !HasPendingRunChoice && !HasPendingRewardedAdOffer;
             var previousStartWaveEnabled = GUI.enabled;
             GUI.enabled = startWaveEnabled;
 
@@ -2012,6 +2141,8 @@ namespace Project147.UnityPresentation.Debug
 
             var status = HasPendingRunChoice
                 ? "Choose reward"
+                : HasPendingRewardedAdOffer
+                    ? "Choose fake ad offer"
                 : waveActive
                     ? gamePause.IsPaused ? "Paused" : "Wave running"
                     : sellMode
@@ -2028,12 +2159,15 @@ namespace Project147.UnityPresentation.Debug
             }
 
             GUI.Label(new Rect(left + 12, top, 260, 24), status);
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 260, 24), BuildInstrumentationStatusText());
             DrawEventFeed(left + 296, 16);
             DrawWaveIntelPanel(left + 296, 232);
             DrawRunChoicePanel(left + 296, 444);
+            DrawRewardedAdOfferPanel(left + 296, HasPendingRunChoice ? 592 : 444);
             DrawRunSummaryPanel(left + 296, 232);
-            DrawSessionProgressPanel(left + 296, HasPendingRunChoice ? 592 : 444);
-            DrawInspectedTowerPanel(left + 296, HasPendingRunChoice ? 798 : 650);
+            DrawSessionProgressPanel(left + 296, BuildSessionProgressPanelTop());
+            DrawInspectedTowerPanel(left + 296, BuildInspectedTowerPanelTop());
             DrawCombatBanner();
         }
 
@@ -2125,6 +2259,27 @@ namespace Project147.UnityPresentation.Debug
                 : $"Cooldown {towerOverchargeState.RemainingCooldownSeconds:0.0}s";
         }
 
+        private string BuildInstrumentationStatusText()
+        {
+            return $"Analytics: {analyticsRecorder.Records.Count}  Fake ads: {rewardedAdOfferTracker.TotalOffers}";
+        }
+
+        private int BuildSessionProgressPanelTop()
+        {
+            if (won || lost)
+            {
+                return 444;
+            }
+
+            var top = HasPendingRunChoice ? 592 : 444;
+            return HasPendingRewardedAdOffer ? top + 112 : top;
+        }
+
+        private int BuildInspectedTowerPanelTop()
+        {
+            return BuildSessionProgressPanelTop() + 206;
+        }
+
         private void DrawRunChoicePanel(int left, int top)
         {
             if (!HasPendingRunChoice)
@@ -2146,6 +2301,29 @@ namespace Project147.UnityPresentation.Debug
                 }
 
                 top += 30;
+            }
+        }
+
+        private void DrawRewardedAdOfferPanel(int left, int top)
+        {
+            if (!HasPendingRewardedAdOffer || won || lost)
+            {
+                return;
+            }
+
+            GUI.Box(new Rect(left, top, 360, 104), "Fake Rewarded Ad");
+            top += 28;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"+{pendingRewardedAdScrapAmount} scrap after a pretend ad.");
+            top += 26;
+
+            if (GUI.Button(new Rect(left + 12, top, 164, 26), "Claim Fake Ad Reward"))
+            {
+                ClaimPendingRewardedAdOffer();
+            }
+
+            if (GUI.Button(new Rect(left + 184, top, 164, 26), "Skip"))
+            {
+                SkipPendingRewardedAdOffer();
             }
         }
 
@@ -2308,6 +2486,48 @@ namespace Project147.UnityPresentation.Debug
             UnityEngine.Debug.Log(message);
         }
 
+        private void TrackAbilityUsed(string abilityId)
+        {
+            TrackAnalytics(
+                "ability_used",
+                new Dictionary<string, string>
+                {
+                    { "level_id", SelectedLevelLayout.Id },
+                    { "ability_id", abilityId },
+                    { "wave_number", (completedWaves + 1).ToString() }
+                });
+        }
+
+        private void TrackLevelCompleted()
+        {
+            TrackAnalytics(
+                "level_completed",
+                new Dictionary<string, string>
+                {
+                    { "level_id", SelectedLevelLayout.Id },
+                    { "outcome", runSummary.Outcome.ToString() },
+                    { "stars", runSummary.StarRating.ToString() },
+                    { "waves_cleared", runSummary.WavesCleared.ToString() }
+                });
+        }
+
+        private void TrackAnalytics(string eventName, IReadOnlyDictionary<string, string> properties)
+        {
+            if (analyticsRecorder == null)
+            {
+                return;
+            }
+
+            try
+            {
+                analyticsRecorder.Track(eventName, properties);
+            }
+            catch (System.Exception exception)
+            {
+                UnityEngine.Debug.LogWarning($"Analytics event rejected: {exception.Message}");
+            }
+        }
+
         private void ShowCombatBanner(string message)
         {
             combatBannerText = message;
@@ -2400,6 +2620,11 @@ namespace Project147.UnityPresentation.Debug
         private bool HasPendingRunChoice
         {
             get { return pendingRunChoices != null && pendingRunChoices.Count > 0; }
+        }
+
+        private bool HasPendingRewardedAdOffer
+        {
+            get { return pendingRewardedAdOpportunity != null; }
         }
 
         private static string BuildRunChoiceButtonText(RunChoiceDefinition choice)

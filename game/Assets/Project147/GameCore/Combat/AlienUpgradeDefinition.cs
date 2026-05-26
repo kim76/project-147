@@ -13,6 +13,29 @@ namespace Project147.GameCore.Combat
             float dodgeChanceBonus,
             DamageType resistanceDamageType,
             float resistanceBonus)
+            : this(
+                id,
+                healthMultiplier,
+                speedMultiplier,
+                rewardMultiplier,
+                dodgeChanceBonus,
+                resistanceDamageType,
+                resistanceBonus,
+                0,
+                0)
+        {
+        }
+
+        public AlienUpgradeDefinition(
+            string id,
+            float healthMultiplier,
+            float speedMultiplier,
+            float rewardMultiplier,
+            float dodgeChanceBonus,
+            DamageType resistanceDamageType,
+            float resistanceBonus,
+            float shieldCapacityBonus,
+            float healthRegenerationBonus)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -50,6 +73,16 @@ namespace Project147.GameCore.Combat
                 throw new ArgumentOutOfRangeException(nameof(resistanceBonus), "Resistance bonus cannot be negative.");
             }
 
+            if (shieldCapacityBonus < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(shieldCapacityBonus), "Shield capacity bonus cannot be negative.");
+            }
+
+            if (healthRegenerationBonus < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(healthRegenerationBonus), "Health regeneration bonus cannot be negative.");
+            }
+
             Id = id;
             HealthMultiplier = healthMultiplier;
             SpeedMultiplier = speedMultiplier;
@@ -57,6 +90,8 @@ namespace Project147.GameCore.Combat
             DodgeChanceBonus = dodgeChanceBonus;
             ResistanceDamageType = resistanceDamageType;
             ResistanceBonus = resistanceBonus;
+            ShieldCapacityBonus = shieldCapacityBonus;
+            HealthRegenerationBonus = healthRegenerationBonus;
         }
 
         public string Id { get; }
@@ -72,6 +107,10 @@ namespace Project147.GameCore.Combat
         public DamageType ResistanceDamageType { get; }
 
         public float ResistanceBonus { get; }
+
+        public float ShieldCapacityBonus { get; }
+
+        public float HealthRegenerationBonus { get; }
 
         public AlienDefinition ApplyTo(AlienDefinition alien)
         {
@@ -104,9 +143,9 @@ namespace Project147.GameCore.Combat
                 Convert.ToInt32(Math.Round(alien.Reward * RewardMultiplier, MidpointRounding.AwayFromZero)),
                 resistances,
                 dodgeChance,
-                alien.ShieldCapacity,
+                alien.ShieldCapacity + ShieldCapacityBonus,
                 alien.TargetableAfterPathProgress,
-                alien.HealthRegenerationPerSecond);
+                alien.HealthRegenerationPerSecond + HealthRegenerationBonus);
         }
 
         private static Dictionary<DamageType, float> CopyResistances(AlienDefinition alien)

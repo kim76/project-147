@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Project147.GameCore.Abilities;
 using Project147.GameCore.Choices;
@@ -6,6 +7,7 @@ using Project147.GameCore.Combat;
 using Project147.GameCore.Grid;
 using Project147.GameCore.Level;
 using Project147.GameData.Debug;
+using Project147.PlatformServices.Save;
 using UnityEngine;
 
 namespace Project147.UnityPresentation.Debug
@@ -107,6 +109,7 @@ namespace Project147.UnityPresentation.Debug
         private CurrencyWallet wallet;
         private RunModifierState runModifiers;
         private RunSummaryState runSummary;
+        private ICampaignProgressStore campaignProgressStore;
         private CampaignProgressState campaignProgress;
         private CampaignLevelUnlockState levelUnlockState;
         private LevelProgressApplicationResult lastProgressResult;
@@ -132,6 +135,7 @@ namespace Project147.UnityPresentation.Debug
         private GridCoordinate? previewCoordinate;
         private string combatBannerText;
         private float combatBannerSeconds;
+        private string saveStatusText;
 
         private void Start()
         {
@@ -413,11 +417,36 @@ namespace Project147.UnityPresentation.Debug
             orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
             shieldBurstState = new PlayerAbilityState(config.CreateShieldBurstAbilityDefinition());
             towerUpgradeLoadout = new TowerUpgradeLoadout(config.CreateTowerUpgradeDefinitions());
-            campaignProgress = campaignProgress ?? new CampaignProgressState();
+            campaignProgressStore = CreateCampaignProgressStore();
+            campaignProgress = LoadCampaignProgress();
             RefreshLevelUnlockState();
             SelectFirstUnlockedLevelIfCurrentIsLocked();
             gameSpeed = gameSpeed ?? new GameSpeedState();
             gamePause = gamePause ?? new GamePauseState();
+        }
+
+        private static ICampaignProgressStore CreateCampaignProgressStore()
+        {
+            var path = Path.Combine(Application.persistentDataPath, "project147-campaign-progress.save");
+            return new CampaignProgressStore(
+                new FileTextSaveStorage(path),
+                new CampaignProgressSaveCodec());
+        }
+
+        private CampaignProgressState LoadCampaignProgress()
+        {
+            try
+            {
+                var loaded = campaignProgressStore.LoadOrDefault();
+                saveStatusText = campaignProgressStore.Exists ? "Progress loaded" : "No saved progress";
+                return loaded;
+            }
+            catch (System.Exception exception)
+            {
+                UnityEngine.Debug.LogWarning($"Could not load campaign progress: {exception.Message}");
+                saveStatusText = "Save load failed";
+                return new CampaignProgressState();
+            }
         }
 
         private TowerDefinition SelectedTower
@@ -1685,6 +1714,7 @@ namespace Project147.UnityPresentation.Debug
                 || wallet == null
                 || levelDefinitions == null
                 || towerUnlockState == null
+                || campaignProgressStore == null
                 || towerLoadoutPlans == null
                 || towerLoadout == null
                 || towerUpgradeLoadout == null
@@ -1944,7 +1974,7 @@ namespace Project147.UnityPresentation.Debug
             DrawRunChoicePanel(left + 296, 444);
             DrawRunSummaryPanel(left + 296, 232);
             DrawSessionProgressPanel(left + 296, HasPendingRunChoice ? 592 : 444);
-            DrawInspectedTowerPanel(left + 296, HasPendingRunChoice ? 764 : 616);
+            DrawInspectedTowerPanel(left + 296, HasPendingRunChoice ? 798 : 650);
             DrawCombatBanner();
         }
 
@@ -2115,7 +2145,7 @@ namespace Project147.UnityPresentation.Debug
 
             var levelProgress = campaignProgress.GetProgress(SelectedLevelLayout.Id);
 
-            GUI.Box(new Rect(left, top, 260, 156), "Session Progress");
+            GUI.Box(new Rect(left, top, 260, 190), "Session Progress");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 236, 22), FormatProgressLevelLabel(SelectedLevelLayout.Id));
             top += 22;
@@ -2128,6 +2158,19 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 12, top, 236, 22), $"Perfect waves: {levelProgress.BestPerfectWaves}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 236, 22), BuildProgressStatusText());
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 236, 22), saveStatusText ?? "No save status");
+            top += 24;
+
+            var previousEnabled = GUI.enabled;
+            GUI.enabled = !waveActive && !won && !lost;
+
+            if (GUI.Button(new Rect(left + 12, top, 116, 24), "Reset Save"))
+            {
+                ResetSavedCampaignProgress();
+            }
+
+            GUI.enabled = previousEnabled;
         }
 
         private void DrawInspectedTowerPanel(int left, int top)
@@ -2247,11 +2290,38 @@ namespace Project147.UnityPresentation.Debug
             lastProgressResult = result.LevelResult;
             RefreshLevelUnlockState();
             lastRunUnlockedLevel = levelUnlockState.UnlockedLevelIds.Count > previousUnlockedCount;
+            SaveCampaignProgress();
 
             if (lastRunUnlockedLevel)
             {
                 RecordEvent("New level unlocked.");
             }
+        }
+
+        private void SaveCampaignProgress()
+        {
+            try
+            {
+                campaignProgressStore.Save(campaignProgress);
+                saveStatusText = "Progress saved";
+            }
+            catch (System.Exception exception)
+            {
+                UnityEngine.Debug.LogWarning($"Could not save campaign progress: {exception.Message}");
+                saveStatusText = "Save failed";
+            }
+        }
+
+        private void ResetSavedCampaignProgress()
+        {
+            campaignProgressStore.Clear();
+            campaignProgress = new CampaignProgressState();
+            lastProgressResult = null;
+            RefreshLevelUnlockState();
+            selectedLevelLayoutIndex = 0;
+            saveStatusText = "Saved progress reset";
+            ResetSlice();
+            RecordEvent("Saved campaign progress reset.");
         }
 
         private bool HasPendingRunChoice

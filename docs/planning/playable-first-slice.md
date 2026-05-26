@@ -55,7 +55,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Victory and defeat show a run summary with stars, wave, kill, leak, scrap, reward and ability-use counts.
 - Completed runs update per-level session progress with runs, victories, best stars, best waves and best perfect waves.
 - Total stars unlock later debug levels.
-- Campaign progress can be captured and restored through a tested snapshot model, ready for local save wiring later.
+- Campaign progress is saved locally after completed runs and loaded when the debug scene starts.
 - The slice ends in victory after all waves or defeat when the base reaches zero health.
 
 ## How To Run
@@ -81,6 +81,8 @@ For the active next-task list, see `current-roadmap.md`.
 19. Use `Freeze Pulse`, `Orbital Strike` or `Shield Burst` during active waves when their cooldowns are ready.
 20. On victory or defeat, read the run summary panel.
 21. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
+22. Stop and restart Play mode to confirm saved progress loads.
+23. Use `Reset Save` to clear debug campaign progress when you want a fresh campaign.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -143,6 +145,6 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Orbital Strike is a debug ability, not final balance.
 - Shield Burst is a debug ability, not final balance.
 - Run summary is debug UI, not final progression UX.
-- Per-level session progress is in-memory only; the snapshot model exists, but disk save/load is not wired yet.
+- Campaign progress is saved locally for this debug slice.
 
 These limits are intentional. The slice exists to prove the loop before expanding content.

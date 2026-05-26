@@ -36,7 +36,7 @@ The first playable slice currently has:
 - End-of-run summary and session progress tracking.
 - Per-level-layout session progress tracking.
 - Total-star level unlock rules in the debug campaign flow.
-- Campaign progress snapshot/restore model for later local saves.
+- Local save/load for campaign progress.
 - First-pass code-native visuals for towers and aliens.
 - Health, shield and status markers on active aliens.
 - Upgrade pips on upgraded towers.
@@ -54,21 +54,23 @@ After pulling/opening the latest work:
 5. Confirm the session progress panel sits below the intel panels and does not cover the board.
 6. Confirm fresh campaign progress shows only the first level unlocked.
 7. Complete a strong run and confirm more levels unlock from total stars.
-8. Cycle pre-run tower loadouts and confirm the selected tower list changes to `1/3`.
-9. Select the status loadout and confirm the chemical tower is available.
-10. Cycle upgrade paths and confirm the selected upgrade name changes.
-11. Place towers, then click an existing tower between waves to inspect and upgrade it.
-12. Confirm the tower detail panel shows level, targeting, invested scrap and upgrade history.
-13. Sell an upgraded tower and confirm the refund reflects actual spend.
-14. During a wave, use Shield Burst and confirm base shield increases.
-15. Start later waves and confirm trait text, threat rating, counter hints and `Regenerator` appear in next-wave intel.
-16. Confirm active aliens show health bars and shielded aliens show shield bars.
-17. Confirm poisoned or slowed aliens show a small status marker.
-18. Upgrade towers and confirm upgraded towers show visible pips.
-19. Confirm wave start, wave clear, victory and defeat banners appear.
-20. Confirm green halo regenerator aliens appear.
-21. Confirm burrowers are still not shot immediately at spawn.
-22. Confirm the final boss wave still completes into victory or defeat.
+8. Restart Play mode and confirm saved campaign progress loads.
+9. Use `Reset Save` and confirm progress returns to one unlocked level.
+10. Cycle pre-run tower loadouts and confirm the selected tower list changes to `1/3`.
+11. Select the status loadout and confirm the chemical tower is available.
+12. Cycle upgrade paths and confirm the selected upgrade path name changes.
+13. Place towers, then click an existing tower between waves to inspect and upgrade it.
+14. Confirm the tower detail panel shows level, targeting, invested scrap, current stats and upgrade history.
+15. Sell an upgraded tower and confirm the refund reflects actual spend.
+16. During a wave, use Shield Burst and confirm base shield increases.
+17. Start later waves and confirm trait text, threat rating, counter hints and `Regenerator` appear in next-wave intel.
+18. Confirm active aliens show health bars and shielded aliens show shield bars.
+19. Confirm poisoned or slowed aliens show a small status marker.
+20. Upgrade towers and confirm upgraded towers show visible pips.
+21. Confirm wave start, wave clear, victory and defeat banners appear.
+22. Confirm green halo regenerator aliens appear.
+23. Confirm burrowers are still not shot immediately at spawn.
+24. Confirm the final boss wave still completes into victory or defeat.
 
 ## Next Slice Candidates
 
@@ -150,10 +152,10 @@ Done:
 - Track session progress separately for each debug layout.
 - Add unlock rules based on stars.
 - Add a progress snapshot/restore model for local save work.
+- Add local save/load for progress.
 
 Next:
 
-- Add local save/load for progress.
 - Add a simple campaign selection screen later, after the debug scene proves the rules.
 
 ### 6. Alien-Side Prototype

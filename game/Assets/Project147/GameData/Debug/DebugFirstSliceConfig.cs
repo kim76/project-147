@@ -236,8 +236,14 @@ namespace Project147.GameData.Debug
 
         public WaveDefinition CreateWaveDefinition(int completedWaves)
         {
+            return CreateWaveDefinition(completedWaves, TotalWaves);
+        }
+
+        public WaveDefinition CreateWaveDefinition(int completedWaves, int totalWaves)
+        {
             return level.CreateWaveDefinition(
                 completedWaves,
+                totalWaves,
                 BasicAlienId,
                 FastAlienId,
                 ArmouredAlienId,
@@ -262,6 +268,33 @@ namespace Project147.GameData.Debug
             };
         }
 
+        public IReadOnlyList<LevelRunDefinition> CreateLevelDefinitions()
+        {
+            var layouts = CreateLevelLayouts();
+
+            return new[]
+            {
+                new LevelRunDefinition(
+                    layouts[0],
+                    StartingCurrency,
+                    BaseHealth,
+                    TotalWaves,
+                    PerfectWaveScrapBonus),
+                new LevelRunDefinition(
+                    layouts[1],
+                    StartingCurrency,
+                    BaseHealth,
+                    TotalWaves + 1,
+                    PerfectWaveScrapBonus + 5),
+                new LevelRunDefinition(
+                    layouts[2],
+                    StartingCurrency + 40,
+                    Math.Max(1, BaseHealth - 2),
+                    TotalWaves,
+                    PerfectWaveScrapBonus)
+            };
+        }
+
         public TowerDefinition CreateTowerDefinition()
         {
             return CreateTowerDefinitions()[0];
@@ -275,6 +308,22 @@ namespace Project147.GameData.Debug
                 mortarTower.CreateDefinition(),
                 EnergyTower.CreateDefinition(),
                 ChemicalTower.CreateDefinition(new[] { CreateChemicalStatusEffectDefinition() })
+            };
+        }
+
+        public IReadOnlyList<TowerLoadoutPlan> CreateTowerLoadoutPlans()
+        {
+            var towers = CreateTowerDefinitions();
+            var railgun = towers[0];
+            var mortar = towers[1];
+            var energy = towers[2];
+            var chemical = towers[3];
+
+            return new[]
+            {
+                new TowerLoadoutPlan("debug-loadout-balanced", new[] { railgun, mortar, energy }),
+                new TowerLoadoutPlan("debug-loadout-status", new[] { railgun, chemical, energy }),
+                new TowerLoadoutPlan("debug-loadout-heavy", new[] { mortar, chemical, railgun })
             };
         }
 
@@ -302,6 +351,11 @@ namespace Project147.GameData.Debug
         public PlayerAbilityDefinition CreateOrbitalStrikeAbilityDefinition()
         {
             return abilities.CreateOrbitalStrikeDefinition();
+        }
+
+        public PlayerAbilityDefinition CreateShieldBurstAbilityDefinition()
+        {
+            return abilities.CreateShieldBurstDefinition();
         }
 
         public IReadOnlyList<RunChoiceDefinition> CreateRunChoiceDefinitions()

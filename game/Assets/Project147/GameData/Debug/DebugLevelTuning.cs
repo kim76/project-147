@@ -62,9 +62,37 @@ namespace Project147.GameData.Debug
             string regeneratorAlienId,
             string bossAlienId)
         {
+            return CreateWaveDefinition(
+                completedWaves,
+                totalWaves,
+                basicAlienId,
+                fastAlienId,
+                armouredAlienId,
+                shieldedAlienId,
+                burrowerAlienId,
+                regeneratorAlienId,
+                bossAlienId);
+        }
+
+        public WaveDefinition CreateWaveDefinition(
+            int completedWaves,
+            int runTotalWaves,
+            string basicAlienId,
+            string fastAlienId,
+            string armouredAlienId,
+            string shieldedAlienId,
+            string burrowerAlienId,
+            string regeneratorAlienId,
+            string bossAlienId)
+        {
             if (completedWaves < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(completedWaves), "Completed waves cannot be negative.");
+            }
+
+            if (runTotalWaves <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(runTotalWaves), "Run total waves must be greater than zero.");
             }
 
             if (string.IsNullOrWhiteSpace(bossAlienId))
@@ -88,7 +116,7 @@ namespace Project147.GameData.Debug
             }
 
             var totalAliens = startingWaveAlienCount + completedWaves * extraAliensPerWave;
-            var hasBoss = completedWaves == totalWaves - 1;
+            var hasBoss = completedWaves == runTotalWaves - 1;
             var fastAliens = completedWaves <= 0 ? 0 : Math.Max(1, totalAliens / 4);
             var armouredAliens = completedWaves < 2 ? 0 : Math.Max(1, totalAliens / 5);
             var shieldedAliens = completedWaves < 3 ? 0 : Math.Max(1, totalAliens / 6);

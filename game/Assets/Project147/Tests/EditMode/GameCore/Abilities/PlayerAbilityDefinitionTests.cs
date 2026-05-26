@@ -36,6 +36,23 @@ namespace Project147.Tests.EditMode.GameCore.Abilities
             Assert.That(definition.DamageType, Is.EqualTo(DamageType.Energy));
             Assert.That(definition.HasStatusEffect, Is.False);
             Assert.That(definition.HasDamage, Is.True);
+            Assert.That(definition.HasBaseShield, Is.False);
+        }
+
+        [Test]
+        public void Constructor_WhenBaseShieldValuesAreValid_StoresShieldValues()
+        {
+            var definition = new PlayerAbilityDefinition(
+                "shield-burst",
+                20,
+                2);
+
+            Assert.That(definition.Id, Is.EqualTo("shield-burst"));
+            Assert.That(definition.CooldownSeconds, Is.EqualTo(20));
+            Assert.That(definition.BaseShieldAmount, Is.EqualTo(2));
+            Assert.That(definition.HasStatusEffect, Is.False);
+            Assert.That(definition.HasDamage, Is.False);
+            Assert.That(definition.HasBaseShield, Is.True);
         }
 
         [TestCase(null)]
@@ -69,6 +86,15 @@ namespace Project147.Tests.EditMode.GameCore.Abilities
                 18,
                 0,
                 DamageType.Energy));
+        }
+
+        [Test]
+        public void Constructor_WhenBaseShieldAmountIsZero_Throws()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new PlayerAbilityDefinition(
+                "shield-burst",
+                20,
+                0));
         }
 
         private static AlienStatusEffectDefinition CreateSlow()

@@ -12,7 +12,9 @@ For the active next-task list, see `current-roadmap.md`.
 
 - Player places towers between waves.
 - Player can switch between three debug level layouts before placing towers.
-- Player can switch between four debug tower types before placing.
+- Each debug level can have its own starting scrap, base health, wave count and perfect-wave bonus.
+- Player can switch between three pre-run debug tower loadout presets before placing towers.
+- Player can switch between the three tower types inside the selected loadout before placing.
 - Player can switch between four tower upgrade paths before upgrading.
 - Railgun, mortar, energy and chemical towers use distinct first-pass debug visual profiles.
 - Railgun applies a short slow effect, mortar deals splash damage, energy provides direct single-target damage, and chemical applies poison damage over time.
@@ -26,7 +28,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Player can cycle wave speed between 1x, 2x and 3x.
 - Player can pause and resume active waves.
 - A `Next Wave` panel previews enemy counts and tags before each wave.
-- The `Next Wave` panel shows a simple threat rating and counter hints.
+- The `Next Wave` panel shows trait text, a simple threat rating and counter hints.
 - Mixed waves spawn basic, fast, armoured, shielded, burrower, regenerator and boss debug aliens.
 - Shielded aliens absorb damage into shields before health.
 - Burrower aliens cannot be targeted by towers until they have travelled several path steps.
@@ -38,6 +40,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Tower shots draw a short line and briefly flash the alien.
 - Freeze Pulse can be triggered during a wave to slow all active aliens.
 - Orbital Strike can be triggered during a wave to damage all active aliens.
+- Shield Burst can be triggered during a wave to add temporary base shield.
 - Status effects expire automatically.
 - Killed aliens award scrap.
 - Clearing waves awards bonus scrap.
@@ -57,20 +60,22 @@ For the active next-task list, see `current-roadmap.md`.
 3. Recreate the debug scene from `Project147 > Debug > Create Grid Scene`.
 4. Press Play.
 5. Switch level layouts before placing a tower if you want a different board.
-6. Place towers by clicking open cells.
-7. Select an upgrade path, then click an existing tower between waves to upgrade it.
-8. Read the `Next Wave` panel, then press `Start Wave` in the debug HUD.
-9. After a non-final wave, choose one reward from the reward panel.
-10. Continue placing or upgrading towers between waves. If you picked the construction credit, the next tower cost is reduced.
-11. Toggle `Sell Mode`, click an existing tower, and confirm scrap increases.
-12. Toggle `Target`, click an existing tower, and confirm the event feed shows the new targeting mode.
-13. Click `Speed` to cycle between 1x, 2x and 3x wave speed.
-14. During a wave, click `Pause`, then `Resume`.
-15. If you picked `Overclock`, the next wave gets boosted tower damage.
-16. If you picked `Rapid Loader`, the next wave gets boosted tower fire rate.
-17. Use `Freeze Pulse` or `Orbital Strike` during active waves when their cooldowns are ready.
-18. On victory or defeat, read the run summary panel.
-19. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
+6. Confirm the selected level changes the resource and wave numbers shown in the HUD.
+7. Switch tower loadout before placing a tower if you want a different three-tower preset.
+8. Place towers by clicking open cells.
+9. Select an upgrade path, then click an existing tower between waves to upgrade it.
+10. Read the `Next Wave` panel, then press `Start Wave` in the debug HUD.
+11. After a non-final wave, choose one reward from the reward panel.
+12. Continue placing or upgrading towers between waves. If you picked the construction credit, the next tower cost is reduced.
+13. Toggle `Sell Mode`, click an existing tower, and confirm scrap increases.
+14. Toggle `Target`, click an existing tower, and confirm the event feed shows the new targeting mode.
+15. Click `Speed` to cycle between 1x, 2x and 3x wave speed.
+16. During a wave, click `Pause`, then `Resume`.
+17. If you picked `Overclock`, the next wave gets boosted tower damage.
+18. If you picked `Rapid Loader`, the next wave gets boosted tower fire rate.
+19. Use `Freeze Pulse`, `Orbital Strike` or `Shield Burst` during active waves when their cooldowns are ready.
+20. On victory or defeat, read the run summary panel.
+21. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -102,8 +107,11 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Towers can only be placed between waves.
 - Towers can only be upgraded between waves.
 - Level layout can only be changed before placing towers in a fresh run.
+- Level run settings are attached to debug level selection, not final campaign data.
+- Tower loadout can only be changed before placing towers in a fresh run.
 - Tower upgrade paths currently share one debug cost to keep selling deterministic.
 - There are four debug tower types.
+- Each debug run uses one selected three-tower loadout.
 - There are three debug level layouts.
 - There are four debug tower upgrade paths.
 - The status upgrade path only matters for towers that already apply slow or poison.
@@ -122,6 +130,7 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Overclock affects damage only, not fire rate.
 - Rapid Loader affects fire rate only, not damage.
 - Orbital Strike is a debug ability, not final balance.
+- Shield Burst is a debug ability, not final balance.
 - Run summary is debug UI, not final progression UX.
 - Per-level session progress is in-memory only; it is not a save system yet.
 

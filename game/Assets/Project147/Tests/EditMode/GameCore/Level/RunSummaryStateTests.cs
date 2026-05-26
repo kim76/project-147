@@ -17,6 +17,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
             Assert.That(summary.WavesCleared, Is.EqualTo(0));
             Assert.That(summary.PerfectWaves, Is.EqualTo(0));
             Assert.That(summary.ScrapEarned, Is.EqualTo(0));
+            Assert.That(summary.ShieldBurstUses, Is.EqualTo(0));
             Assert.That(summary.StarRating, Is.EqualTo(0));
         }
 
@@ -82,6 +83,16 @@ namespace Project147.Tests.EditMode.GameCore.Level
             var result = summary.RecordOrbitalStrikeUsed();
 
             Assert.That(result.OrbitalStrikeUses, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void RecordShieldBurstUsed_IncrementsShieldBurstUses()
+        {
+            var summary = new RunSummaryState();
+
+            var result = summary.RecordShieldBurstUsed();
+
+            Assert.That(result.ShieldBurstUses, Is.EqualTo(1));
         }
 
         [Test]

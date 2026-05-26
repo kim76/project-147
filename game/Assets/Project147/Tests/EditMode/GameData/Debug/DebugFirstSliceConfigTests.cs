@@ -44,6 +44,20 @@ namespace Project147.Tests.EditMode.GameData.Debug
         }
 
         [Test]
+        public void CreateTowerLoadoutPlans_ReturnsThreeTowerPlans()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var plans = config.CreateTowerLoadoutPlans();
+
+            Assert.That(plans.Count, Is.EqualTo(3));
+            Assert.That(plans.Select(plan => plan.Id), Does.Contain("debug-loadout-balanced"));
+            Assert.That(plans.Select(plan => plan.Id), Does.Contain("debug-loadout-status"));
+            Assert.That(plans.Select(plan => plan.Id), Does.Contain("debug-loadout-heavy"));
+            Assert.That(plans.All(plan => plan.Towers.Count == 3), Is.True);
+        }
+
+        [Test]
         public void CreateLevelLayouts_ReturnsDebugLayouts()
         {
             var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
@@ -75,6 +89,23 @@ namespace Project147.Tests.EditMode.GameData.Debug
         }
 
         [Test]
+        public void CreateLevelDefinitions_ReturnsLayoutSpecificRunSettings()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var levels = config.CreateLevelDefinitions();
+
+            Assert.That(levels.Count, Is.EqualTo(3));
+            Assert.That(levels.Select(level => level.Layout.Id), Does.Contain("debug-relay-yard"));
+            Assert.That(levels.Select(level => level.Layout.Id), Does.Contain("debug-switchback"));
+            Assert.That(levels.Select(level => level.Layout.Id), Does.Contain("debug-twin-lane"));
+            Assert.That(levels.All(level => level.StartingCurrency >= 0), Is.True);
+            Assert.That(levels.All(level => level.BaseHealth > 0), Is.True);
+            Assert.That(levels.All(level => level.TotalWaves > 0), Is.True);
+            Assert.That(levels.Select(level => level.TotalWaves).Distinct().Count(), Is.GreaterThan(1));
+        }
+
+        [Test]
         public void CreateWaveDefinition_WhenLaterWave_ReturnsMixedAlienIds()
         {
             var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
@@ -89,6 +120,16 @@ namespace Project147.Tests.EditMode.GameData.Debug
             Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.BurrowerAlienId), Is.True);
             Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.RegeneratorAlienId), Is.False);
             Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.BossAlienId), Is.False);
+        }
+
+        [Test]
+        public void CreateWaveDefinition_WhenRunTotalWavesIsDifferent_UsesRunTotalForBossWave()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var wave = config.CreateWaveDefinition(5, 6);
+
+            Assert.That(wave.SpawnEntries.Any(entry => entry.AlienId == config.BossAlienId), Is.True);
         }
 
         [Test]
@@ -181,6 +222,19 @@ namespace Project147.Tests.EditMode.GameData.Debug
             Assert.That(ability.CooldownSeconds, Is.GreaterThan(0));
             Assert.That(ability.HasDamage, Is.True);
             Assert.That(ability.DamageAmount, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void CreateShieldBurstAbilityDefinition_ReturnsBaseShieldAbility()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var ability = config.CreateShieldBurstAbilityDefinition();
+
+            Assert.That(ability.Id, Is.EqualTo("debug-shield-burst"));
+            Assert.That(ability.CooldownSeconds, Is.GreaterThan(0));
+            Assert.That(ability.HasBaseShield, Is.True);
+            Assert.That(ability.BaseShieldAmount, Is.GreaterThan(0));
         }
 
         [Test]

@@ -10,7 +10,8 @@ namespace Project147.GameCore.Level
             IReadOnlyList<WaveIntelEntry> entries,
             IReadOnlyList<string> tags,
             int clearReward,
-            int threatRating = 1)
+            int threatRating = 1,
+            IReadOnlyList<string> traitHints = null)
         {
             if (waveNumber <= 0)
             {
@@ -67,9 +68,20 @@ namespace Project147.GameCore.Level
                 }
             }
 
+            var hints = traitHints ?? Array.Empty<string>();
+
+            foreach (var hint in hints)
+            {
+                if (string.IsNullOrWhiteSpace(hint))
+                {
+                    throw new ArgumentException("Wave intel trait hints cannot be empty.", nameof(traitHints));
+                }
+            }
+
             WaveNumber = waveNumber;
             Entries = new List<WaveIntelEntry>(entries);
             Tags = new List<string>(tags);
+            TraitHints = new List<string>(hints);
             TotalAliens = totalAliens;
             ClearReward = clearReward;
             ThreatRating = threatRating;
@@ -86,5 +98,7 @@ namespace Project147.GameCore.Level
         public IReadOnlyList<WaveIntelEntry> Entries { get; }
 
         public IReadOnlyList<string> Tags { get; }
+
+        public IReadOnlyList<string> TraitHints { get; }
     }
 }

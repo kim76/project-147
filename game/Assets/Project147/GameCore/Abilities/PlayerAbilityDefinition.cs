@@ -9,7 +9,7 @@ namespace Project147.GameCore.Abilities
             string id,
             float cooldownSeconds,
             AlienStatusEffectDefinition statusEffect)
-            : this(id, cooldownSeconds, statusEffect, 0, DamageType.Kinetic)
+            : this(id, cooldownSeconds, statusEffect, 0, DamageType.Kinetic, 0)
         {
             if (statusEffect == null)
             {
@@ -22,7 +22,7 @@ namespace Project147.GameCore.Abilities
             float cooldownSeconds,
             float damageAmount,
             DamageType damageType)
-            : this(id, cooldownSeconds, null, damageAmount, damageType)
+            : this(id, cooldownSeconds, null, damageAmount, damageType, 0)
         {
             if (damageAmount <= 0)
             {
@@ -32,12 +32,27 @@ namespace Project147.GameCore.Abilities
             }
         }
 
+        public PlayerAbilityDefinition(
+            string id,
+            float cooldownSeconds,
+            int baseShieldAmount)
+            : this(id, cooldownSeconds, null, 0, DamageType.Kinetic, baseShieldAmount)
+        {
+            if (baseShieldAmount <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(baseShieldAmount),
+                    "Player ability base shield amount must be greater than zero.");
+            }
+        }
+
         private PlayerAbilityDefinition(
             string id,
             float cooldownSeconds,
             AlienStatusEffectDefinition statusEffect,
             float damageAmount,
-            DamageType damageType)
+            DamageType damageType,
+            int baseShieldAmount)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -58,11 +73,19 @@ namespace Project147.GameCore.Abilities
                     "Player ability damage cannot be negative.");
             }
 
+            if (baseShieldAmount < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(baseShieldAmount),
+                    "Player ability base shield amount cannot be negative.");
+            }
+
             Id = id;
             CooldownSeconds = cooldownSeconds;
             StatusEffect = statusEffect;
             DamageAmount = damageAmount;
             DamageType = damageType;
+            BaseShieldAmount = baseShieldAmount;
         }
 
         public string Id { get; }
@@ -75,6 +98,8 @@ namespace Project147.GameCore.Abilities
 
         public DamageType DamageType { get; }
 
+        public int BaseShieldAmount { get; }
+
         public bool HasStatusEffect
         {
             get { return StatusEffect != null; }
@@ -83,6 +108,11 @@ namespace Project147.GameCore.Abilities
         public bool HasDamage
         {
             get { return DamageAmount > 0; }
+        }
+
+        public bool HasBaseShield
+        {
+            get { return BaseShieldAmount > 0; }
         }
     }
 }

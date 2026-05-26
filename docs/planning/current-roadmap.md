@@ -18,6 +18,8 @@ The first playable slice currently has:
 - Selectable tower upgrade paths.
 - Actual tower upgrade spend tracking for selling and inspection.
 - Multiple selectable debug level layouts.
+- Level-specific starting scrap, base health, wave count and perfect-wave bonus.
+- Selectable three-tower debug loadout presets before a run starts.
 - Tested 1x/2x/3x game speed control.
 - Active-wave pause/resume without Unity global time scale.
 - Four debug towers: railgun, mortar, energy and chemical.
@@ -26,9 +28,10 @@ The first playable slice currently has:
 - Shield-first damage for shielded aliens.
 - Early-path untargetability for burrowers.
 - Health regeneration for regenerator aliens.
-- Freeze Pulse and Orbital Strike player abilities.
+- Freeze Pulse, Orbital Strike and Shield Burst player abilities.
 - Between-wave reward choices.
 - Next-wave intel with enemy tags.
+- Next-wave trait text for special aliens.
 - Next-wave threat ratings and counter hints.
 - End-of-run summary and session progress tracking.
 - Per-level-layout session progress tracking.
@@ -41,15 +44,19 @@ After pulling/opening the latest work:
 1. Run all Edit Mode tests.
 2. Press Play in the debug scene.
 3. Switch level layouts before placing a tower and confirm the board changes.
-4. Select tower `4/4` and confirm it is the chemical tower with poison text.
-5. Cycle upgrade paths and confirm the selected upgrade name changes.
-6. Place towers, then click an existing tower between waves to inspect and upgrade it.
-7. Confirm the tower detail panel shows level, targeting, invested scrap and upgrade history.
-8. Sell an upgraded tower and confirm the refund reflects actual spend.
-9. Start later waves and confirm threat rating, counter hints and `Regenerator` appear in next-wave intel.
-10. Confirm green halo regenerator aliens appear.
-11. Confirm burrowers are still not shot immediately at spawn.
-12. Confirm the final boss wave still completes into victory or defeat.
+4. Confirm the selected level changes starting scrap, base health, wave count or perfect-wave bonus.
+5. Confirm the session progress panel sits below the intel panels and does not cover the board.
+6. Cycle pre-run tower loadouts and confirm the selected tower list changes to `1/3`.
+7. Select the status loadout and confirm the chemical tower is available.
+8. Cycle upgrade paths and confirm the selected upgrade name changes.
+9. Place towers, then click an existing tower between waves to inspect and upgrade it.
+10. Confirm the tower detail panel shows level, targeting, invested scrap and upgrade history.
+11. Sell an upgraded tower and confirm the refund reflects actual spend.
+12. During a wave, use Shield Burst and confirm base shield increases.
+13. Start later waves and confirm trait text, threat rating, counter hints and `Regenerator` appear in next-wave intel.
+14. Confirm green halo regenerator aliens appear.
+15. Confirm burrowers are still not shot immediately at spawn.
+16. Confirm the final boss wave still completes into victory or defeat.
 
 ## Next Slice Candidates
 
@@ -84,22 +91,26 @@ Done:
 - Add resistances, dodge and alien upgrades.
 - Add simple threat ratings in wave intel.
 - Add counter hints for shielded, regenerator, burrower, armoured and boss waves.
+- Add clearer trait text in wave intel.
 
 Next:
 
-- Add clearer trait text in wave intel.
 - Add enemy-side upgrade choices for health, speed, resistance, dodge, shields and regeneration.
 
 ### 3. Defence Loadout
 
 Goal: move from a debug tower carousel to an intentional pre-run tower selection.
 
+Done:
+
+- Add tested tower loadout plan and plan-set models.
+- Restrict each run to a selected three-tower debug loadout.
+- Add a simple pre-run debug control for changing the loadout.
+
 Next:
 
 - Add a tested tower unlock model.
-- Add a tested loadout slot model.
-- Restrict each run to a chosen subset of towers.
-- Add a simple pre-run debug panel for changing the loadout.
+- Replace preset loadouts with explicit slot editing.
 
 ### 4. Multiple Levels
 
@@ -110,10 +121,10 @@ Done:
 - Add tested level layout definitions.
 - Add three selectable debug layouts.
 - Wire level switching into the debug scene before a run starts.
+- Add level-specific starting scrap, base health and wave count.
 
 Next:
 
-- Add level-specific starting scrap, base health and wave count.
 - Add layout-specific wave tuning.
 - Add level completion stars per layout.
 
@@ -139,10 +150,10 @@ Goal: support playing as the invading alien side.
 Done:
 
 - Add a tested budgeted alien squad loadout model.
+- Add a tested alien spawn-order planning model.
 
 Next:
 
-- Add alien spawn-order planning.
 - Add a simple automated defence opponent.
 - Reuse existing tower, targeting and damage rules rather than building a separate game.
 
@@ -150,9 +161,12 @@ Next:
 
 Goal: make both sides feel expressive.
 
+Done:
+
+- Add Shield Burst as a defensive base-shield ability.
+
 Next:
 
-- Add a defensive shield burst.
 - Add a tower overcharge ability.
 - Add alien decoy or sabotage ability.
 - Add alien tunnel burst ability.

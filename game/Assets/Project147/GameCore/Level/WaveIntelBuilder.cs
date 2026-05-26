@@ -37,6 +37,7 @@ namespace Project147.GameCore.Level
 
             var entries = new List<WaveIntelEntry>();
             var tags = new List<string>();
+            var traitHints = new List<string>();
             var hasFast = false;
             var hasArmoured = false;
             var hasShielded = false;
@@ -87,31 +88,37 @@ namespace Project147.GameCore.Level
             if (hasFast)
             {
                 tags.Add("Fast");
+                traitHints.Add("Fast: quick.");
             }
 
             if (hasArmoured)
             {
                 tags.Add("Armoured");
+                traitHints.Add("Armoured: resists kinetic.");
             }
 
             if (hasShielded)
             {
                 tags.Add("Shielded");
+                traitHints.Add("Shielded: shield first.");
             }
 
             if (hasBurrower)
             {
                 tags.Add("Burrower");
+                traitHints.Add("Burrower: hidden early.");
             }
 
             if (hasRegenerator)
             {
                 tags.Add("Regenerator");
+                traitHints.Add("Regenerator: heals.");
             }
 
             if (hasBoss)
             {
                 tags.Add("Boss");
+                traitHints.Add("Boss: tough.");
             }
 
             if (wave.AlienCount >= 10)
@@ -124,7 +131,8 @@ namespace Project147.GameCore.Level
                 entries,
                 tags,
                 wave.ClearReward,
-                CalculateThreatRating(completedWaves, wave.AlienCount, hasShielded, hasBurrower, hasRegenerator, hasBoss));
+                CalculateThreatRating(completedWaves, wave.AlienCount, hasShielded, hasBurrower, hasRegenerator, hasBoss),
+                traitHints);
         }
 
         private static int CalculateThreatRating(

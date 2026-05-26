@@ -35,6 +35,15 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private DamageType orbitalStrikeDamageType = DamageType.Energy;
 
+        [SerializeField]
+        private string shieldBurstId = "debug-shield-burst";
+
+        [SerializeField]
+        private float shieldBurstCooldownSeconds = 16;
+
+        [SerializeField]
+        private int shieldBurstAmount = 2;
+
         public PlayerAbilityDefinition CreateFreezePulseDefinition()
         {
             return new PlayerAbilityDefinition(
@@ -54,6 +63,14 @@ namespace Project147.GameData.Debug
                 orbitalStrikeCooldownSeconds,
                 orbitalStrikeDamage,
                 orbitalStrikeDamageType);
+        }
+
+        public PlayerAbilityDefinition CreateShieldBurstDefinition()
+        {
+            return new PlayerAbilityDefinition(
+                shieldBurstId,
+                shieldBurstCooldownSeconds,
+                shieldBurstAmount);
         }
     }
 }

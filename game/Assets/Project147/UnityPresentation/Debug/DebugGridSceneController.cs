@@ -84,6 +84,7 @@ namespace Project147.UnityPresentation.Debug
 
         private readonly FreezePulseResolver freezePulseResolver = new FreezePulseResolver();
         private readonly OrbitalStrikeResolver orbitalStrikeResolver = new OrbitalStrikeResolver(new DamageResolver());
+        private readonly BaseShieldBurstResolver baseShieldBurstResolver = new BaseShieldBurstResolver();
         private readonly RunChoiceResolver runChoiceResolver = new RunChoiceResolver();
         private readonly RunChoiceOfferSelector runChoiceOfferSelector =
             new RunChoiceOfferSelector(new RandomChoiceIndexPicker());
@@ -96,7 +97,9 @@ namespace Project147.UnityPresentation.Debug
         private SplashDamageResolver splashDamageResolver;
         private PlayerAbilityState freezePulseState;
         private PlayerAbilityState orbitalStrikeState;
+        private PlayerAbilityState shieldBurstState;
         private TowerLoadout towerLoadout;
+        private TowerLoadoutPlanSet towerLoadoutPlans;
         private TowerUpgradeLoadout towerUpgradeLoadout;
         private RewardCalculator rewardCalculator;
         private BaseState currentBase;
@@ -105,7 +108,7 @@ namespace Project147.UnityPresentation.Debug
         private RunSummaryState runSummary;
         private CampaignProgressState campaignProgress;
         private LevelProgressApplicationResult lastProgressResult;
-        private IReadOnlyList<LevelLayoutDefinition> levelLayouts;
+        private IReadOnlyList<LevelRunDefinition> levelDefinitions;
         private GameSpeedState gameSpeed;
         private GamePauseState gamePause;
         private LevelEventFeed eventFeed;
@@ -148,6 +151,11 @@ namespace Project147.UnityPresentation.Debug
             if (freezePulseState != null)
             {
                 freezePulseState = freezePulseState.Tick(deltaSeconds);
+            }
+
+            if (shieldBurstState != null)
+            {
+                shieldBurstState = shieldBurstState.Tick(deltaSeconds);
             }
 
             UpdateWaveSpawning(deltaSeconds);
@@ -296,14 +304,17 @@ namespace Project147.UnityPresentation.Debug
             ClearTiles();
             placedTowers.Clear();
             towers.Clear();
-            currentBase = new BaseState(config.BaseHealth);
-            wallet = new CurrencyWallet(config.StartingCurrency);
+            rewardCalculator = new RewardCalculator(SelectedLevel.PerfectWaveScrapBonus);
+            currentBase = new BaseState(SelectedLevel.BaseHealth);
+            wallet = new CurrencyWallet(SelectedLevel.StartingCurrency);
+            towerLoadout = towerLoadoutPlans.SelectedPlan.CreateLoadout();
             runModifiers = new RunModifierState();
             runSummary = new RunSummaryState();
             gameSpeed = new GameSpeedState();
             gamePause = new GamePauseState();
             freezePulseState = new PlayerAbilityState(config.CreateFreezePulseAbilityDefinition());
             orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
+            shieldBurstState = new PlayerAbilityState(config.CreateShieldBurstAbilityDefinition());
             eventFeed = new LevelEventFeed(EventFeedCapacity).Add("Ready. Place towers, then start wave.");
             waveActive = false;
             won = false;
@@ -321,12 +332,12 @@ namespace Project147.UnityPresentation.Debug
 
         private void ApplySelectedLevelLayout()
         {
-            if (levelLayouts == null || levelLayouts.Count == 0)
+            if (levelDefinitions == null || levelDefinitions.Count == 0)
             {
                 return;
             }
 
-            if (selectedLevelLayoutIndex < 0 || selectedLevelLayoutIndex >= levelLayouts.Count)
+            if (selectedLevelLayoutIndex < 0 || selectedLevelLayoutIndex >= levelDefinitions.Count)
             {
                 selectedLevelLayoutIndex = 0;
             }
@@ -377,11 +388,13 @@ namespace Project147.UnityPresentation.Debug
             var damageResolver = new DamageResolver();
             attackResolver = new AttackResolver(damageResolver);
             splashDamageResolver = new SplashDamageResolver(damageResolver);
-            rewardCalculator = new RewardCalculator(config.PerfectWaveScrapBonus);
-            towerLoadout = new TowerLoadout(config.CreateTowerDefinitions());
-            levelLayouts = config.CreateLevelLayouts();
+            levelDefinitions = config.CreateLevelDefinitions();
+            rewardCalculator = new RewardCalculator(SelectedLevel.PerfectWaveScrapBonus);
+            towerLoadoutPlans = new TowerLoadoutPlanSet(config.CreateTowerLoadoutPlans());
+            towerLoadout = towerLoadoutPlans.SelectedPlan.CreateLoadout();
             freezePulseState = new PlayerAbilityState(config.CreateFreezePulseAbilityDefinition());
             orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
+            shieldBurstState = new PlayerAbilityState(config.CreateShieldBurstAbilityDefinition());
             towerUpgradeLoadout = new TowerUpgradeLoadout(config.CreateTowerUpgradeDefinitions());
             campaignProgress = campaignProgress ?? new CampaignProgressState();
             gameSpeed = gameSpeed ?? new GameSpeedState();
@@ -395,7 +408,12 @@ namespace Project147.UnityPresentation.Debug
 
         private LevelLayoutDefinition SelectedLevelLayout
         {
-            get { return levelLayouts[selectedLevelLayoutIndex]; }
+            get { return SelectedLevel.Layout; }
+        }
+
+        private LevelRunDefinition SelectedLevel
+        {
+            get { return levelDefinitions[selectedLevelLayoutIndex]; }
         }
 
         private TowerUpgradeDefinition SelectedTowerUpgrade
@@ -438,6 +456,20 @@ namespace Project147.UnityPresentation.Debug
             RecordEvent($"Selected tower: {SelectedTower.Id}.");
         }
 
+        private void SelectPreviousTowerLoadoutPlan()
+        {
+            towerLoadoutPlans = towerLoadoutPlans.SelectPrevious();
+            ResetSlice();
+            RecordEvent($"Selected loadout: {towerLoadoutPlans.SelectedPlan.Id}.");
+        }
+
+        private void SelectNextTowerLoadoutPlan()
+        {
+            towerLoadoutPlans = towerLoadoutPlans.SelectNext();
+            ResetSlice();
+            RecordEvent($"Selected loadout: {towerLoadoutPlans.SelectedPlan.Id}.");
+        }
+
         private void SelectPreviousTowerUpgrade()
         {
             towerUpgradeLoadout = towerUpgradeLoadout.SelectPrevious();
@@ -454,14 +486,14 @@ namespace Project147.UnityPresentation.Debug
 
         private void SelectPreviousLevelLayout()
         {
-            selectedLevelLayoutIndex = (selectedLevelLayoutIndex + levelLayouts.Count - 1) % levelLayouts.Count;
+            selectedLevelLayoutIndex = (selectedLevelLayoutIndex + levelDefinitions.Count - 1) % levelDefinitions.Count;
             ResetSlice();
             RecordEvent($"Selected level: {SelectedLevelLayout.Id}.");
         }
 
         private void SelectNextLevelLayout()
         {
-            selectedLevelLayoutIndex = (selectedLevelLayoutIndex + 1) % levelLayouts.Count;
+            selectedLevelLayoutIndex = (selectedLevelLayoutIndex + 1) % levelDefinitions.Count;
             ResetSlice();
             RecordEvent($"Selected level: {SelectedLevelLayout.Id}.");
         }
@@ -540,7 +572,7 @@ namespace Project147.UnityPresentation.Debug
 
         private void StartNextWave()
         {
-            if (waveActive || won || lost || completedWaves >= config.TotalWaves)
+            if (waveActive || won || lost || completedWaves >= SelectedLevel.TotalWaves)
             {
                 return;
             }
@@ -556,7 +588,7 @@ namespace Project147.UnityPresentation.Debug
             retargetMode = false;
             runModifiers = runModifiers.StartWave();
             waveStartBaseHealth = currentBase.CurrentHealth;
-            currentWaveDefinition = config.CreateWaveDefinition(completedWaves);
+            currentWaveDefinition = config.CreateWaveDefinition(completedWaves, SelectedLevel.TotalWaves);
             waveSpawnState = new WaveSpawnState(currentWaveDefinition);
             RecordEvent($"Wave {completedWaves + 1} started: {BuildWaveSummary(currentWaveDefinition)}.");
         }
@@ -671,6 +703,31 @@ namespace Project147.UnityPresentation.Debug
             }
 
             RecordEvent($"Orbital Strike hit {results.Count} alien(s).");
+        }
+
+        private void TryActivateShieldBurst()
+        {
+            if (won || lost)
+            {
+                return;
+            }
+
+            if (!waveActive)
+            {
+                RecordEvent("Shield Burst can only be used during a wave.");
+                return;
+            }
+
+            if (!shieldBurstState.CanActivate)
+            {
+                RecordEvent($"Shield Burst cooling down: {shieldBurstState.RemainingCooldownSeconds:0.0}s.");
+                return;
+            }
+
+            currentBase = baseShieldBurstResolver.Resolve(shieldBurstState.Definition, currentBase);
+            shieldBurstState = shieldBurstState.Activate();
+            runSummary = runSummary.RecordShieldBurstUsed();
+            RecordEvent($"Shield Burst added {shieldBurstState.Definition.BaseShieldAmount} base shield.");
         }
 
         private void SelectRunChoice(int choiceIndex)
@@ -991,7 +1048,7 @@ namespace Project147.UnityPresentation.Debug
             waveSpawnState = null;
             runModifiers = runModifiers.EndWave();
 
-            if (completedWaves >= config.TotalWaves)
+            if (completedWaves >= SelectedLevel.TotalWaves)
             {
                 won = true;
                 runSummary = runSummary.Complete(RunOutcome.Victory);
@@ -1397,12 +1454,14 @@ namespace Project147.UnityPresentation.Debug
         {
             if (currentBase == null
                 || wallet == null
-                || levelLayouts == null
+                || levelDefinitions == null
+                || towerLoadoutPlans == null
                 || towerLoadout == null
                 || towerUpgradeLoadout == null
                 || rewardCalculator == null
                 || freezePulseState == null
                 || orbitalStrikeState == null
+                || shieldBurstState == null
                 || runSummary == null
                 || gameSpeed == null
                 || gamePause == null)
@@ -1412,9 +1471,9 @@ namespace Project147.UnityPresentation.Debug
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 586), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 760), "Project 147 First Slice");
             top += 28;
-            GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}");
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}  Shield: {currentBase.CurrentShield}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Level: {SelectedLevelLayout.Id}");
             top += 24;
@@ -1429,7 +1488,22 @@ namespace Project147.UnityPresentation.Debug
                 SelectNextLevelLayout();
             }
 
-            GUI.Label(new Rect(left + 144, top + 2, 130, 24), $"{selectedLevelLayoutIndex + 1}/{levelLayouts.Count}");
+            GUI.Label(new Rect(left + 144, top + 2, 130, 24), $"{selectedLevelLayoutIndex + 1}/{levelDefinitions.Count}");
+            top += 30;
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Loadout: {towerLoadoutPlans.SelectedPlan.Id}");
+            top += 24;
+
+            if (!waveActive && !won && !lost && towers.Count == 0 && completedWaves == 0 && GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
+            {
+                SelectPreviousTowerLoadoutPlan();
+            }
+
+            if (!waveActive && !won && !lost && towers.Count == 0 && completedWaves == 0 && GUI.Button(new Rect(left + 74, top, 54, 24), ">"))
+            {
+                SelectNextTowerLoadoutPlan();
+            }
+
+            GUI.Label(new Rect(left + 144, top + 2, 130, 24), $"{towerLoadoutPlans.SelectedIndex + 1}/{towerLoadoutPlans.Plans.Count}");
             top += 30;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Scrap: {wallet.Balance}  {BuildTowerCostText()}");
             top += 22;
@@ -1467,9 +1541,9 @@ namespace Project147.UnityPresentation.Debug
 
             GUI.Label(new Rect(left + 144, top + 2, 130, 24), $"{towerUpgradeLoadout.SelectedIndex + 1}/{towerUpgradeLoadout.Upgrades.Count}");
             top += 30;
-            GUI.Label(new Rect(left + 12, top, 260, 24), $"Perfect wave bonus: {config.PerfectWaveScrapBonus}");
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Perfect wave bonus: {SelectedLevel.PerfectWaveScrapBonus}");
             top += 22;
-            GUI.Label(new Rect(left + 12, top, 260, 24), $"Wave: {completedWaves}/{config.TotalWaves}  Alien cap: L{config.MaxAlienLevel}");
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Wave: {completedWaves}/{SelectedLevel.TotalWaves}  Alien cap: L{config.MaxAlienLevel}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Active aliens: {activeAliens.Count}");
             top += 22;
@@ -1560,6 +1634,22 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 144, top + 4, 130, 24), BuildOrbitalStrikeStatusText());
             top += 34;
 
+            previousEnabled = GUI.enabled;
+            GUI.enabled = waveActive
+                && !won
+                && !lost
+                && !gamePause.IsPaused
+                && shieldBurstState.CanActivate;
+
+            if (GUI.Button(new Rect(left + 12, top, 120, 28), BuildShieldBurstButtonText()))
+            {
+                TryActivateShieldBurst();
+            }
+
+            GUI.enabled = previousEnabled;
+            GUI.Label(new Rect(left + 144, top + 4, 130, 24), BuildShieldBurstStatusText());
+            top += 34;
+
             var startWaveEnabled = !waveActive && !won && !lost && !HasPendingRunChoice;
             var previousStartWaveEnabled = GUI.enabled;
             GUI.enabled = startWaveEnabled;
@@ -1597,11 +1687,11 @@ namespace Project147.UnityPresentation.Debug
 
             GUI.Label(new Rect(left + 12, top, 260, 24), status);
             DrawEventFeed(left + 296, 16);
-            DrawSessionProgressPanel(left + 668, 16);
-            DrawInspectedTowerPanel(left + 668, 188);
             DrawWaveIntelPanel(left + 296, 232);
-            DrawRunChoicePanel(left + 296, 410);
+            DrawRunChoicePanel(left + 296, 444);
             DrawRunSummaryPanel(left + 296, 232);
+            DrawSessionProgressPanel(left + 296, HasPendingRunChoice ? 592 : 444);
+            DrawInspectedTowerPanel(left + 296, HasPendingRunChoice ? 764 : 616);
         }
 
         private string BuildSelectedTowerAbilityText()
@@ -1664,6 +1754,20 @@ namespace Project147.UnityPresentation.Debug
                 : $"Cooldown {orbitalStrikeState.RemainingCooldownSeconds:0.0}s";
         }
 
+        private string BuildShieldBurstButtonText()
+        {
+            return shieldBurstState.CanActivate
+                ? "Shield Burst"
+                : $"Shield {Mathf.CeilToInt(shieldBurstState.RemainingCooldownSeconds)}s";
+        }
+
+        private string BuildShieldBurstStatusText()
+        {
+            return shieldBurstState.CanActivate
+                ? $"+{shieldBurstState.Definition.BaseShieldAmount} base shield"
+                : $"Cooldown {shieldBurstState.RemainingCooldownSeconds:0.0}s";
+        }
+
         private void DrawRunChoicePanel(int left, int top)
         {
             if (!HasPendingRunChoice)
@@ -1690,12 +1794,12 @@ namespace Project147.UnityPresentation.Debug
 
         private void DrawWaveIntelPanel(int left, int top)
         {
-            if (won || lost || waveActive || completedWaves >= config.TotalWaves)
+            if (won || lost || waveActive || completedWaves >= SelectedLevel.TotalWaves)
             {
                 return;
             }
 
-            var nextWave = config.CreateWaveDefinition(completedWaves);
+            var nextWave = config.CreateWaveDefinition(completedWaves, SelectedLevel.TotalWaves);
             var intel = waveIntelBuilder.Build(
                 completedWaves,
                 nextWave,
@@ -1706,7 +1810,8 @@ namespace Project147.UnityPresentation.Debug
                 config.BurrowerAlienId,
                 config.RegeneratorAlienId);
 
-            GUI.Box(new Rect(left, top, 360, 156), "Next Wave");
+            var panelHeight = intel.TraitHints.Count > 0 ? 200 : 156;
+            GUI.Box(new Rect(left, top, 360, panelHeight), "Next Wave");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Wave {intel.WaveNumber}: {intel.TotalAliens} aliens  Reward {intel.ClearReward}");
             top += 22;
@@ -1717,6 +1822,12 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Tags: {BuildWaveIntelTagsText(intel)}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 336, 22), BuildWaveCounterHintsText(intel));
+
+            if (intel.TraitHints.Count > 0)
+            {
+                top += 22;
+                GUI.Label(new Rect(left + 12, top, 336, 44), BuildWaveTraitHintsText(intel));
+            }
         }
 
         private void DrawRunSummaryPanel(int left, int top)
@@ -1732,18 +1843,18 @@ namespace Project147.UnityPresentation.Debug
             top += 22;
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Stars: {runSummary.StarRating}/3");
             top += 22;
-            GUI.Label(new Rect(left + 12, top, 336, 22), $"Waves: {runSummary.WavesCleared}/{config.TotalWaves}  Perfect: {runSummary.PerfectWaves}");
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Waves: {runSummary.WavesCleared}/{SelectedLevel.TotalWaves}  Perfect: {runSummary.PerfectWaves}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Aliens destroyed: {runSummary.AliensDestroyed}  Leaked: {runSummary.AliensLeaked}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Scrap earned: {runSummary.ScrapEarned}  Rewards: {runSummary.RewardsChosen}");
             top += 22;
-            GUI.Label(new Rect(left + 12, top, 336, 22), $"Abilities: Freeze {runSummary.FreezePulseUses}  Strike {runSummary.OrbitalStrikeUses}");
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Abilities: Freeze {runSummary.FreezePulseUses}  Strike {runSummary.OrbitalStrikeUses}  Shield {runSummary.ShieldBurstUses}");
         }
 
         private void DrawSessionProgressPanel(int left, int top)
         {
-            if (campaignProgress == null || levelLayouts == null)
+            if (campaignProgress == null || levelDefinitions == null)
             {
                 return;
             }
@@ -1758,7 +1869,7 @@ namespace Project147.UnityPresentation.Debug
             top += 22;
             GUI.Label(new Rect(left + 12, top, 236, 22), $"Best stars: {levelProgress.BestStars}/3");
             top += 22;
-            GUI.Label(new Rect(left + 12, top, 236, 22), $"Best waves: {levelProgress.BestWavesCleared}/{config.TotalWaves}");
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Best waves: {levelProgress.BestWavesCleared}/{SelectedLevel.TotalWaves}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 236, 22), $"Perfect waves: {levelProgress.BestPerfectWaves}");
             top += 22;
@@ -1987,6 +2098,13 @@ namespace Project147.UnityPresentation.Debug
             return hints.Count == 0
                 ? "Counters: standard"
                 : $"Counters: {string.Join(", ", hints)}";
+        }
+
+        private static string BuildWaveTraitHintsText(WaveIntelSummary intel)
+        {
+            return intel.TraitHints.Count == 0
+                ? "Traits: none"
+                : $"Traits: {string.Join(" ", intel.TraitHints)}";
         }
 
         private string BuildProgressStatusText()

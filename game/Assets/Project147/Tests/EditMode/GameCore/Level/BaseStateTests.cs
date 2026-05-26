@@ -13,6 +13,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
 
             Assert.That(state.MaxHealth, Is.EqualTo(10));
             Assert.That(state.CurrentHealth, Is.EqualTo(10));
+            Assert.That(state.CurrentShield, Is.EqualTo(0));
             Assert.That(state.IsDestroyed, Is.False);
         }
 
@@ -45,6 +46,28 @@ namespace Project147.Tests.EditMode.GameCore.Level
         }
 
         [Test]
+        public void ApplyLeakDamage_WhenShielded_ReducesShieldBeforeHealth()
+        {
+            var state = new BaseState(10).AddShield(2);
+
+            var result = state.ApplyLeakDamage(1);
+
+            Assert.That(result.CurrentShield, Is.EqualTo(1));
+            Assert.That(result.CurrentHealth, Is.EqualTo(10));
+        }
+
+        [Test]
+        public void ApplyLeakDamage_WhenDamageExceedsShield_AppliesOverflowToHealth()
+        {
+            var state = new BaseState(10).AddShield(2);
+
+            var result = state.ApplyLeakDamage(3);
+
+            Assert.That(result.CurrentShield, Is.EqualTo(0));
+            Assert.That(result.CurrentHealth, Is.EqualTo(9));
+        }
+
+        [Test]
         public void ApplyLeakDamage_WhenAmountIsNegative_Throws()
         {
             var state = new BaseState(10);
@@ -60,6 +83,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
             var result = state.Repair(2);
 
             Assert.That(result.CurrentHealth, Is.EqualTo(8));
+            Assert.That(result.CurrentShield, Is.EqualTo(0));
             Assert.That(state.CurrentHealth, Is.EqualTo(6));
         }
 
@@ -79,6 +103,26 @@ namespace Project147.Tests.EditMode.GameCore.Level
             var state = new BaseState(10);
 
             Assert.Throws<ArgumentOutOfRangeException>(() => state.Repair(-1));
+        }
+
+        [Test]
+        public void AddShield_IncreasesShieldAndReturnsNewState()
+        {
+            var state = new BaseState(10);
+
+            var result = state.AddShield(3);
+
+            Assert.That(result.CurrentShield, Is.EqualTo(3));
+            Assert.That(result.CurrentHealth, Is.EqualTo(10));
+            Assert.That(state.CurrentShield, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void AddShield_WhenAmountIsNegative_Throws()
+        {
+            var state = new BaseState(10);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => state.AddShield(-1));
         }
     }
 }

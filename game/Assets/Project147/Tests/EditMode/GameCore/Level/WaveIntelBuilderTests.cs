@@ -31,6 +31,8 @@ namespace Project147.Tests.EditMode.GameCore.Level
             Assert.That(summary.Tags.Contains("Fast"), Is.True);
             Assert.That(summary.Tags.Contains("Armoured"), Is.True);
             Assert.That(summary.Tags.Contains("Heavy"), Is.True);
+            Assert.That(summary.TraitHints.Contains("Fast: quick."), Is.True);
+            Assert.That(summary.TraitHints.Contains("Armoured: resists kinetic."), Is.True);
             Assert.That(summary.ThreatRating, Is.EqualTo(3));
         }
 
@@ -46,6 +48,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
             var summary = builder.Build(0, wave, "fast", "armoured");
 
             Assert.That(summary.Tags.Count, Is.EqualTo(0));
+            Assert.That(summary.TraitHints.Count, Is.EqualTo(0));
             Assert.That(summary.ThreatRating, Is.EqualTo(1));
             Assert.That(summary.Entries.Single().AlienId, Is.EqualTo("basic"));
             Assert.That(summary.Entries.Single().Count, Is.EqualTo(4));
@@ -67,6 +70,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
             var summary = builder.Build(4, wave, "fast", "armoured", "boss");
 
             Assert.That(summary.Tags.Contains("Boss"), Is.True);
+            Assert.That(summary.TraitHints.Contains("Boss: tough."), Is.True);
             Assert.That(summary.Tags.Contains("Mixed"), Is.True);
             Assert.That(summary.ThreatRating, Is.EqualTo(5));
         }
@@ -87,6 +91,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
             var summary = builder.Build(3, wave, "fast", "armoured", "boss", "shielded");
 
             Assert.That(summary.Tags.Contains("Shielded"), Is.True);
+            Assert.That(summary.TraitHints.Contains("Shielded: shield first."), Is.True);
             Assert.That(summary.Tags.Contains("Mixed"), Is.True);
             Assert.That(summary.ThreatRating, Is.EqualTo(4));
         }
@@ -107,6 +112,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
             var summary = builder.Build(3, wave, "fast", "armoured", "boss", "shielded", "burrower");
 
             Assert.That(summary.Tags.Contains("Burrower"), Is.True);
+            Assert.That(summary.TraitHints.Contains("Burrower: hidden early."), Is.True);
             Assert.That(summary.Tags.Contains("Mixed"), Is.True);
             Assert.That(summary.ThreatRating, Is.EqualTo(4));
         }
@@ -127,6 +133,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
             var summary = builder.Build(3, wave, "fast", "armoured", "boss", "shielded", "burrower", "regenerator");
 
             Assert.That(summary.Tags.Contains("Regenerator"), Is.True);
+            Assert.That(summary.TraitHints.Contains("Regenerator: heals."), Is.True);
             Assert.That(summary.Tags.Contains("Mixed"), Is.True);
             Assert.That(summary.ThreatRating, Is.EqualTo(4));
         }

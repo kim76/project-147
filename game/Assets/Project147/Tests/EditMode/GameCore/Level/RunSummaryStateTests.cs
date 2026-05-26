@@ -18,6 +18,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
             Assert.That(summary.PerfectWaves, Is.EqualTo(0));
             Assert.That(summary.ScrapEarned, Is.EqualTo(0));
             Assert.That(summary.ShieldBurstUses, Is.EqualTo(0));
+            Assert.That(summary.TowerOverchargeUses, Is.EqualTo(0));
             Assert.That(summary.StarRating, Is.EqualTo(0));
         }
 
@@ -93,6 +94,16 @@ namespace Project147.Tests.EditMode.GameCore.Level
             var result = summary.RecordShieldBurstUsed();
 
             Assert.That(result.ShieldBurstUses, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void RecordTowerOverchargeUsed_IncrementsTowerOverchargeUses()
+        {
+            var summary = new RunSummaryState();
+
+            var result = summary.RecordTowerOverchargeUsed();
+
+            Assert.That(result.TowerOverchargeUses, Is.EqualTo(1));
         }
 
         [Test]

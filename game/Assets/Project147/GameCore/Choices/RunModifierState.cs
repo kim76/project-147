@@ -162,6 +162,40 @@ namespace Project147.GameCore.Choices
                 ActiveWaveTowerFireRatePercent);
         }
 
+        public RunModifierState AddActiveWaveTowerDamagePercent(int percent)
+        {
+            if (percent < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(percent),
+                    "Active wave tower damage percent cannot be negative.");
+            }
+
+            return new RunModifierState(
+                NextTowerDiscountAmount,
+                PendingWaveTowerDamagePercent,
+                ActiveWaveTowerDamagePercent + percent,
+                PendingWaveTowerFireRatePercent,
+                ActiveWaveTowerFireRatePercent);
+        }
+
+        public RunModifierState AddActiveWaveTowerFireRatePercent(int percent)
+        {
+            if (percent < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(percent),
+                    "Active wave tower fire-rate percent cannot be negative.");
+            }
+
+            return new RunModifierState(
+                NextTowerDiscountAmount,
+                PendingWaveTowerDamagePercent,
+                ActiveWaveTowerDamagePercent,
+                PendingWaveTowerFireRatePercent,
+                ActiveWaveTowerFireRatePercent + percent);
+        }
+
         public RunModifierState ConsumeNextTowerDiscount()
         {
             return new RunModifierState(

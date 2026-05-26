@@ -43,6 +43,25 @@ namespace Project147.Tests.EditMode.GameCore.Combat
         }
 
         [Test]
+        public void MarkFired_WhenEffectiveFireRateIsProvided_UsesEffectiveCooldown()
+        {
+            var state = new TowerState(CreateTower(fireRatePerSecond: 2));
+
+            var result = state.MarkFired(4);
+
+            Assert.That(result.Definition, Is.SameAs(state.Definition));
+            Assert.That(result.SecondsUntilReady, Is.EqualTo(0.25f));
+        }
+
+        [Test]
+        public void MarkFired_WhenEffectiveFireRateIsZero_Throws()
+        {
+            var state = new TowerState(CreateTower(fireRatePerSecond: 2));
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => state.MarkFired(0));
+        }
+
+        [Test]
         public void Tick_ReducesCooldownAndReturnsNewState()
         {
             var state = new TowerState(CreateTower(fireRatePerSecond: 2)).MarkFired();

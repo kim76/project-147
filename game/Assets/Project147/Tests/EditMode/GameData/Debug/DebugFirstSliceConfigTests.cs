@@ -278,6 +278,20 @@ namespace Project147.Tests.EditMode.GameData.Debug
         }
 
         [Test]
+        public void CreateTowerOverchargeAbilityDefinition_ReturnsTowerBoostAbility()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var ability = config.CreateTowerOverchargeAbilityDefinition();
+
+            Assert.That(ability.Id, Is.EqualTo("debug-tower-overcharge"));
+            Assert.That(ability.CooldownSeconds, Is.GreaterThan(0));
+            Assert.That(ability.HasTowerOvercharge, Is.True);
+            Assert.That(ability.TowerDamagePercent, Is.GreaterThan(0));
+            Assert.That(ability.TowerFireRatePercent, Is.GreaterThan(0));
+        }
+
+        [Test]
         public void CreateRunChoiceDefinitions_ReturnsBetweenWaveChoices()
         {
             var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();

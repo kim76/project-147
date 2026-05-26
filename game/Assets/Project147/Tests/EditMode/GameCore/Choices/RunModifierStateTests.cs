@@ -186,5 +186,65 @@ namespace Project147.Tests.EditMode.GameCore.Choices
 
             Assert.Throws<ArgumentOutOfRangeException>(() => state.AddNextWaveTowerFireRatePercent(-1));
         }
+
+        [Test]
+        public void AddActiveWaveTowerDamagePercent_ReturnsStateWithActiveBoost()
+        {
+            var state = new RunModifierState();
+
+            var result = state.AddActiveWaveTowerDamagePercent(30);
+
+            Assert.That(result.HasActiveWaveTowerDamageBoost, Is.True);
+            Assert.That(result.ActiveWaveTowerDamagePercent, Is.EqualTo(30));
+            Assert.That(result.ActiveWaveTowerDamageMultiplier, Is.EqualTo(1.3f).Within(0.0001f));
+        }
+
+        [Test]
+        public void AddActiveWaveTowerDamagePercent_WhenCalledTwice_StacksActiveBoost()
+        {
+            var state = new RunModifierState()
+                .AddActiveWaveTowerDamagePercent(30)
+                .AddActiveWaveTowerDamagePercent(15);
+
+            Assert.That(state.ActiveWaveTowerDamagePercent, Is.EqualTo(45));
+        }
+
+        [Test]
+        public void AddActiveWaveTowerDamagePercent_WhenPercentIsNegative_Throws()
+        {
+            var state = new RunModifierState();
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => state.AddActiveWaveTowerDamagePercent(-1));
+        }
+
+        [Test]
+        public void AddActiveWaveTowerFireRatePercent_ReturnsStateWithActiveBoost()
+        {
+            var state = new RunModifierState();
+
+            var result = state.AddActiveWaveTowerFireRatePercent(20);
+
+            Assert.That(result.HasActiveWaveTowerFireRateBoost, Is.True);
+            Assert.That(result.ActiveWaveTowerFireRatePercent, Is.EqualTo(20));
+            Assert.That(result.ActiveWaveTowerFireRateMultiplier, Is.EqualTo(1.2f).Within(0.0001f));
+        }
+
+        [Test]
+        public void AddActiveWaveTowerFireRatePercent_WhenCalledTwice_StacksActiveBoost()
+        {
+            var state = new RunModifierState()
+                .AddActiveWaveTowerFireRatePercent(20)
+                .AddActiveWaveTowerFireRatePercent(10);
+
+            Assert.That(state.ActiveWaveTowerFireRatePercent, Is.EqualTo(30));
+        }
+
+        [Test]
+        public void AddActiveWaveTowerFireRatePercent_WhenPercentIsNegative_Throws()
+        {
+            var state = new RunModifierState();
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => state.AddActiveWaveTowerFireRatePercent(-1));
+        }
     }
 }

@@ -117,7 +117,19 @@ namespace Project147.GameCore.Combat
 
         public TowerState MarkFired()
         {
-            return new TowerState(Definition, Level, SecondsPerShot(), TargetingMode, UpgradeSpend, UpgradeHistory);
+            return MarkFired(Definition.FireRatePerSecond);
+        }
+
+        public TowerState MarkFired(float fireRatePerSecond)
+        {
+            if (fireRatePerSecond <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(fireRatePerSecond),
+                    "Tower fire rate must be greater than zero.");
+            }
+
+            return new TowerState(Definition, Level, SecondsPerShot(fireRatePerSecond), TargetingMode, UpgradeSpend, UpgradeHistory);
         }
 
         public TowerState Upgrade(TowerUpgradeDefinition upgrade)
@@ -154,9 +166,9 @@ namespace Project147.GameCore.Combat
                 UpgradeHistory);
         }
 
-        private float SecondsPerShot()
+        private static float SecondsPerShot(float fireRatePerSecond)
         {
-            return 1 / Definition.FireRatePerSecond;
+            return 1 / fireRatePerSecond;
         }
     }
 }

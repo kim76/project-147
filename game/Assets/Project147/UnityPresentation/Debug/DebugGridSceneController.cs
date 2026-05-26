@@ -87,6 +87,7 @@ namespace Project147.UnityPresentation.Debug
         private readonly FreezePulseResolver freezePulseResolver = new FreezePulseResolver();
         private readonly OrbitalStrikeResolver orbitalStrikeResolver = new OrbitalStrikeResolver(new DamageResolver());
         private readonly BaseShieldBurstResolver baseShieldBurstResolver = new BaseShieldBurstResolver();
+        private readonly TowerOverchargeResolver towerOverchargeResolver = new TowerOverchargeResolver();
         private readonly RunChoiceResolver runChoiceResolver = new RunChoiceResolver();
         private readonly RunChoiceOfferSelector runChoiceOfferSelector =
             new RunChoiceOfferSelector(new RandomChoiceIndexPicker());
@@ -100,6 +101,7 @@ namespace Project147.UnityPresentation.Debug
         private PlayerAbilityState freezePulseState;
         private PlayerAbilityState orbitalStrikeState;
         private PlayerAbilityState shieldBurstState;
+        private PlayerAbilityState towerOverchargeState;
         private TowerUnlockState towerUnlockState;
         private TowerLoadout towerLoadout;
         private TowerLoadoutPlanSet towerLoadoutPlans;
@@ -166,6 +168,11 @@ namespace Project147.UnityPresentation.Debug
             if (shieldBurstState != null)
             {
                 shieldBurstState = shieldBurstState.Tick(deltaSeconds);
+            }
+
+            if (towerOverchargeState != null)
+            {
+                towerOverchargeState = towerOverchargeState.Tick(deltaSeconds);
             }
 
             UpdateWaveSpawning(deltaSeconds);
@@ -332,6 +339,7 @@ namespace Project147.UnityPresentation.Debug
             freezePulseState = new PlayerAbilityState(config.CreateFreezePulseAbilityDefinition());
             orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
             shieldBurstState = new PlayerAbilityState(config.CreateShieldBurstAbilityDefinition());
+            towerOverchargeState = new PlayerAbilityState(config.CreateTowerOverchargeAbilityDefinition());
             eventFeed = new LevelEventFeed(EventFeedCapacity).Add("Ready. Place towers, then start wave.");
             waveActive = false;
             won = false;
@@ -416,6 +424,7 @@ namespace Project147.UnityPresentation.Debug
             freezePulseState = new PlayerAbilityState(config.CreateFreezePulseAbilityDefinition());
             orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
             shieldBurstState = new PlayerAbilityState(config.CreateShieldBurstAbilityDefinition());
+            towerOverchargeState = new PlayerAbilityState(config.CreateTowerOverchargeAbilityDefinition());
             towerUpgradeLoadout = new TowerUpgradeLoadout(config.CreateTowerUpgradeDefinitions());
             campaignProgressStore = CreateCampaignProgressStore();
             campaignProgress = LoadCampaignProgress();
@@ -802,6 +811,38 @@ namespace Project147.UnityPresentation.Debug
             RecordEvent($"Shield Burst added {shieldBurstState.Definition.BaseShieldAmount} base shield.");
         }
 
+        private void TryActivateTowerOvercharge()
+        {
+            if (won || lost)
+            {
+                return;
+            }
+
+            if (!waveActive)
+            {
+                RecordEvent("Tower Overcharge can only be used during a wave.");
+                return;
+            }
+
+            if (towers.Count == 0)
+            {
+                RecordEvent("Tower Overcharge needs at least one tower.");
+                return;
+            }
+
+            if (!towerOverchargeState.CanActivate)
+            {
+                RecordEvent($"Tower Overcharge cooling down: {towerOverchargeState.RemainingCooldownSeconds:0.0}s.");
+                return;
+            }
+
+            runModifiers = towerOverchargeResolver.Resolve(towerOverchargeState.Definition, runModifiers);
+            towerOverchargeState = towerOverchargeState.Activate();
+            runSummary = runSummary.RecordTowerOverchargeUsed();
+            RecordEvent(
+                $"Tower Overcharge: +{towerOverchargeState.Definition.TowerDamagePercent}% damage, +{towerOverchargeState.Definition.TowerFireRatePercent}% rate this wave.");
+        }
+
         private void SelectRunChoice(int choiceIndex)
         {
             if (!HasPendingRunChoice)
@@ -1072,7 +1113,7 @@ namespace Project147.UnityPresentation.Debug
                 var effectiveTowerDefinition = BuildEffectiveTowerDefinition(tower.State.Definition);
                 var attack = attackResolver.Resolve(effectiveTowerDefinition, alien.State);
                 alien.State = attack.Target;
-                tower.State = tower.State.MarkFired();
+                tower.State = tower.State.MarkFired(effectiveTowerDefinition.FireRatePerSecond);
 
                 if (!attack.Damage.WasDodged && attack.Damage.FinalAmount > 0 && alien.State.IsAlive)
                 {
@@ -1723,6 +1764,7 @@ namespace Project147.UnityPresentation.Debug
                 || freezePulseState == null
                 || orbitalStrikeState == null
                 || shieldBurstState == null
+                || towerOverchargeState == null
                 || runSummary == null
                 || gameSpeed == null
                 || gamePause == null)
@@ -1732,7 +1774,7 @@ namespace Project147.UnityPresentation.Debug
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 822), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 856), "Project 147 First Slice");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}  Shield: {currentBase.CurrentShield}");
             top += 22;
@@ -1933,6 +1975,23 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 144, top + 4, 130, 24), BuildShieldBurstStatusText());
             top += 34;
 
+            previousEnabled = GUI.enabled;
+            GUI.enabled = waveActive
+                && !won
+                && !lost
+                && !gamePause.IsPaused
+                && towers.Count > 0
+                && towerOverchargeState.CanActivate;
+
+            if (GUI.Button(new Rect(left + 12, top, 120, 28), BuildTowerOverchargeButtonText()))
+            {
+                TryActivateTowerOvercharge();
+            }
+
+            GUI.enabled = previousEnabled;
+            GUI.Label(new Rect(left + 144, top + 4, 130, 24), BuildTowerOverchargeStatusText());
+            top += 34;
+
             var startWaveEnabled = !waveActive && !won && !lost && !HasPendingRunChoice;
             var previousStartWaveEnabled = GUI.enabled;
             GUI.enabled = startWaveEnabled;
@@ -2052,6 +2111,20 @@ namespace Project147.UnityPresentation.Debug
                 : $"Cooldown {shieldBurstState.RemainingCooldownSeconds:0.0}s";
         }
 
+        private string BuildTowerOverchargeButtonText()
+        {
+            return towerOverchargeState.CanActivate
+                ? "Overcharge"
+                : $"Charge {Mathf.CeilToInt(towerOverchargeState.RemainingCooldownSeconds)}s";
+        }
+
+        private string BuildTowerOverchargeStatusText()
+        {
+            return towerOverchargeState.CanActivate
+                ? $"+{towerOverchargeState.Definition.TowerDamagePercent}% dmg, +{towerOverchargeState.Definition.TowerFireRatePercent}% rate"
+                : $"Cooldown {towerOverchargeState.RemainingCooldownSeconds:0.0}s";
+        }
+
         private void DrawRunChoicePanel(int left, int top)
         {
             if (!HasPendingRunChoice)
@@ -2133,7 +2206,7 @@ namespace Project147.UnityPresentation.Debug
             top += 22;
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Scrap earned: {runSummary.ScrapEarned}  Rewards: {runSummary.RewardsChosen}");
             top += 22;
-            GUI.Label(new Rect(left + 12, top, 336, 22), $"Abilities: Freeze {runSummary.FreezePulseUses}  Strike {runSummary.OrbitalStrikeUses}  Shield {runSummary.ShieldBurstUses}");
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Abilities: Freeze {runSummary.FreezePulseUses}  Strike {runSummary.OrbitalStrikeUses}  Shield {runSummary.ShieldBurstUses}  Charge {runSummary.TowerOverchargeUses}");
         }
 
         private void DrawSessionProgressPanel(int left, int top)

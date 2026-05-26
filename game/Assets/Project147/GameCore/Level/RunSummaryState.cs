@@ -5,7 +5,7 @@ namespace Project147.GameCore.Level
     public sealed class RunSummaryState
     {
         public RunSummaryState()
-            : this(RunOutcome.InProgress, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            : this(RunOutcome.InProgress, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         {
         }
 
@@ -19,7 +19,8 @@ namespace Project147.GameCore.Level
             int rewardsChosen,
             int freezePulseUses,
             int orbitalStrikeUses,
-            int shieldBurstUses)
+            int shieldBurstUses,
+            int towerOverchargeUses)
         {
             if (aliensDestroyed < 0)
             {
@@ -68,6 +69,11 @@ namespace Project147.GameCore.Level
                 throw new ArgumentOutOfRangeException(nameof(shieldBurstUses), "Shield Burst uses cannot be negative.");
             }
 
+            if (towerOverchargeUses < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(towerOverchargeUses), "Tower Overcharge uses cannot be negative.");
+            }
+
             Outcome = outcome;
             AliensDestroyed = aliensDestroyed;
             AliensLeaked = aliensLeaked;
@@ -78,6 +84,7 @@ namespace Project147.GameCore.Level
             FreezePulseUses = freezePulseUses;
             OrbitalStrikeUses = orbitalStrikeUses;
             ShieldBurstUses = shieldBurstUses;
+            TowerOverchargeUses = towerOverchargeUses;
         }
 
         public RunOutcome Outcome { get; }
@@ -99,6 +106,8 @@ namespace Project147.GameCore.Level
         public int OrbitalStrikeUses { get; }
 
         public int ShieldBurstUses { get; }
+
+        public int TowerOverchargeUses { get; }
 
         public int StarRating
         {
@@ -130,7 +139,8 @@ namespace Project147.GameCore.Level
                 RewardsChosen,
                 FreezePulseUses,
                 OrbitalStrikeUses,
-                ShieldBurstUses);
+                ShieldBurstUses,
+                TowerOverchargeUses);
         }
 
         public RunSummaryState RecordAlienLeaked()
@@ -145,7 +155,8 @@ namespace Project147.GameCore.Level
                 RewardsChosen,
                 FreezePulseUses,
                 OrbitalStrikeUses,
-                ShieldBurstUses);
+                ShieldBurstUses,
+                TowerOverchargeUses);
         }
 
         public RunSummaryState RecordWaveCleared(int scrapEarned, bool wasPerfectWave)
@@ -160,7 +171,8 @@ namespace Project147.GameCore.Level
                 RewardsChosen,
                 FreezePulseUses,
                 OrbitalStrikeUses,
-                ShieldBurstUses);
+                ShieldBurstUses,
+                TowerOverchargeUses);
         }
 
         public RunSummaryState RecordRewardChosen()
@@ -175,7 +187,8 @@ namespace Project147.GameCore.Level
                 RewardsChosen + 1,
                 FreezePulseUses,
                 OrbitalStrikeUses,
-                ShieldBurstUses);
+                ShieldBurstUses,
+                TowerOverchargeUses);
         }
 
         public RunSummaryState RecordFreezePulseUsed()
@@ -190,7 +203,8 @@ namespace Project147.GameCore.Level
                 RewardsChosen,
                 FreezePulseUses + 1,
                 OrbitalStrikeUses,
-                ShieldBurstUses);
+                ShieldBurstUses,
+                TowerOverchargeUses);
         }
 
         public RunSummaryState RecordOrbitalStrikeUsed()
@@ -205,7 +219,8 @@ namespace Project147.GameCore.Level
                 RewardsChosen,
                 FreezePulseUses,
                 OrbitalStrikeUses + 1,
-                ShieldBurstUses);
+                ShieldBurstUses,
+                TowerOverchargeUses);
         }
 
         public RunSummaryState RecordShieldBurstUsed()
@@ -220,7 +235,24 @@ namespace Project147.GameCore.Level
                 RewardsChosen,
                 FreezePulseUses,
                 OrbitalStrikeUses,
-                ShieldBurstUses + 1);
+                ShieldBurstUses + 1,
+                TowerOverchargeUses);
+        }
+
+        public RunSummaryState RecordTowerOverchargeUsed()
+        {
+            return new RunSummaryState(
+                Outcome,
+                AliensDestroyed,
+                AliensLeaked,
+                WavesCleared,
+                PerfectWaves,
+                ScrapEarned,
+                RewardsChosen,
+                FreezePulseUses,
+                OrbitalStrikeUses,
+                ShieldBurstUses,
+                TowerOverchargeUses + 1);
         }
 
         public RunSummaryState Complete(RunOutcome outcome)
@@ -240,7 +272,8 @@ namespace Project147.GameCore.Level
                 RewardsChosen,
                 FreezePulseUses,
                 OrbitalStrikeUses,
-                ShieldBurstUses);
+                ShieldBurstUses,
+                TowerOverchargeUses);
         }
 
         private int AddScrap(int amount)

@@ -44,6 +44,18 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private int shieldBurstAmount = 2;
 
+        [SerializeField]
+        private string towerOverchargeId = "debug-tower-overcharge";
+
+        [SerializeField]
+        private float towerOverchargeCooldownSeconds = 20;
+
+        [SerializeField]
+        private int towerOverchargeDamagePercent = 25;
+
+        [SerializeField]
+        private int towerOverchargeFireRatePercent = 20;
+
         public PlayerAbilityDefinition CreateFreezePulseDefinition()
         {
             return new PlayerAbilityDefinition(
@@ -71,6 +83,15 @@ namespace Project147.GameData.Debug
                 shieldBurstId,
                 shieldBurstCooldownSeconds,
                 shieldBurstAmount);
+        }
+
+        public PlayerAbilityDefinition CreateTowerOverchargeDefinition()
+        {
+            return new PlayerAbilityDefinition(
+                towerOverchargeId,
+                towerOverchargeCooldownSeconds,
+                towerOverchargeDamagePercent,
+                towerOverchargeFireRatePercent);
         }
     }
 }

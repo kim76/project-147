@@ -44,6 +44,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Freeze Pulse can be triggered during a wave to slow all active aliens.
 - Orbital Strike can be triggered during a wave to damage all active aliens.
 - Shield Burst can be triggered during a wave to add temporary base shield.
+- Tower Overcharge can be triggered during a wave to boost tower damage and fire rate for that wave.
 - Status effects expire automatically.
 - Killed aliens award scrap.
 - Clearing waves awards bonus scrap.
@@ -56,6 +57,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Completed runs update per-level session progress with runs, victories, best stars, best waves and best perfect waves.
 - Total stars unlock later debug levels.
 - Campaign progress is saved locally after completed runs and loaded when the debug scene starts.
+- Analytics events and rewarded-ad opportunities are defined as tested catalogues, but no live SDKs are wired in.
 - The slice ends in victory after all waves or defeat when the base reaches zero health.
 
 ## How To Run
@@ -78,11 +80,12 @@ For the active next-task list, see `current-roadmap.md`.
 16. During a wave, click `Pause`, then `Resume`.
 17. If you picked `Overclock`, the next wave gets boosted tower damage.
 18. If you picked `Rapid Loader`, the next wave gets boosted tower fire rate.
-19. Use `Freeze Pulse`, `Orbital Strike` or `Shield Burst` during active waves when their cooldowns are ready.
-20. On victory or defeat, read the run summary panel.
-21. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
-22. Stop and restart Play mode to confirm saved progress loads.
-23. Use `Reset Save` to clear debug campaign progress when you want a fresh campaign.
+19. Use `Freeze Pulse`, `Orbital Strike`, `Shield Burst` or `Overcharge` during active waves when their cooldowns are ready.
+20. Confirm `Overcharge` changes the modifier line to show active wave damage and fire-rate boosts.
+21. On victory or defeat, read the run summary panel.
+22. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
+23. Stop and restart Play mode to confirm saved progress loads.
+24. Use `Reset Save` to clear debug campaign progress when you want a fresh campaign.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -131,9 +134,10 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - There are seven debug alien types.
 - First-slice tuning is grouped in one debug config asset, not final production content data.
 - There is no polished UI.
-- There is no save system.
+- There is no cloud save or account system.
 - There is no mobile touch polish.
 - There is no final art.
+- There are no live ads, purchase SDKs, subscriptions or backend accounts.
 - Reward choices are debug-tuned and not final progression design.
 - The tower discount reward only affects the next placed tower, not upgrades.
 - Selling refunds 75% of tower and upgrade spend in the debug slice.
@@ -144,6 +148,7 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Rapid Loader affects fire rate only, not damage.
 - Orbital Strike is a debug ability, not final balance.
 - Shield Burst is a debug ability, not final balance.
+- Tower Overcharge is a debug ability, not final balance.
 - Run summary is debug UI, not final progression UX.
 - Campaign progress is saved locally for this debug slice.
 

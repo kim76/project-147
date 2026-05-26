@@ -28,7 +28,7 @@ The first playable slice currently has:
 - Shield-first damage for shielded aliens.
 - Early-path untargetability for burrowers.
 - Health regeneration for regenerator aliens.
-- Freeze Pulse, Orbital Strike and Shield Burst player abilities.
+- Freeze Pulse, Orbital Strike, Shield Burst and Tower Overcharge player abilities.
 - Between-wave reward choices.
 - Next-wave intel with enemy tags.
 - Next-wave trait text for special aliens.
@@ -37,6 +37,8 @@ The first playable slice currently has:
 - Per-level-layout session progress tracking.
 - Total-star level unlock rules in the debug campaign flow.
 - Local save/load for campaign progress.
+- Tested analytics event catalogue for retention and balance instrumentation.
+- Tested rewarded-ad opportunity catalogue without live ad SDKs.
 - First-pass code-native visuals for towers and aliens.
 - Health, shield and status markers on active aliens.
 - Upgrade pips on upgraded towers.
@@ -63,14 +65,15 @@ After pulling/opening the latest work:
 14. Confirm the tower detail panel shows level, targeting, invested scrap, current stats and upgrade history.
 15. Sell an upgraded tower and confirm the refund reflects actual spend.
 16. During a wave, use Shield Burst and confirm base shield increases.
-17. Start later waves and confirm trait text, threat rating, counter hints and `Regenerator` appear in next-wave intel.
-18. Confirm active aliens show health bars and shielded aliens show shield bars.
-19. Confirm poisoned or slowed aliens show a small status marker.
-20. Upgrade towers and confirm upgraded towers show visible pips.
-21. Confirm wave start, wave clear, victory and defeat banners appear.
-22. Confirm green halo regenerator aliens appear.
-23. Confirm burrowers are still not shot immediately at spawn.
-24. Confirm the final boss wave still completes into victory or defeat.
+17. During a wave with at least one tower, use Tower Overcharge and confirm the modifier line shows active-wave damage and fire-rate boosts.
+18. Start later waves and confirm trait text, threat rating, counter hints and `Regenerator` appear in next-wave intel.
+19. Confirm active aliens show health bars and shielded aliens show shield bars.
+20. Confirm poisoned or slowed aliens show a small status marker.
+21. Upgrade towers and confirm upgraded towers show visible pips.
+22. Confirm wave start, wave clear, victory and defeat banners appear.
+23. Confirm green halo regenerator aliens appear.
+24. Confirm burrowers are still not shot immediately at spawn.
+25. Confirm the final boss wave still completes into victory or defeat.
 
 ## Next Slice Candidates
 
@@ -179,10 +182,10 @@ Goal: make both sides feel expressive.
 Done:
 
 - Add Shield Burst as a defensive base-shield ability.
+- Add Tower Overcharge as an active-wave tower damage and fire-rate ability.
 
 Next:
 
-- Add a tower overcharge ability.
 - Add alien decoy or sabotage ability.
 - Add alien tunnel burst ability.
 - Keep ability effects in GameCore and scene feedback in UnityPresentation.
@@ -212,8 +215,8 @@ Goal: prepare for monetisation without adding it too early.
 
 Next:
 
-- Define analytics events for retention and balance.
-- Mark natural rewarded-ad moments.
+- Wire analytics event catalogue into a fake/local analytics service.
+- Wire rewarded-ad opportunities into fake debug prompts before adding live SDKs.
 - Keep purchases, subscriptions and backend work out until the core loop has enough retention signal.
 
 ## Not Yet

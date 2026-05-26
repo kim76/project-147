@@ -53,6 +53,26 @@ namespace Project147.Tests.EditMode.GameCore.Abilities
             Assert.That(definition.HasStatusEffect, Is.False);
             Assert.That(definition.HasDamage, Is.False);
             Assert.That(definition.HasBaseShield, Is.True);
+            Assert.That(definition.HasTowerOvercharge, Is.False);
+        }
+
+        [Test]
+        public void Constructor_WhenTowerOverchargeValuesAreValid_StoresTowerBoosts()
+        {
+            var definition = new PlayerAbilityDefinition(
+                "tower-overcharge",
+                22,
+                35,
+                25);
+
+            Assert.That(definition.Id, Is.EqualTo("tower-overcharge"));
+            Assert.That(definition.CooldownSeconds, Is.EqualTo(22));
+            Assert.That(definition.TowerDamagePercent, Is.EqualTo(35));
+            Assert.That(definition.TowerFireRatePercent, Is.EqualTo(25));
+            Assert.That(definition.HasTowerOvercharge, Is.True);
+            Assert.That(definition.HasStatusEffect, Is.False);
+            Assert.That(definition.HasDamage, Is.False);
+            Assert.That(definition.HasBaseShield, Is.False);
         }
 
         [TestCase(null)]
@@ -94,6 +114,16 @@ namespace Project147.Tests.EditMode.GameCore.Abilities
             Assert.Throws<ArgumentOutOfRangeException>(() => new PlayerAbilityDefinition(
                 "shield-burst",
                 20,
+                0));
+        }
+
+        [Test]
+        public void Constructor_WhenTowerOverchargeHasNoBoost_Throws()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new PlayerAbilityDefinition(
+                "tower-overcharge",
+                22,
+                0,
                 0));
         }
 

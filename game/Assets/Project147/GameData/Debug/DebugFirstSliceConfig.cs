@@ -399,6 +399,11 @@ namespace Project147.GameData.Debug
             return abilities.CreateShieldBurstDefinition();
         }
 
+        public PlayerAbilityDefinition CreateTowerOverchargeAbilityDefinition()
+        {
+            return abilities.CreateTowerOverchargeDefinition();
+        }
+
         public IReadOnlyList<RunChoiceDefinition> CreateRunChoiceDefinitions()
         {
             return runChoices.CreateDefinitions();

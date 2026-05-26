@@ -41,6 +41,12 @@ Expected interfaces later:
 
 The first implementation can be fake or local, but the boundary should exist early.
 
+Current repo status:
+
+- analytics event names and required properties live in a tested catalogue;
+- rewarded-ad opportunities live in a tested catalogue;
+- no live ad, purchase, subscription or backend SDK has been added.
+
 ## Rewarded Ads
 
 Rewarded ads should be explicit and optional.
@@ -56,4 +62,3 @@ Bad examples:
 - interrupting active gameplay;
 - hiding the reward amount;
 - making ad watching the default way to progress.
-

@@ -295,6 +295,18 @@ namespace Project147.GameData.Debug
             };
         }
 
+        public IReadOnlyList<LevelUnlockRule> CreateLevelUnlockRules()
+        {
+            var levels = CreateLevelDefinitions();
+
+            return new[]
+            {
+                new LevelUnlockRule(levels[0].Layout.Id, 0),
+                new LevelUnlockRule(levels[1].Layout.Id, 2),
+                new LevelUnlockRule(levels[2].Layout.Id, 4)
+            };
+        }
+
         public TowerDefinition CreateTowerDefinition()
         {
             return CreateTowerDefinitions()[0];

@@ -9,7 +9,7 @@ namespace Project147.GameCore.Level
         {
         }
 
-        private LevelProgressState(
+        public LevelProgressState(
             int runsCompleted,
             int victories,
             int bestStars,

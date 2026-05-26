@@ -29,7 +29,21 @@ namespace Project147.Tests.EditMode.GameCore.Level
             Assert.That(progress.RunsCompleted, Is.EqualTo(1));
             Assert.That(progress.Victories, Is.EqualTo(1));
             Assert.That(progress.BestStars, Is.EqualTo(3));
+            Assert.That(result.Campaign.TotalStars, Is.EqualTo(3));
             Assert.That(result.LevelResult.ImprovedStars, Is.True);
+        }
+
+        [Test]
+        public void LevelProgressById_ReturnsCopyOfTrackedProgress()
+        {
+            var campaign = new CampaignProgressState()
+                .ApplyRunSummary("debug-relay-yard", CreateVictory())
+                .Campaign;
+
+            var entries = campaign.LevelProgressById;
+
+            Assert.That(entries.ContainsKey("debug-relay-yard"), Is.True);
+            Assert.That(entries["debug-relay-yard"].BestStars, Is.EqualTo(3));
         }
 
         [Test]

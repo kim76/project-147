@@ -15,7 +15,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Each debug level can have its own starting scrap, base health, wave count and perfect-wave bonus.
 - Player can switch between three pre-run debug tower loadout presets before placing towers.
 - Player can switch between the three tower types inside the selected loadout before placing.
-- Player can switch between four tower upgrade paths before upgrading.
+- Player can switch between four tower upgrade paths before upgrading; upgrade path is separate from upgrade count.
 - Railgun, mortar, energy and chemical towers use distinct first-pass debug visual profiles.
 - Railgun applies a short slow effect, mortar deals splash damage, energy provides direct single-target damage, and chemical applies poison damage over time.
 - Hovering a cell previews tower range and whether placement is valid.
@@ -54,6 +54,8 @@ For the active next-task list, see `current-roadmap.md`.
 - A debug event feed shows important placement, upgrade, reward, leak and win/loss events.
 - Victory and defeat show a run summary with stars, wave, kill, leak, scrap, reward and ability-use counts.
 - Completed runs update per-level session progress with runs, victories, best stars, best waves and best perfect waves.
+- Total stars unlock later debug levels.
+- Campaign progress can be captured and restored through a tested snapshot model, ready for local save wiring later.
 - The slice ends in victory after all waves or defeat when the base reaches zero health.
 
 ## How To Run
@@ -62,7 +64,7 @@ For the active next-task list, see `current-roadmap.md`.
 2. Run Edit Mode tests from `Window > General > Test Runner`.
 3. Recreate the debug scene from `Project147 > Debug > Create Grid Scene`.
 4. Press Play.
-5. Switch level layouts before placing a tower if you want a different board.
+5. Switch between unlocked level layouts before placing a tower if you want a different board.
 6. Confirm the selected level changes the resource and wave numbers shown in the HUD.
 7. Switch tower loadout before placing a tower if you want a different three-tower preset.
 8. Place towers by clicking open cells.
@@ -114,9 +116,11 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Towers can only be placed between waves.
 - Towers can only be upgraded between waves.
 - Level layout can only be changed before placing towers in a fresh run.
+- Later debug levels require enough total stars before the level selector reaches them.
 - Level run settings are attached to debug level selection, not final campaign data.
 - Tower loadout can only be changed before placing towers in a fresh run.
 - Tower upgrade paths currently share one debug cost to keep selling deterministic.
+- Towers currently have two upgrade opportunities after placement because max tower level is 3.
 - There are four debug tower types.
 - Each debug run uses one selected three-tower loadout.
 - There are three debug level layouts.
@@ -139,6 +143,6 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Orbital Strike is a debug ability, not final balance.
 - Shield Burst is a debug ability, not final balance.
 - Run summary is debug UI, not final progression UX.
-- Per-level session progress is in-memory only; it is not a save system yet.
+- Per-level session progress is in-memory only; the snapshot model exists, but disk save/load is not wired yet.
 
 These limits are intentional. The slice exists to prove the loop before expanding content.

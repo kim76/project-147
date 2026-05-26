@@ -132,6 +132,20 @@ namespace Project147.Tests.EditMode.GameData.Debug
         }
 
         [Test]
+        public void CreateLevelUnlockRules_ReturnsStarGatedLevels()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var rules = config.CreateLevelUnlockRules();
+
+            Assert.That(rules.Count, Is.EqualTo(3));
+            Assert.That(rules[0].LevelId, Is.EqualTo("debug-relay-yard"));
+            Assert.That(rules[0].RequiredTotalStars, Is.EqualTo(0));
+            Assert.That(rules[1].RequiredTotalStars, Is.EqualTo(2));
+            Assert.That(rules[2].RequiredTotalStars, Is.EqualTo(4));
+        }
+
+        [Test]
         public void CreateWaveDefinition_WhenLaterWave_ReturnsMixedAlienIds()
         {
             var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();

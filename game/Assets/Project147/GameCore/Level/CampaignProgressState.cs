@@ -12,7 +12,7 @@ namespace Project147.GameCore.Level
         {
         }
 
-        private CampaignProgressState(IReadOnlyDictionary<string, LevelProgressState> levelProgressById)
+        public CampaignProgressState(IReadOnlyDictionary<string, LevelProgressState> levelProgressById)
         {
             if (levelProgressById == null)
             {
@@ -33,6 +33,26 @@ namespace Project147.GameCore.Level
             }
 
             this.levelProgressById = new Dictionary<string, LevelProgressState>(levelProgressById);
+        }
+
+        public int TotalStars
+        {
+            get
+            {
+                var total = 0;
+
+                foreach (var progress in levelProgressById.Values)
+                {
+                    total += progress.BestStars;
+                }
+
+                return total;
+            }
+        }
+
+        public IReadOnlyDictionary<string, LevelProgressState> LevelProgressById
+        {
+            get { return new Dictionary<string, LevelProgressState>(levelProgressById); }
         }
 
         public LevelProgressState GetProgress(string levelId)

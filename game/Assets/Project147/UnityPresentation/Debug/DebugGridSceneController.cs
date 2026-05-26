@@ -108,6 +108,7 @@ namespace Project147.UnityPresentation.Debug
         private RunModifierState runModifiers;
         private RunSummaryState runSummary;
         private CampaignProgressState campaignProgress;
+        private CampaignLevelUnlockState levelUnlockState;
         private LevelProgressApplicationResult lastProgressResult;
         private IReadOnlyList<LevelRunDefinition> levelDefinitions;
         private GameSpeedState gameSpeed;
@@ -118,6 +119,7 @@ namespace Project147.UnityPresentation.Debug
         private bool lost;
         private bool sellMode;
         private bool retargetMode;
+        private bool lastRunUnlockedLevel;
         private int selectedLevelLayoutIndex;
         private GridCoordinate? inspectedTowerCoordinate;
         private int completedWaves;
@@ -248,6 +250,12 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
+            if (waveActive || won || lost || HasPendingRunChoice)
+            {
+                HidePlacementPreviewIfAny();
+                return;
+            }
+
             previewCoordinate = coordinate;
             EnsurePlacementPreview();
 
@@ -274,8 +282,8 @@ namespace Project147.UnityPresentation.Debug
                 && retargetMode
                 && !HasPendingRunChoice;
             var colour = canPlace || canUpgrade || canSell || canRetarget
-                ? new Color(0.25f, 1f, 0.35f, 0.95f)
-                : new Color(1f, 0.2f, 0.2f, 0.95f);
+                ? new Color(0.25f, 1f, 0.35f, 0.48f)
+                : new Color(1f, 0.2f, 0.2f, 0.48f);
             var range = tower == null ? SelectedTower.Range : tower.State.Definition.Range;
             placementPreview.transform.localPosition = ToWorldPosition(coordinate, 0.18f);
             placementPreviewLine.startColor = colour;
@@ -326,6 +334,7 @@ namespace Project147.UnityPresentation.Debug
             lost = false;
             sellMode = false;
             retargetMode = false;
+            lastRunUnlockedLevel = false;
             inspectedTowerCoordinate = null;
             completedWaves = 0;
             waveStartBaseHealth = currentBase.CurrentHealth;
@@ -405,6 +414,8 @@ namespace Project147.UnityPresentation.Debug
             shieldBurstState = new PlayerAbilityState(config.CreateShieldBurstAbilityDefinition());
             towerUpgradeLoadout = new TowerUpgradeLoadout(config.CreateTowerUpgradeDefinitions());
             campaignProgress = campaignProgress ?? new CampaignProgressState();
+            RefreshLevelUnlockState();
+            SelectFirstUnlockedLevelIfCurrentIsLocked();
             gameSpeed = gameSpeed ?? new GameSpeedState();
             gamePause = gamePause ?? new GamePauseState();
         }
@@ -494,16 +505,38 @@ namespace Project147.UnityPresentation.Debug
 
         private void SelectPreviousLevelLayout()
         {
-            selectedLevelLayoutIndex = (selectedLevelLayoutIndex + levelDefinitions.Count - 1) % levelDefinitions.Count;
+            selectedLevelLayoutIndex = SelectUnlockedLevelIndex(-1);
             ResetSlice();
             RecordEvent($"Selected level: {SelectedLevelLayout.Id}.");
         }
 
         private void SelectNextLevelLayout()
         {
-            selectedLevelLayoutIndex = (selectedLevelLayoutIndex + 1) % levelDefinitions.Count;
+            selectedLevelLayoutIndex = SelectUnlockedLevelIndex(1);
             ResetSlice();
             RecordEvent($"Selected level: {SelectedLevelLayout.Id}.");
+        }
+
+        private int SelectUnlockedLevelIndex(int direction)
+        {
+            if (levelDefinitions == null || levelDefinitions.Count == 0)
+            {
+                return 0;
+            }
+
+            var step = direction < 0 ? -1 : 1;
+
+            for (var offset = 1; offset <= levelDefinitions.Count; offset++)
+            {
+                var index = (selectedLevelLayoutIndex + offset * step + levelDefinitions.Count) % levelDefinitions.Count;
+
+                if (IsLevelUnlocked(levelDefinitions[index].Layout.Id))
+                {
+                    return index;
+                }
+            }
+
+            return selectedLevelLayoutIndex;
         }
 
         private void TryUpgradeTower(GridCoordinate coordinate)
@@ -594,6 +627,7 @@ namespace Project147.UnityPresentation.Debug
             waveActive = true;
             sellMode = false;
             retargetMode = false;
+            HidePlacementPreviewIfAny();
             runModifiers = runModifiers.StartWave();
             waveStartBaseHealth = currentBase.CurrentHealth;
             currentWaveDefinition = config.CreateWaveDefinition(completedWaves, SelectedLevel.TotalWaves);
@@ -1159,7 +1193,7 @@ namespace Project147.UnityPresentation.Debug
                 won = true;
                 runSummary = runSummary.Complete(RunOutcome.Victory);
                 ApplyCompletedRunProgress();
-                ShowCombatBanner("Victory");
+                ShowCombatBanner(lastRunUnlockedLevel ? "Level Unlocked" : "Victory");
                 RecordEvent("Victory. All waves cleared.");
                 return;
             }
@@ -1552,10 +1586,30 @@ namespace Project147.UnityPresentation.Debug
             placementPreviewLine.loop = true;
             placementPreviewLine.useWorldSpace = false;
             placementPreviewLine.positionCount = 72;
-            placementPreviewLine.widthMultiplier = 0.06f;
+            placementPreviewLine.widthMultiplier = 0.035f;
             placementPreviewLine.material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+            ConfigurePreviewMaterial(placementPreviewLine.material);
             BuildPlacementPreviewCircle(SelectedTower.Range);
             placementPreview.SetActive(false);
+        }
+
+        private static void ConfigurePreviewMaterial(Material material)
+        {
+            if (material == null)
+            {
+                return;
+            }
+
+            if (material.HasProperty("_Surface"))
+            {
+                material.SetFloat("_Surface", 1);
+            }
+
+            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetInt("_ZWrite", 0);
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
         }
 
         private void SetPreviewMaterialColour(Color colour)
@@ -1635,6 +1689,7 @@ namespace Project147.UnityPresentation.Debug
                 || towerLoadout == null
                 || towerUpgradeLoadout == null
                 || rewardCalculator == null
+                || levelUnlockState == null
                 || freezePulseState == null
                 || orbitalStrikeState == null
                 || shieldBurstState == null
@@ -1647,38 +1702,48 @@ namespace Project147.UnityPresentation.Debug
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 800), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 822), "Project 147 First Slice");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}  Shield: {currentBase.CurrentShield}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Level: {SelectedLevelLayout.Id}");
             top += 24;
 
-            if (!waveActive && !won && !lost && towers.Count == 0 && completedWaves == 0 && GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
+            var previousEnabled = GUI.enabled;
+            GUI.enabled = !waveActive && !won && !lost && towers.Count == 0 && completedWaves == 0;
+
+            if (GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
             {
                 SelectPreviousLevelLayout();
             }
 
-            if (!waveActive && !won && !lost && towers.Count == 0 && completedWaves == 0 && GUI.Button(new Rect(left + 74, top, 54, 24), ">"))
+            if (GUI.Button(new Rect(left + 74, top, 54, 24), ">"))
             {
                 SelectNextLevelLayout();
             }
 
+            GUI.enabled = previousEnabled;
             GUI.Label(new Rect(left + 144, top + 2, 130, 24), $"{selectedLevelLayoutIndex + 1}/{levelDefinitions.Count}");
             top += 30;
+            GUI.Label(new Rect(left + 12, top, 260, 24), BuildLevelUnlockStatusText());
+            top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Loadout: {towerLoadoutPlans.SelectedPlan.Id}");
             top += 24;
 
-            if (!waveActive && !won && !lost && towers.Count == 0 && completedWaves == 0 && GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
+            previousEnabled = GUI.enabled;
+            GUI.enabled = !waveActive && !won && !lost && towers.Count == 0 && completedWaves == 0;
+
+            if (GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
             {
                 SelectPreviousTowerLoadoutPlan();
             }
 
-            if (!waveActive && !won && !lost && towers.Count == 0 && completedWaves == 0 && GUI.Button(new Rect(left + 74, top, 54, 24), ">"))
+            if (GUI.Button(new Rect(left + 74, top, 54, 24), ">"))
             {
                 SelectNextTowerLoadoutPlan();
             }
 
+            GUI.enabled = previousEnabled;
             GUI.Label(new Rect(left + 144, top + 2, 130, 24), $"{towerLoadoutPlans.SelectedIndex + 1}/{towerLoadoutPlans.Plans.Count}");
             top += 30;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Unlocked towers: {towerUnlockState.UnlockedTowerIds.Count}");
@@ -1692,32 +1757,42 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 12, top, 260, 24), BuildSelectedTowerAbilityText());
             top += 30;
 
-            if (!waveActive && !won && !lost && GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
+            previousEnabled = GUI.enabled;
+            GUI.enabled = !waveActive && !won && !lost;
+
+            if (GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
             {
                 SelectPreviousTower();
             }
 
-            if (!waveActive && !won && !lost && GUI.Button(new Rect(left + 74, top, 54, 24), ">"))
+            if (GUI.Button(new Rect(left + 74, top, 54, 24), ">"))
             {
                 SelectNextTower();
             }
 
+            GUI.enabled = previousEnabled;
             GUI.Label(new Rect(left + 144, top + 2, 130, 24), $"{towerLoadout.SelectedIndex + 1}/{towerLoadout.Towers.Count}");
             top += 30;
-            GUI.Label(new Rect(left + 12, top, 260, 24), $"Upgrade: {SelectedTowerUpgrade.Id}  Cost {SelectedTowerUpgrade.Cost}");
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Upgrade path: {SelectedTowerUpgrade.Id}");
             top += 24;
 
-            if (!waveActive && !won && !lost && GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
+            previousEnabled = GUI.enabled;
+            GUI.enabled = !waveActive && !won && !lost;
+
+            if (GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
             {
                 SelectPreviousTowerUpgrade();
             }
 
-            if (!waveActive && !won && !lost && GUI.Button(new Rect(left + 74, top, 54, 24), ">"))
+            if (GUI.Button(new Rect(left + 74, top, 54, 24), ">"))
             {
                 SelectNextTowerUpgrade();
             }
 
-            GUI.Label(new Rect(left + 144, top + 2, 130, 24), $"{towerUpgradeLoadout.SelectedIndex + 1}/{towerUpgradeLoadout.Upgrades.Count}");
+            GUI.enabled = previousEnabled;
+            GUI.Label(new Rect(left + 144, top + 2, 130, 24), $"Path {towerUpgradeLoadout.SelectedIndex + 1}/{towerUpgradeLoadout.Upgrades.Count}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Upgrade cost: {SelectedTowerUpgrade.Cost}  Max level: {config.MaxTowerLevel}");
             top += 30;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Perfect wave bonus: {SelectedLevel.PerfectWaveScrapBonus}");
             top += 22;
@@ -1728,7 +1803,7 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 12, top, 260, 24), BuildRunModifierStatusText());
             top += 30;
 
-            var previousEnabled = GUI.enabled;
+            previousEnabled = GUI.enabled;
             GUI.enabled = !waveActive && !won && !lost && !HasPendingRunChoice;
 
             if (GUI.Button(new Rect(left + 12, top, 120, 28), sellMode ? "Sell Mode: On" : "Sell Mode: Off"))
@@ -2070,13 +2145,15 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
-            GUI.Box(new Rect(left, top, 260, 134), "Tower Detail");
+            GUI.Box(new Rect(left, top, 260, 178), "Tower Detail");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 236, 22), $"Cell: {tower.Coordinate}  Level: {tower.State.Level}/{config.MaxTowerLevel}");
             top += 22;
+            GUI.Label(new Rect(left + 12, top, 236, 22), BuildTowerStatsText(tower.State));
+            top += 22;
             GUI.Label(new Rect(left + 12, top, 236, 22), $"Targeting: {tower.State.TargetingMode}");
             top += 22;
-            GUI.Label(new Rect(left + 12, top, 236, 22), $"Invested: {tower.State.TotalSpend}  Upgrades: {tower.State.UpgradeHistory.Count}");
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Invested: {tower.State.TotalSpend}  Upgrades used: {tower.State.UpgradeHistory.Count}/{config.MaxTowerLevel - 1}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 236, 44), BuildTowerUpgradeHistoryText(tower.State));
         }
@@ -2131,11 +2208,50 @@ namespace Project147.UnityPresentation.Debug
             combatBannerSeconds = Mathf.Max(0, combatBannerSeconds - deltaSeconds);
         }
 
+        private void RefreshLevelUnlockState()
+        {
+            levelUnlockState = new CampaignLevelUnlockState(
+                config.CreateLevelUnlockRules(),
+                campaignProgress ?? new CampaignProgressState());
+        }
+
+        private void SelectFirstUnlockedLevelIfCurrentIsLocked()
+        {
+            if (IsLevelUnlocked(SelectedLevelLayout.Id))
+            {
+                return;
+            }
+
+            for (var index = 0; index < levelDefinitions.Count; index++)
+            {
+                if (IsLevelUnlocked(levelDefinitions[index].Layout.Id))
+                {
+                    selectedLevelLayoutIndex = index;
+                    return;
+                }
+            }
+
+            selectedLevelLayoutIndex = 0;
+        }
+
+        private bool IsLevelUnlocked(string levelId)
+        {
+            return levelUnlockState == null || levelUnlockState.IsUnlocked(levelId);
+        }
+
         private void ApplyCompletedRunProgress()
         {
+            var previousUnlockedCount = levelUnlockState.UnlockedLevelIds.Count;
             var result = campaignProgress.ApplyRunSummary(SelectedLevelLayout.Id, runSummary);
             campaignProgress = result.Campaign;
             lastProgressResult = result.LevelResult;
+            RefreshLevelUnlockState();
+            lastRunUnlockedLevel = levelUnlockState.UnlockedLevelIds.Count > previousUnlockedCount;
+
+            if (lastRunUnlockedLevel)
+            {
+                RecordEvent("New level unlocked.");
+            }
         }
 
         private bool HasPendingRunChoice
@@ -2153,6 +2269,11 @@ namespace Project147.UnityPresentation.Debug
             return tower.UpgradeHistory.Count == 0
                 ? "Paths: none"
                 : $"Paths: {string.Join(", ", tower.UpgradeHistory)}";
+        }
+
+        private static string BuildTowerStatsText(TowerState tower)
+        {
+            return $"Dmg {tower.Definition.Damage:0.#}  Rng {tower.Definition.Range:0.##}  Rate {tower.Definition.FireRatePerSecond:0.##}";
         }
 
         private static string FormatRunChoiceEffect(RunChoiceDefinition choice)
@@ -2323,6 +2444,11 @@ namespace Project147.UnityPresentation.Debug
             return lastProgressResult.HasAnyImprovement
                 ? "New best recorded"
                 : "No new best this run";
+        }
+
+        private string BuildLevelUnlockStatusText()
+        {
+            return $"Stars: {campaignProgress.TotalStars}  Levels unlocked: {levelUnlockState.UnlockedLevelIds.Count}/{levelDefinitions.Count}";
         }
 
         private static string FormatProgressLevelLabel(string levelId)

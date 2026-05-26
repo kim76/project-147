@@ -38,6 +38,9 @@ For the active next-task list, see `current-roadmap.md`.
 - Later waves spawn upgraded aliens, capped by the debug config.
 - Towers select targets, fire on cooldown, damage aliens and apply slow or poison effects.
 - Tower shots draw a short line and briefly flash the alien.
+- Active aliens show simple health, shield and status markers.
+- Upgraded towers show simple upgrade pips.
+- Wave start, wave clear, victory and defeat show short debug banners.
 - Freeze Pulse can be triggered during a wave to slow all active aliens.
 - Orbital Strike can be triggered during a wave to damage all active aliens.
 - Shield Burst can be triggered during a wave to add temporary base shield.
@@ -99,6 +102,10 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Green chemical tower: chemical.
 - Green range ring: valid tower placement or affordable tower upgrade preview.
 - Red range ring: invalid, unaffordable or max-level tower preview.
+- Green bar: alien health.
+- Cyan bar: alien shield.
+- Small green/cyan marker: poison or slow status on an alien.
+- Small yellow pips: tower upgrade level markers.
 - Cyan pulse ring: Freeze Pulse ability.
 - Orange strike ring: Orbital Strike ability.
 

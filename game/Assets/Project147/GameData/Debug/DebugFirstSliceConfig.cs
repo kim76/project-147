@@ -327,6 +327,35 @@ namespace Project147.GameData.Debug
             };
         }
 
+        public IReadOnlyList<TowerLoadoutPlan> CreateTowerLoadoutPlans(TowerUnlockState unlockState)
+        {
+            if (unlockState == null)
+            {
+                throw new ArgumentNullException(nameof(unlockState));
+            }
+
+            var plans = new List<TowerLoadoutPlan>();
+
+            foreach (var plan in CreateTowerLoadoutPlans())
+            {
+                plans.Add(unlockState.FilterPlan(plan));
+            }
+
+            return plans;
+        }
+
+        public TowerUnlockState CreateInitialTowerUnlockState()
+        {
+            var towerIds = new List<string>();
+
+            foreach (var tower in CreateTowerDefinitions())
+            {
+                towerIds.Add(tower.Id);
+            }
+
+            return new TowerUnlockState(towerIds);
+        }
+
         public TowerUpgradeDefinition CreateTowerUpgradeDefinition()
         {
             return CreateTowerUpgradeDefinitions()[0];

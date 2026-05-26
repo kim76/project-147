@@ -98,6 +98,7 @@ namespace Project147.UnityPresentation.Debug
         private PlayerAbilityState freezePulseState;
         private PlayerAbilityState orbitalStrikeState;
         private PlayerAbilityState shieldBurstState;
+        private TowerUnlockState towerUnlockState;
         private TowerLoadout towerLoadout;
         private TowerLoadoutPlanSet towerLoadoutPlans;
         private TowerUpgradeLoadout towerUpgradeLoadout;
@@ -127,6 +128,8 @@ namespace Project147.UnityPresentation.Debug
         private GameObject placementPreview;
         private LineRenderer placementPreviewLine;
         private GridCoordinate? previewCoordinate;
+        private string combatBannerText;
+        private float combatBannerSeconds;
 
         private void Start()
         {
@@ -142,6 +145,7 @@ namespace Project147.UnityPresentation.Debug
             }
 
             var deltaSeconds = ScaledDeltaSeconds;
+            TickCombatBanner(deltaSeconds);
 
             if (orbitalStrikeState != null)
             {
@@ -161,6 +165,7 @@ namespace Project147.UnityPresentation.Debug
             UpdateWaveSpawning(deltaSeconds);
             UpdateAliens(deltaSeconds);
             UpdateTowers(deltaSeconds);
+            UpdateAlienStatusVisuals();
             CompleteWaveIfReady();
         }
 
@@ -327,6 +332,8 @@ namespace Project147.UnityPresentation.Debug
             currentWaveDefinition = null;
             waveSpawnState = null;
             pendingRunChoices = new List<RunChoiceDefinition>();
+            combatBannerText = null;
+            combatBannerSeconds = 0;
             RebuildTiles();
         }
 
@@ -390,7 +397,8 @@ namespace Project147.UnityPresentation.Debug
             splashDamageResolver = new SplashDamageResolver(damageResolver);
             levelDefinitions = config.CreateLevelDefinitions();
             rewardCalculator = new RewardCalculator(SelectedLevel.PerfectWaveScrapBonus);
-            towerLoadoutPlans = new TowerLoadoutPlanSet(config.CreateTowerLoadoutPlans());
+            towerUnlockState = config.CreateInitialTowerUnlockState();
+            towerLoadoutPlans = new TowerLoadoutPlanSet(config.CreateTowerLoadoutPlans(towerUnlockState));
             towerLoadout = towerLoadoutPlans.SelectedPlan.CreateLoadout();
             freezePulseState = new PlayerAbilityState(config.CreateFreezePulseAbilityDefinition());
             orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
@@ -590,6 +598,7 @@ namespace Project147.UnityPresentation.Debug
             waveStartBaseHealth = currentBase.CurrentHealth;
             currentWaveDefinition = config.CreateWaveDefinition(completedWaves, SelectedLevel.TotalWaves);
             waveSpawnState = new WaveSpawnState(currentWaveDefinition);
+            ShowCombatBanner($"Wave {completedWaves + 1}");
             RecordEvent($"Wave {completedWaves + 1} started: {BuildWaveSummary(currentWaveDefinition)}.");
         }
 
@@ -788,12 +797,14 @@ namespace Project147.UnityPresentation.Debug
                 SelectAlienVisualRole(definition),
                 alienMaterial);
 
-            activeAliens.Add(new RuntimeAlien(
+            var alien = new RuntimeAlien(
                 visual.GameObject,
                 new AlienState(definition),
                 path,
                 visual.PrimaryRenderer,
-                visual.DefaultMaterial));
+                visual.DefaultMaterial);
+            AttachAlienStatusVisuals(alien);
+            activeAliens.Add(alien);
         }
 
         private void UpdateAliens(float deltaSeconds)
@@ -830,6 +841,7 @@ namespace Project147.UnityPresentation.Debug
                         waveActive = false;
                         runSummary = runSummary.Complete(RunOutcome.Defeat);
                         ApplyCompletedRunProgress();
+                        ShowCombatBanner("Defeat");
                         RecordEvent("Defeat. Base destroyed.");
                     }
                 }
@@ -849,6 +861,99 @@ namespace Project147.UnityPresentation.Debug
             {
                 alien.Renderer.sharedMaterial = alien.DefaultMaterial;
             }
+        }
+
+        private void AttachAlienStatusVisuals(RuntimeAlien alien)
+        {
+            alien.StatusVisualRoot = new GameObject("Status Visuals");
+            alien.StatusVisualRoot.transform.SetParent(alien.GameObject.transform, false);
+            alien.StatusVisualRoot.transform.localPosition = Vector3.zero;
+
+            alien.HealthBarBackground = CreateIndicatorPart(
+                alien.StatusVisualRoot.transform,
+                PrimitiveType.Cube,
+                "Health Bar Background",
+                new Vector3(0, 0.74f, -0.34f),
+                new Vector3(0.66f, 0.04f, 0.06f),
+                new Color(0.08f, 0.08f, 0.08f, 1f));
+            alien.HealthBarForeground = CreateIndicatorPart(
+                alien.StatusVisualRoot.transform,
+                PrimitiveType.Cube,
+                "Health Bar",
+                new Vector3(0, 0.75f, -0.34f),
+                new Vector3(0.62f, 0.05f, 0.07f),
+                new Color(0.25f, 1f, 0.32f, 1f));
+            alien.ShieldBarForeground = CreateIndicatorPart(
+                alien.StatusVisualRoot.transform,
+                PrimitiveType.Cube,
+                "Shield Bar",
+                new Vector3(0, 0.84f, -0.34f),
+                new Vector3(0.62f, 0.05f, 0.07f),
+                new Color(0.2f, 0.82f, 1f, 1f));
+            alien.StatusMarker = CreateIndicatorPart(
+                alien.StatusVisualRoot.transform,
+                PrimitiveType.Sphere,
+                "Status Marker",
+                new Vector3(0.42f, 0.82f, -0.34f),
+                new Vector3(0.12f, 0.12f, 0.12f),
+                new Color(0.82f, 1f, 0.24f, 1f));
+
+            UpdateAlienStatusVisual(alien);
+        }
+
+        private void UpdateAlienStatusVisuals()
+        {
+            foreach (var alien in activeAliens)
+            {
+                UpdateAlienStatusVisual(alien);
+            }
+        }
+
+        private void UpdateAlienStatusVisual(RuntimeAlien alien)
+        {
+            if (alien.GameObject == null || alien.StatusVisualRoot == null)
+            {
+                return;
+            }
+
+            UpdateBar(alien.HealthBarForeground, alien.State.CurrentHealth / alien.State.Definition.MaxHealth, 0.62f);
+
+            var shieldRatio = alien.State.Definition.ShieldCapacity <= 0
+                ? 0
+                : alien.State.CurrentShield / alien.State.Definition.ShieldCapacity;
+            UpdateBar(alien.ShieldBarForeground, shieldRatio, 0.62f);
+
+            if (alien.StatusMarker == null)
+            {
+                return;
+            }
+
+            var hasStatus = alien.State.ActiveStatusEffects.Count > 0;
+            alien.StatusMarker.SetActive(hasStatus);
+
+            if (hasStatus)
+            {
+                var colour = alien.State.ActiveStatusEffects[0].Definition.Type == AlienStatusEffectType.Poison
+                    ? new Color(0.62f, 1f, 0.18f, 1f)
+                    : new Color(0.35f, 0.92f, 1f, 1f);
+                SetRendererColour(alien.StatusMarker, colour);
+            }
+        }
+
+        private static void UpdateBar(GameObject bar, float ratio, float fullWidth)
+        {
+            if (bar == null)
+            {
+                return;
+            }
+
+            var clampedRatio = Mathf.Clamp01(ratio);
+            bar.SetActive(clampedRatio > 0);
+            bar.transform.localScale = new Vector3(fullWidth * clampedRatio, bar.transform.localScale.y, bar.transform.localScale.z);
+            bar.transform.localPosition = new Vector3(
+                -fullWidth * (1 - clampedRatio) * 0.5f,
+                bar.transform.localPosition.y,
+                bar.transform.localPosition.z);
         }
 
         private bool MoveAlien(RuntimeAlien alien, float deltaSeconds)
@@ -1043,6 +1148,7 @@ namespace Project147.UnityPresentation.Debug
             RecordEvent(wasPerfectWave
                 ? $"Wave cleared perfectly. +{reward.Amount} scrap."
                 : $"Wave cleared. +{reward.Amount} scrap.");
+            ShowCombatBanner(wasPerfectWave ? "Perfect Wave" : "Wave Clear");
             waveActive = false;
             currentWaveDefinition = null;
             waveSpawnState = null;
@@ -1053,6 +1159,7 @@ namespace Project147.UnityPresentation.Debug
                 won = true;
                 runSummary = runSummary.Complete(RunOutcome.Victory);
                 ApplyCompletedRunProgress();
+                ShowCombatBanner("Victory");
                 RecordEvent("Victory. All waves cleared.");
                 return;
             }
@@ -1147,6 +1254,39 @@ namespace Project147.UnityPresentation.Debug
             return tower;
         }
 
+        private static GameObject CreateIndicatorPart(
+            Transform parent,
+            PrimitiveType primitiveType,
+            string name,
+            Vector3 localPosition,
+            Vector3 localScale,
+            Color colour)
+        {
+            var part = GameObject.CreatePrimitive(primitiveType);
+            part.name = name;
+            part.transform.SetParent(parent, false);
+            part.transform.localPosition = localPosition;
+            part.transform.localScale = localScale;
+            SetRendererColour(part, colour);
+            return part;
+        }
+
+        private static void SetRendererColour(GameObject target, Color colour)
+        {
+            var renderer = target.GetComponent<Renderer>();
+
+            if (renderer != null)
+            {
+                var material = renderer.material;
+                material.color = colour;
+
+                if (material.HasProperty("_BaseColor"))
+                {
+                    material.SetColor("_BaseColor", colour);
+                }
+            }
+        }
+
         private DebugAlienVisualRole SelectAlienVisualRole(AlienDefinition definition)
         {
             if (definition.Id == config.FastAlienId)
@@ -1192,6 +1332,41 @@ namespace Project147.UnityPresentation.Debug
             var levelBonus = (tower.State.Level - 1) * 0.16f;
             tower.GameObject.transform.localPosition = ToWorldPosition(tower.Coordinate, 0.45f + levelBonus * 0.25f);
             tower.GameObject.transform.localScale = Vector3.one * (1 + levelBonus);
+            UpdateTowerUpgradeMarkers(tower);
+        }
+
+        private void UpdateTowerUpgradeMarkers(RuntimeTower tower)
+        {
+            if (tower.UpgradeMarkerRoot != null)
+            {
+                Destroy(tower.UpgradeMarkerRoot);
+                tower.UpgradeMarkerRoot = null;
+            }
+
+            var markerCount = tower.State.Level - 1;
+
+            if (markerCount <= 0)
+            {
+                return;
+            }
+
+            tower.UpgradeMarkerRoot = new GameObject("Upgrade Markers");
+            tower.UpgradeMarkerRoot.transform.SetParent(tower.GameObject.transform, false);
+            tower.UpgradeMarkerRoot.transform.localPosition = Vector3.zero;
+
+            const float spacing = 0.16f;
+            var startX = -spacing * (markerCount - 1) * 0.5f;
+
+            for (var index = 0; index < markerCount; index++)
+            {
+                CreateIndicatorPart(
+                    tower.UpgradeMarkerRoot.transform,
+                    PrimitiveType.Cube,
+                    "Upgrade Pip",
+                    new Vector3(startX + index * spacing, 0.86f, -0.34f),
+                    new Vector3(0.1f, 0.06f, 0.1f),
+                    new Color(1f, 0.92f, 0.22f, 1f));
+            }
         }
 
         private TacticalGrid CreateGrid(GridBounds bounds)
@@ -1455,6 +1630,7 @@ namespace Project147.UnityPresentation.Debug
             if (currentBase == null
                 || wallet == null
                 || levelDefinitions == null
+                || towerUnlockState == null
                 || towerLoadoutPlans == null
                 || towerLoadout == null
                 || towerUpgradeLoadout == null
@@ -1471,7 +1647,7 @@ namespace Project147.UnityPresentation.Debug
 
             const int left = 16;
             var top = 16;
-            GUI.Box(new Rect(left, top, 280, 760), "Project 147 First Slice");
+            GUI.Box(new Rect(left, top, 280, 800), "Project 147 First Slice");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}  Shield: {currentBase.CurrentShield}");
             top += 22;
@@ -1505,6 +1681,8 @@ namespace Project147.UnityPresentation.Debug
 
             GUI.Label(new Rect(left + 144, top + 2, 130, 24), $"{towerLoadoutPlans.SelectedIndex + 1}/{towerLoadoutPlans.Plans.Count}");
             top += 30;
+            GUI.Label(new Rect(left + 12, top, 260, 24), $"Unlocked towers: {towerUnlockState.UnlockedTowerIds.Count}");
+            top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Scrap: {wallet.Balance}  {BuildTowerCostText()}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 260, 24), $"Selected: {SelectedTower.Id}");
@@ -1692,6 +1870,7 @@ namespace Project147.UnityPresentation.Debug
             DrawRunSummaryPanel(left + 296, 232);
             DrawSessionProgressPanel(left + 296, HasPendingRunChoice ? 592 : 444);
             DrawInspectedTowerPanel(left + 296, HasPendingRunChoice ? 764 : 616);
+            DrawCombatBanner();
         }
 
         private string BuildSelectedTowerAbilityText()
@@ -1919,10 +2098,37 @@ namespace Project147.UnityPresentation.Debug
             }
         }
 
+        private void DrawCombatBanner()
+        {
+            if (string.IsNullOrWhiteSpace(combatBannerText) || combatBannerSeconds <= 0)
+            {
+                return;
+            }
+
+            var width = 320;
+            GUI.Box(new Rect(Screen.width * 0.5f - width * 0.5f, 18, width, 42), combatBannerText);
+        }
+
         private void RecordEvent(string message)
         {
             eventFeed = (eventFeed ?? new LevelEventFeed(EventFeedCapacity)).Add(message);
             UnityEngine.Debug.Log(message);
+        }
+
+        private void ShowCombatBanner(string message)
+        {
+            combatBannerText = message;
+            combatBannerSeconds = 1.8f;
+        }
+
+        private void TickCombatBanner(float deltaSeconds)
+        {
+            if (combatBannerSeconds <= 0)
+            {
+                return;
+            }
+
+            combatBannerSeconds = Mathf.Max(0, combatBannerSeconds - deltaSeconds);
         }
 
         private void ApplyCompletedRunProgress()
@@ -2199,6 +2405,8 @@ namespace Project147.UnityPresentation.Debug
             public TowerState State { get; set; }
 
             public GameObject GameObject { get; }
+
+            public GameObject UpgradeMarkerRoot { get; set; }
         }
 
         private sealed class RuntimeAlien
@@ -2234,6 +2442,16 @@ namespace Project147.UnityPresentation.Debug
             public float PathProgress { get; set; }
 
             public float HitFlashSeconds { get; set; }
+
+            public GameObject StatusVisualRoot { get; set; }
+
+            public GameObject HealthBarBackground { get; set; }
+
+            public GameObject HealthBarForeground { get; set; }
+
+            public GameObject ShieldBarForeground { get; set; }
+
+            public GameObject StatusMarker { get; set; }
         }
     }
 }

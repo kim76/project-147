@@ -1,5 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
+using Project147.GameCore.Combat;
 using Project147.GameCore.Grid;
 using Project147.GameData.Debug;
 using UnityEngine;
@@ -55,6 +56,31 @@ namespace Project147.Tests.EditMode.GameData.Debug
             Assert.That(plans.Select(plan => plan.Id), Does.Contain("debug-loadout-status"));
             Assert.That(plans.Select(plan => plan.Id), Does.Contain("debug-loadout-heavy"));
             Assert.That(plans.All(plan => plan.Towers.Count == 3), Is.True);
+        }
+
+        [Test]
+        public void CreateTowerLoadoutPlans_WhenUnlockStateIsProvided_ReturnsUnlockedTowersOnly()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+            var unlocks = new TowerUnlockState(new[] { "debug-railgun", "debug-energy" });
+
+            var plans = config.CreateTowerLoadoutPlans(unlocks);
+
+            Assert.That(plans.Count, Is.EqualTo(3));
+            Assert.That(plans.All(plan => plan.Towers.All(tower => tower.Id == "debug-railgun" || tower.Id == "debug-energy")), Is.True);
+        }
+
+        [Test]
+        public void CreateInitialTowerUnlockState_ReturnsAllDebugTowerIds()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var unlocks = config.CreateInitialTowerUnlockState();
+
+            Assert.That(unlocks.IsUnlocked("debug-railgun"), Is.True);
+            Assert.That(unlocks.IsUnlocked("debug-mortar"), Is.True);
+            Assert.That(unlocks.IsUnlocked("debug-energy"), Is.True);
+            Assert.That(unlocks.IsUnlocked("debug-chemical"), Is.True);
         }
 
         [Test]

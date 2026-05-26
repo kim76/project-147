@@ -36,6 +36,10 @@ The first playable slice currently has:
 - End-of-run summary and session progress tracking.
 - Per-level-layout session progress tracking.
 - First-pass code-native visuals for towers and aliens.
+- Health, shield and status markers on active aliens.
+- Upgrade pips on upgraded towers.
+- Simple wave-start, wave-clear, victory and defeat banners.
+- Tested tower unlock-state foundation.
 
 ## Morning Verification
 
@@ -54,9 +58,13 @@ After pulling/opening the latest work:
 11. Sell an upgraded tower and confirm the refund reflects actual spend.
 12. During a wave, use Shield Burst and confirm base shield increases.
 13. Start later waves and confirm trait text, threat rating, counter hints and `Regenerator` appear in next-wave intel.
-14. Confirm green halo regenerator aliens appear.
-15. Confirm burrowers are still not shot immediately at spawn.
-16. Confirm the final boss wave still completes into victory or defeat.
+14. Confirm active aliens show health bars and shielded aliens show shield bars.
+15. Confirm poisoned or slowed aliens show a small status marker.
+16. Upgrade towers and confirm upgraded towers show visible pips.
+17. Confirm wave start, wave clear, victory and defeat banners appear.
+18. Confirm green halo regenerator aliens appear.
+19. Confirm burrowers are still not shot immediately at spawn.
+20. Confirm the final boss wave still completes into victory or defeat.
 
 ## Next Slice Candidates
 
@@ -106,10 +114,10 @@ Done:
 - Add tested tower loadout plan and plan-set models.
 - Restrict each run to a selected three-tower debug loadout.
 - Add a simple pre-run debug control for changing the loadout.
+- Add a tested tower unlock model.
 
 Next:
 
-- Add a tested tower unlock model.
 - Replace preset loadouts with explicit slot editing.
 
 ### 4. Multiple Levels
@@ -178,10 +186,7 @@ Goal: make the prototype easier to read and more fun to play.
 
 Next:
 
-- Add health bars.
-- Add poison, shield and regeneration indicators.
 - Add clearer hit feedback.
-- Add better wave-start and wave-clear feedback.
 - Add placeholder sound hooks only after the visual feedback is readable.
 
 ### 9. Data Cleanup

@@ -94,6 +94,19 @@ namespace Project147.GameData.Debug
             0.2f);
 
         [SerializeField]
+        private DebugTowerUpgradeTuning statusTowerUpgrade = new DebugTowerUpgradeTuning(
+            "debug-upgrade-status",
+            75,
+            1.05f,
+            1f,
+            0.1f,
+            0.02f,
+            0.05f,
+            1.35f,
+            1.35f,
+            0.85f);
+
+        [SerializeField]
         private DebugStatusEffectTuning railgunSlow = new DebugStatusEffectTuning(
             "debug-frost-slow",
             1.4f,
@@ -276,7 +289,8 @@ namespace Project147.GameData.Debug
             {
                 DamageTowerUpgrade.CreateDefinition(),
                 RapidTowerUpgrade.CreateDefinition(),
-                RangeTowerUpgrade.CreateDefinition()
+                RangeTowerUpgrade.CreateDefinition(),
+                StatusTowerUpgrade.CreateDefinition()
             };
         }
 
@@ -422,6 +436,11 @@ namespace Project147.GameData.Debug
         private DebugTowerUpgradeTuning RangeTowerUpgrade
         {
             get { return rangeTowerUpgrade ?? towerUpgrade ?? new DebugTowerUpgradeTuning(); }
+        }
+
+        private DebugTowerUpgradeTuning StatusTowerUpgrade
+        {
+            get { return statusTowerUpgrade ?? towerUpgrade ?? new DebugTowerUpgradeTuning(); }
         }
 
         private DebugTowerTuning ChemicalTower

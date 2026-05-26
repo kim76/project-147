@@ -6,17 +6,11 @@ namespace Project147.GameCore.Combat
     {
         public int CalculateRefund(
             TowerState tower,
-            TowerUpgradeDefinition upgradeDefinition,
             float refundMultiplier)
         {
             if (tower == null)
             {
                 throw new ArgumentNullException(nameof(tower));
-            }
-
-            if (upgradeDefinition == null)
-            {
-                throw new ArgumentNullException(nameof(upgradeDefinition));
             }
 
             if (refundMultiplier < 0 || refundMultiplier > 1)
@@ -26,8 +20,7 @@ namespace Project147.GameCore.Combat
                     "Refund multiplier must be between zero and one.");
             }
 
-            var invested = tower.Definition.Cost + (tower.Level - 1) * upgradeDefinition.Cost;
-            return Convert.ToInt32(Math.Round(invested * refundMultiplier, MidpointRounding.AwayFromZero));
+            return Convert.ToInt32(Math.Round(tower.TotalSpend * refundMultiplier, MidpointRounding.AwayFromZero));
         }
     }
 }

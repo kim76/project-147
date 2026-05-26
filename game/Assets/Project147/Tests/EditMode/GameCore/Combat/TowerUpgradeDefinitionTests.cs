@@ -16,7 +16,10 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 1.1f,
                 0.5f,
                 0.1f,
-                0.25f);
+                0.25f,
+                1.5f,
+                1.4f,
+                0.8f);
 
             Assert.That(upgrade.Id, Is.EqualTo("railgun-damage-1"));
             Assert.That(upgrade.Cost, Is.EqualTo(75));
@@ -25,6 +28,9 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(upgrade.RangeBonus, Is.EqualTo(0.5f));
             Assert.That(upgrade.CriticalChanceBonus, Is.EqualTo(0.1f));
             Assert.That(upgrade.CriticalDamageMultiplierBonus, Is.EqualTo(0.25f));
+            Assert.That(upgrade.StatusDurationMultiplier, Is.EqualTo(1.5f));
+            Assert.That(upgrade.StatusDamageMultiplier, Is.EqualTo(1.4f));
+            Assert.That(upgrade.StatusMovementSpeedMultiplier, Is.EqualTo(0.8f));
         }
 
         [TestCase(null)]
@@ -115,6 +121,55 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 -0.01f));
         }
 
+        [TestCase(0)]
+        [TestCase(-0.01f)]
+        public void Constructor_WhenStatusDurationMultiplierIsZeroOrLess_Throws(float statusDurationMultiplier)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new TowerUpgradeDefinition(
+                "railgun-damage-1",
+                75,
+                1,
+                1,
+                0,
+                0,
+                0,
+                statusDurationMultiplier));
+        }
+
+        [TestCase(0)]
+        [TestCase(-0.01f)]
+        public void Constructor_WhenStatusDamageMultiplierIsZeroOrLess_Throws(float statusDamageMultiplier)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new TowerUpgradeDefinition(
+                "railgun-damage-1",
+                75,
+                1,
+                1,
+                0,
+                0,
+                0,
+                1,
+                statusDamageMultiplier));
+        }
+
+        [TestCase(0)]
+        [TestCase(-0.01f)]
+        [TestCase(1.01f)]
+        public void Constructor_WhenStatusMovementSpeedMultiplierIsOutsideRange_Throws(float statusMovementSpeedMultiplier)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new TowerUpgradeDefinition(
+                "railgun-damage-1",
+                75,
+                1,
+                1,
+                0,
+                0,
+                0,
+                1,
+                1,
+                statusMovementSpeedMultiplier));
+        }
+
         [Test]
         public void ApplyTo_WhenTowerIsNull_Throws()
         {
@@ -156,7 +211,7 @@ namespace Project147.Tests.EditMode.GameCore.Combat
         }
 
         [Test]
-        public void ApplyTo_PreservesTowerStatusEffects()
+        public void ApplyTo_UpgradesTowerStatusEffects()
         {
             var slow = new AlienStatusEffectDefinition(
                 "frost-slow",
@@ -176,11 +231,46 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 0,
                 0,
                 new[] { slow });
-            var upgrade = new TowerUpgradeDefinition("frost-upgrade-1", 75, 1.25f, 1.1f, 0, 0, 0);
+            var upgrade = new TowerUpgradeDefinition("frost-upgrade-1", 75, 1.25f, 1.1f, 0, 0, 0, 1.5f, 1, 0.8f);
 
             var result = upgrade.ApplyTo(tower);
 
-            Assert.That(result.StatusEffects, Is.EqualTo(new[] { slow }));
+            Assert.That(result.StatusEffects, Has.Count.EqualTo(1));
+            Assert.That(result.StatusEffects[0].Id, Is.EqualTo("frost-slow"));
+            Assert.That(result.StatusEffects[0].Type, Is.EqualTo(AlienStatusEffectType.Slow));
+            Assert.That(result.StatusEffects[0].DurationSeconds, Is.EqualTo(3));
+            Assert.That(result.StatusEffects[0].MovementSpeedMultiplier, Is.EqualTo(0.48f).Within(0.0001f));
+        }
+
+        [Test]
+        public void ApplyTo_UpgradesPoisonDamage()
+        {
+            var poison = new AlienStatusEffectDefinition(
+                "acid-burn",
+                AlienStatusEffectType.Poison,
+                3,
+                1,
+                6);
+            var tower = new TowerDefinition(
+                "chemical-basic",
+                100,
+                3,
+                2,
+                20,
+                DamageType.Chemical,
+                TowerTargetingMode.Weakest,
+                0,
+                1,
+                0,
+                0,
+                new[] { poison });
+            var upgrade = new TowerUpgradeDefinition("chemical-status-1", 75, 1, 1, 0, 0, 0, 1.5f, 1.25f);
+
+            var result = upgrade.ApplyTo(tower);
+
+            Assert.That(result.StatusEffects, Has.Count.EqualTo(1));
+            Assert.That(result.StatusEffects[0].DurationSeconds, Is.EqualTo(4.5f));
+            Assert.That(result.StatusEffects[0].DamagePerSecond, Is.EqualTo(7.5f));
         }
 
         [Test]

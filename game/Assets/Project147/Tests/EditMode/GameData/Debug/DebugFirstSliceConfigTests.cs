@@ -32,10 +32,14 @@ namespace Project147.Tests.EditMode.GameData.Debug
 
             var upgrades = config.CreateTowerUpgradeDefinitions();
 
-            Assert.That(upgrades.Count, Is.EqualTo(3));
+            Assert.That(upgrades.Count, Is.EqualTo(4));
             Assert.That(upgrades.Select(upgrade => upgrade.Id), Does.Contain("debug-upgrade-damage"));
             Assert.That(upgrades.Select(upgrade => upgrade.Id), Does.Contain("debug-upgrade-rapid"));
             Assert.That(upgrades.Select(upgrade => upgrade.Id), Does.Contain("debug-upgrade-range"));
+            Assert.That(upgrades.Select(upgrade => upgrade.Id), Does.Contain("debug-upgrade-status"));
+            Assert.That(upgrades.Single(upgrade => upgrade.Id == "debug-upgrade-status").StatusDurationMultiplier, Is.GreaterThan(1));
+            Assert.That(upgrades.Single(upgrade => upgrade.Id == "debug-upgrade-status").StatusDamageMultiplier, Is.GreaterThan(1));
+            Assert.That(upgrades.Single(upgrade => upgrade.Id == "debug-upgrade-status").StatusMovementSpeedMultiplier, Is.LessThan(1));
             Assert.That(upgrades.Select(upgrade => upgrade.Cost).Distinct().Single(), Is.EqualTo(75));
         }
 

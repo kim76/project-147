@@ -17,6 +17,9 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(state.Level, Is.EqualTo(1));
             Assert.That(state.SecondsUntilReady, Is.EqualTo(0));
             Assert.That(state.TargetingMode, Is.EqualTo(TowerTargetingMode.First));
+            Assert.That(state.UpgradeSpend, Is.EqualTo(0));
+            Assert.That(state.TotalSpend, Is.EqualTo(100));
+            Assert.That(state.UpgradeHistory, Is.Empty);
             Assert.That(state.CanFire, Is.True);
         }
 
@@ -35,6 +38,8 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(result.SecondsUntilReady, Is.EqualTo(0.5f));
             Assert.That(result.CanFire, Is.False);
             Assert.That(result.TargetingMode, Is.EqualTo(state.TargetingMode));
+            Assert.That(result.UpgradeSpend, Is.EqualTo(state.UpgradeSpend));
+            Assert.That(result.UpgradeHistory, Is.EqualTo(state.UpgradeHistory));
         }
 
         [Test]
@@ -46,6 +51,8 @@ namespace Project147.Tests.EditMode.GameCore.Combat
 
             Assert.That(result.SecondsUntilReady, Is.EqualTo(0.3f).Within(0.0001f));
             Assert.That(result.TargetingMode, Is.EqualTo(state.TargetingMode));
+            Assert.That(result.UpgradeSpend, Is.EqualTo(state.UpgradeSpend));
+            Assert.That(result.UpgradeHistory, Is.EqualTo(state.UpgradeHistory));
             Assert.That(state.SecondsUntilReady, Is.EqualTo(0.5f));
         }
 
@@ -88,6 +95,10 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             Assert.That(result.Definition.FireRatePerSecond, Is.EqualTo(2.5f));
             Assert.That(result.SecondsUntilReady, Is.EqualTo(state.SecondsUntilReady));
             Assert.That(result.TargetingMode, Is.EqualTo(state.TargetingMode));
+            Assert.That(result.UpgradeSpend, Is.EqualTo(75));
+            Assert.That(result.TotalSpend, Is.EqualTo(175));
+            Assert.That(result.UpgradeHistory, Is.EqualTo(new[] { "railgun-damage-1" }));
+            Assert.That(state.UpgradeHistory, Is.Empty);
         }
 
         [Test]

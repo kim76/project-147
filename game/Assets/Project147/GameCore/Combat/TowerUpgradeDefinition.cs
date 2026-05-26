@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Project147.GameCore.Combat
 {
@@ -11,7 +12,10 @@ namespace Project147.GameCore.Combat
             float fireRateMultiplier,
             float rangeBonus,
             float criticalChanceBonus,
-            float criticalDamageMultiplierBonus)
+            float criticalDamageMultiplierBonus,
+            float statusDurationMultiplier = 1,
+            float statusDamageMultiplier = 1,
+            float statusMovementSpeedMultiplier = 1)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -56,6 +60,27 @@ namespace Project147.GameCore.Combat
                     "Critical damage multiplier bonus cannot be negative.");
             }
 
+            if (statusDurationMultiplier <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(statusDurationMultiplier),
+                    "Status duration multiplier must be greater than zero.");
+            }
+
+            if (statusDamageMultiplier <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(statusDamageMultiplier),
+                    "Status damage multiplier must be greater than zero.");
+            }
+
+            if (statusMovementSpeedMultiplier <= 0 || statusMovementSpeedMultiplier > 1)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(statusMovementSpeedMultiplier),
+                    "Status movement speed multiplier must be greater than zero and no more than one.");
+            }
+
             Id = id;
             Cost = cost;
             DamageMultiplier = damageMultiplier;
@@ -63,6 +88,9 @@ namespace Project147.GameCore.Combat
             RangeBonus = rangeBonus;
             CriticalChanceBonus = criticalChanceBonus;
             CriticalDamageMultiplierBonus = criticalDamageMultiplierBonus;
+            StatusDurationMultiplier = statusDurationMultiplier;
+            StatusDamageMultiplier = statusDamageMultiplier;
+            StatusMovementSpeedMultiplier = statusMovementSpeedMultiplier;
         }
 
         public string Id { get; }
@@ -78,6 +106,12 @@ namespace Project147.GameCore.Combat
         public float CriticalChanceBonus { get; }
 
         public float CriticalDamageMultiplierBonus { get; }
+
+        public float StatusDurationMultiplier { get; }
+
+        public float StatusDamageMultiplier { get; }
+
+        public float StatusMovementSpeedMultiplier { get; }
 
         public TowerDefinition ApplyTo(TowerDefinition tower)
         {
@@ -105,7 +139,25 @@ namespace Project147.GameCore.Combat
                 tower.CriticalDamageMultiplier + CriticalDamageMultiplierBonus,
                 tower.SplashRadius,
                 tower.SplashDamageMultiplier,
-                tower.StatusEffects);
+                UpgradeStatusEffects(tower.StatusEffects));
+        }
+
+        private IReadOnlyList<AlienStatusEffectDefinition> UpgradeStatusEffects(
+            IReadOnlyList<AlienStatusEffectDefinition> statusEffects)
+        {
+            var upgradedStatusEffects = new List<AlienStatusEffectDefinition>();
+
+            foreach (var statusEffect in statusEffects)
+            {
+                upgradedStatusEffects.Add(new AlienStatusEffectDefinition(
+                    statusEffect.Id,
+                    statusEffect.Type,
+                    statusEffect.DurationSeconds * StatusDurationMultiplier,
+                    statusEffect.MovementSpeedMultiplier * StatusMovementSpeedMultiplier,
+                    statusEffect.DamagePerSecond * StatusDamageMultiplier));
+            }
+
+            return upgradedStatusEffects;
         }
     }
 }

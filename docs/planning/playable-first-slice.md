@@ -13,12 +13,12 @@ For the active next-task list, see `current-roadmap.md`.
 - Player places towers between waves.
 - Player can switch between three debug level layouts before placing towers.
 - Player can switch between four debug tower types before placing.
-- Player can switch between three tower upgrade paths before upgrading.
+- Player can switch between four tower upgrade paths before upgrading.
 - Railgun, mortar, energy and chemical towers use distinct first-pass debug visual profiles.
 - Railgun applies a short slow effect, mortar deals splash damage, energy provides direct single-target damage, and chemical applies poison damage over time.
 - Hovering a cell previews tower range and whether placement is valid.
 - Towers cost scrap.
-- Clicking an existing tower between waves upgrades it with the selected upgrade path if enough scrap is available.
+- Clicking an existing tower between waves inspects it and upgrades it with the selected upgrade path if enough scrap is available.
 - Toggling `Sell Mode` and clicking an existing tower between waves sells it for a partial refund.
 - Toggling `Target` and clicking an existing tower between waves cycles its targeting mode.
 - Placement is rejected if it blocks all paths.
@@ -26,6 +26,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Player can cycle wave speed between 1x, 2x and 3x.
 - Player can pause and resume active waves.
 - A `Next Wave` panel previews enemy counts and tags before each wave.
+- The `Next Wave` panel shows a simple threat rating and counter hints.
 - Mixed waves spawn basic, fast, armoured, shielded, burrower, regenerator and boss debug aliens.
 - Shielded aliens absorb damage into shields before health.
 - Burrower aliens cannot be targeted by towers until they have travelled several path steps.
@@ -104,7 +105,8 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Tower upgrade paths currently share one debug cost to keep selling deterministic.
 - There are four debug tower types.
 - There are three debug level layouts.
-- There are three debug tower upgrade paths.
+- There are four debug tower upgrade paths.
+- The status upgrade path only matters for towers that already apply slow or poison.
 - There are seven debug alien types.
 - First-slice tuning is grouped in one debug config asset, not final production content data.
 - There is no polished UI.

@@ -119,7 +119,45 @@ namespace Project147.GameCore.Level
                 tags.Add("Heavy");
             }
 
-            return new WaveIntelSummary(completedWaves + 1, entries, tags, wave.ClearReward);
+            return new WaveIntelSummary(
+                completedWaves + 1,
+                entries,
+                tags,
+                wave.ClearReward,
+                CalculateThreatRating(completedWaves, wave.AlienCount, hasShielded, hasBurrower, hasRegenerator, hasBoss));
+        }
+
+        private static int CalculateThreatRating(
+            int completedWaves,
+            int alienCount,
+            bool hasShielded,
+            bool hasBurrower,
+            bool hasRegenerator,
+            bool hasBoss)
+        {
+            var rating = 1;
+
+            if (completedWaves >= 1)
+            {
+                rating++;
+            }
+
+            if (alienCount >= 8)
+            {
+                rating++;
+            }
+
+            if (hasShielded || hasBurrower || hasRegenerator)
+            {
+                rating++;
+            }
+
+            if (hasBoss)
+            {
+                rating += 3;
+            }
+
+            return Math.Min(5, rating);
         }
     }
 }

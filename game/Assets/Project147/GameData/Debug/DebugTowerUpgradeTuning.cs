@@ -31,6 +31,15 @@ namespace Project147.GameData.Debug
         [SerializeField]
         private float criticalDamageMultiplierBonus = 0.15f;
 
+        [SerializeField]
+        private float statusDurationMultiplier = 1;
+
+        [SerializeField]
+        private float statusDamageMultiplier = 1;
+
+        [SerializeField]
+        private float statusMovementSpeedMultiplier = 1;
+
         public DebugTowerUpgradeTuning()
         {
         }
@@ -42,7 +51,10 @@ namespace Project147.GameData.Debug
             float fireRateMultiplier,
             float rangeBonus,
             float criticalChanceBonus,
-            float criticalDamageMultiplierBonus)
+            float criticalDamageMultiplierBonus,
+            float statusDurationMultiplier = 1,
+            float statusDamageMultiplier = 1,
+            float statusMovementSpeedMultiplier = 1)
         {
             this.id = id;
             this.cost = cost;
@@ -51,6 +63,9 @@ namespace Project147.GameData.Debug
             this.rangeBonus = rangeBonus;
             this.criticalChanceBonus = criticalChanceBonus;
             this.criticalDamageMultiplierBonus = criticalDamageMultiplierBonus;
+            this.statusDurationMultiplier = statusDurationMultiplier;
+            this.statusDamageMultiplier = statusDamageMultiplier;
+            this.statusMovementSpeedMultiplier = statusMovementSpeedMultiplier;
         }
 
         public int MaxTowerLevel
@@ -67,7 +82,10 @@ namespace Project147.GameData.Debug
                 fireRateMultiplier,
                 rangeBonus,
                 criticalChanceBonus,
-                criticalDamageMultiplierBonus);
+                criticalDamageMultiplierBonus,
+                statusDurationMultiplier,
+                statusDamageMultiplier,
+                statusMovementSpeedMultiplier);
         }
     }
 }

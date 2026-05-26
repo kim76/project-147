@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Project147.GameCore.Combat
 {
@@ -14,7 +15,13 @@ namespace Project147.GameCore.Combat
         };
 
         public TowerState(TowerDefinition definition)
-            : this(definition, 1, 0, definition?.DefaultTargetingMode ?? TowerTargetingMode.First)
+            : this(
+                definition,
+                1,
+                0,
+                definition?.DefaultTargetingMode ?? TowerTargetingMode.First,
+                0,
+                new List<string>())
         {
         }
 
@@ -22,7 +29,9 @@ namespace Project147.GameCore.Combat
             TowerDefinition definition,
             int level,
             float secondsUntilReady,
-            TowerTargetingMode targetingMode)
+            TowerTargetingMode targetingMode,
+            int upgradeSpend,
+            IReadOnlyList<string> upgradeHistory)
         {
             Definition = definition ?? throw new ArgumentNullException(nameof(definition));
 
@@ -38,6 +47,24 @@ namespace Project147.GameCore.Combat
                     "Seconds until ready cannot be negative.");
             }
 
+            if (upgradeSpend < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(upgradeSpend), "Upgrade spend cannot be negative.");
+            }
+
+            if (upgradeHistory == null)
+            {
+                throw new ArgumentNullException(nameof(upgradeHistory));
+            }
+
+            foreach (var upgradeId in upgradeHistory)
+            {
+                if (string.IsNullOrWhiteSpace(upgradeId))
+                {
+                    throw new ArgumentException("Upgrade history cannot contain empty upgrade ids.", nameof(upgradeHistory));
+                }
+            }
+
             if (!Enum.IsDefined(typeof(TowerTargetingMode), targetingMode))
             {
                 throw new ArgumentOutOfRangeException(nameof(targetingMode), targetingMode, "Unknown targeting mode.");
@@ -46,6 +73,8 @@ namespace Project147.GameCore.Combat
             Level = level;
             SecondsUntilReady = secondsUntilReady;
             TargetingMode = targetingMode;
+            UpgradeSpend = upgradeSpend;
+            UpgradeHistory = new List<string>(upgradeHistory);
         }
 
         public TowerDefinition Definition { get; }
@@ -55,6 +84,15 @@ namespace Project147.GameCore.Combat
         public float SecondsUntilReady { get; }
 
         public TowerTargetingMode TargetingMode { get; }
+
+        public int UpgradeSpend { get; }
+
+        public IReadOnlyList<string> UpgradeHistory { get; }
+
+        public int TotalSpend
+        {
+            get { return Definition.Cost + UpgradeSpend; }
+        }
 
         public bool CanFire
         {
@@ -68,12 +106,18 @@ namespace Project147.GameCore.Combat
                 throw new ArgumentOutOfRangeException(nameof(deltaSeconds), "Delta seconds cannot be negative.");
             }
 
-            return new TowerState(Definition, Level, Math.Max(0, SecondsUntilReady - deltaSeconds), TargetingMode);
+            return new TowerState(
+                Definition,
+                Level,
+                Math.Max(0, SecondsUntilReady - deltaSeconds),
+                TargetingMode,
+                UpgradeSpend,
+                UpgradeHistory);
         }
 
         public TowerState MarkFired()
         {
-            return new TowerState(Definition, Level, SecondsPerShot(), TargetingMode);
+            return new TowerState(Definition, Level, SecondsPerShot(), TargetingMode, UpgradeSpend, UpgradeHistory);
         }
 
         public TowerState Upgrade(TowerUpgradeDefinition upgrade)
@@ -83,14 +127,31 @@ namespace Project147.GameCore.Combat
                 throw new ArgumentNullException(nameof(upgrade));
             }
 
-            return new TowerState(upgrade.ApplyTo(Definition), Level + 1, SecondsUntilReady, TargetingMode);
+            var upgradeHistory = new List<string>(UpgradeHistory)
+            {
+                upgrade.Id
+            };
+
+            return new TowerState(
+                upgrade.ApplyTo(Definition),
+                Level + 1,
+                SecondsUntilReady,
+                TargetingMode,
+                UpgradeSpend + upgrade.Cost,
+                upgradeHistory);
         }
 
         public TowerState SelectNextTargetingMode()
         {
             var currentIndex = Array.IndexOf(TargetingModeOrder, TargetingMode);
             var nextIndex = (currentIndex + 1) % TargetingModeOrder.Length;
-            return new TowerState(Definition, Level, SecondsUntilReady, TargetingModeOrder[nextIndex]);
+            return new TowerState(
+                Definition,
+                Level,
+                SecondsUntilReady,
+                TargetingModeOrder[nextIndex],
+                UpgradeSpend,
+                UpgradeHistory);
         }
 
         private float SecondsPerShot()

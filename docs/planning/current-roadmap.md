@@ -16,6 +16,7 @@ The first playable slice currently has:
 - Tower selling with a tested partial refund rule.
 - Per-tower targeting mode changes.
 - Selectable tower upgrade paths.
+- Actual tower upgrade spend tracking for selling and inspection.
 - Multiple selectable debug level layouts.
 - Tested 1x/2x/3x game speed control.
 - Active-wave pause/resume without Unity global time scale.
@@ -28,6 +29,7 @@ The first playable slice currently has:
 - Freeze Pulse and Orbital Strike player abilities.
 - Between-wave reward choices.
 - Next-wave intel with enemy tags.
+- Next-wave threat ratings and counter hints.
 - End-of-run summary and session progress tracking.
 - Per-level-layout session progress tracking.
 - First-pass code-native visuals for towers and aliens.
@@ -41,11 +43,13 @@ After pulling/opening the latest work:
 3. Switch level layouts before placing a tower and confirm the board changes.
 4. Select tower `4/4` and confirm it is the chemical tower with poison text.
 5. Cycle upgrade paths and confirm the selected upgrade name changes.
-6. Place towers, then click an existing tower between waves to upgrade using the selected path.
-7. Start later waves and confirm `Regenerator` appears in next-wave intel.
-8. Confirm green halo regenerator aliens appear.
-9. Confirm burrowers are still not shot immediately at spawn.
-10. Confirm the final boss wave still completes into victory or defeat.
+6. Place towers, then click an existing tower between waves to inspect and upgrade it.
+7. Confirm the tower detail panel shows level, targeting, invested scrap and upgrade history.
+8. Sell an upgraded tower and confirm the refund reflects actual spend.
+9. Start later waves and confirm threat rating, counter hints and `Regenerator` appear in next-wave intel.
+10. Confirm green halo regenerator aliens appear.
+11. Confirm burrowers are still not shot immediately at spawn.
+12. Confirm the final boss wave still completes into victory or defeat.
 
 ## Next Slice Candidates
 
@@ -58,13 +62,15 @@ Done:
 - Add selectable upgrade paths.
 - Keep upgrade path selection tested in pure GameCore.
 - Wire selected upgrade path into the debug HUD.
+- Track each tower's upgrade history and actual upgrade spend.
+- Show clicked tower details in the debug HUD.
+- Add a status upgrade path for slow and poison towers.
+- Fix selling so refund is based on actual upgrade spend.
 
 Next:
 
-- Track each tower's upgrade history.
-- Show each placed tower's selected path and level more clearly.
-- Add status-effect upgrade paths, such as longer slow or stronger poison.
-- Fix selling so refund is based on actual upgrade spend, not a same-cost assumption.
+- Make upgrade paths tower-specific when the generic paths start feeling too broad.
+- Add visual upgrade markers to placed towers.
 
 ### 2. Better Alien Progression
 
@@ -76,13 +82,13 @@ Done:
 - Add burrower untargetability.
 - Add regeneration.
 - Add resistances, dodge and alien upgrades.
+- Add simple threat ratings in wave intel.
+- Add counter hints for shielded, regenerator, burrower, armoured and boss waves.
 
 Next:
 
 - Add clearer trait text in wave intel.
-- Add wave difficulty ratings.
 - Add enemy-side upgrade choices for health, speed, resistance, dodge, shields and regeneration.
-- Add counterplay prompts, such as chemical counters regeneration or energy counters shields.
 
 ### 3. Defence Loadout
 
@@ -130,10 +136,12 @@ Next:
 
 Goal: support playing as the invading alien side.
 
+Done:
+
+- Add a tested budgeted alien squad loadout model.
+
 Next:
 
-- Add an alien squad loadout model.
-- Add alien squad budget rules.
 - Add alien spawn-order planning.
 - Add a simple automated defence opponent.
 - Reuse existing tower, targeting and damage rules rather than building a separate game.

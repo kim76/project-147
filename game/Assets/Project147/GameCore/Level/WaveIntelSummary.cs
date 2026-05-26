@@ -9,7 +9,8 @@ namespace Project147.GameCore.Level
             int waveNumber,
             IReadOnlyList<WaveIntelEntry> entries,
             IReadOnlyList<string> tags,
-            int clearReward)
+            int clearReward,
+            int threatRating = 1)
         {
             if (waveNumber <= 0)
             {
@@ -34,6 +35,11 @@ namespace Project147.GameCore.Level
             if (clearReward < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(clearReward), "Clear reward cannot be negative.");
+            }
+
+            if (threatRating < 1 || threatRating > 5)
+            {
+                throw new ArgumentOutOfRangeException(nameof(threatRating), "Threat rating must be between one and five.");
             }
 
             var totalAliens = 0;
@@ -66,6 +72,7 @@ namespace Project147.GameCore.Level
             Tags = new List<string>(tags);
             TotalAliens = totalAliens;
             ClearReward = clearReward;
+            ThreatRating = threatRating;
         }
 
         public int WaveNumber { get; }
@@ -73,6 +80,8 @@ namespace Project147.GameCore.Level
         public int TotalAliens { get; }
 
         public int ClearReward { get; }
+
+        public int ThreatRating { get; }
 
         public IReadOnlyList<WaveIntelEntry> Entries { get; }
 

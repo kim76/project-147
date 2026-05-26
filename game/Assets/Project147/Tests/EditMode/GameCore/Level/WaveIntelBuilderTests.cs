@@ -31,6 +31,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
             Assert.That(summary.Tags.Contains("Fast"), Is.True);
             Assert.That(summary.Tags.Contains("Armoured"), Is.True);
             Assert.That(summary.Tags.Contains("Heavy"), Is.True);
+            Assert.That(summary.ThreatRating, Is.EqualTo(3));
         }
 
         [Test]
@@ -45,6 +46,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
             var summary = builder.Build(0, wave, "fast", "armoured");
 
             Assert.That(summary.Tags.Count, Is.EqualTo(0));
+            Assert.That(summary.ThreatRating, Is.EqualTo(1));
             Assert.That(summary.Entries.Single().AlienId, Is.EqualTo("basic"));
             Assert.That(summary.Entries.Single().Count, Is.EqualTo(4));
         }
@@ -66,6 +68,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
 
             Assert.That(summary.Tags.Contains("Boss"), Is.True);
             Assert.That(summary.Tags.Contains("Mixed"), Is.True);
+            Assert.That(summary.ThreatRating, Is.EqualTo(5));
         }
 
         [Test]
@@ -85,6 +88,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
 
             Assert.That(summary.Tags.Contains("Shielded"), Is.True);
             Assert.That(summary.Tags.Contains("Mixed"), Is.True);
+            Assert.That(summary.ThreatRating, Is.EqualTo(4));
         }
 
         [Test]
@@ -104,6 +108,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
 
             Assert.That(summary.Tags.Contains("Burrower"), Is.True);
             Assert.That(summary.Tags.Contains("Mixed"), Is.True);
+            Assert.That(summary.ThreatRating, Is.EqualTo(4));
         }
 
         [Test]
@@ -123,6 +128,7 @@ namespace Project147.Tests.EditMode.GameCore.Level
 
             Assert.That(summary.Tags.Contains("Regenerator"), Is.True);
             Assert.That(summary.Tags.Contains("Mixed"), Is.True);
+            Assert.That(summary.ThreatRating, Is.EqualTo(4));
         }
 
         [Test]

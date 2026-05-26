@@ -12,7 +12,7 @@ namespace Project147.Tests.EditMode.GameCore.Combat
             var calculator = new TowerSaleCalculator();
             var tower = new TowerState(CreateTower(cost: 50));
 
-            var refund = calculator.CalculateRefund(tower, CreateUpgrade(cost: 75), 0.75f);
+            var refund = calculator.CalculateRefund(tower, 0.75f);
 
             Assert.That(refund, Is.EqualTo(38));
         }
@@ -26,9 +26,22 @@ namespace Project147.Tests.EditMode.GameCore.Combat
                 .Upgrade(upgrade)
                 .Upgrade(upgrade);
 
-            var refund = calculator.CalculateRefund(tower, upgrade, 0.75f);
+            var refund = calculator.CalculateRefund(tower, 0.75f);
 
             Assert.That(refund, Is.EqualTo(150));
+        }
+
+        [Test]
+        public void CalculateRefund_WhenTowerHasMixedUpgradeCosts_UsesActualUpgradeSpend()
+        {
+            var calculator = new TowerSaleCalculator();
+            var tower = new TowerState(CreateTower(cost: 50))
+                .Upgrade(CreateUpgrade("cheap", cost: 40))
+                .Upgrade(CreateUpgrade("expensive", cost: 100));
+
+            var refund = calculator.CalculateRefund(tower, 0.75f);
+
+            Assert.That(refund, Is.EqualTo(143));
         }
 
         [Test]
@@ -36,18 +49,7 @@ namespace Project147.Tests.EditMode.GameCore.Combat
         {
             var calculator = new TowerSaleCalculator();
 
-            Assert.Throws<ArgumentNullException>(() => calculator.CalculateRefund(null, CreateUpgrade(cost: 75), 0.75f));
-        }
-
-        [Test]
-        public void CalculateRefund_WhenUpgradeDefinitionIsNull_Throws()
-        {
-            var calculator = new TowerSaleCalculator();
-
-            Assert.Throws<ArgumentNullException>(() => calculator.CalculateRefund(
-                new TowerState(CreateTower(cost: 50)),
-                null,
-                0.75f));
+            Assert.Throws<ArgumentNullException>(() => calculator.CalculateRefund(null, 0.75f));
         }
 
         [TestCase(-0.01f)]
@@ -58,7 +60,6 @@ namespace Project147.Tests.EditMode.GameCore.Combat
 
             Assert.Throws<ArgumentOutOfRangeException>(() => calculator.CalculateRefund(
                 new TowerState(CreateTower(cost: 50)),
-                CreateUpgrade(cost: 75),
                 refundMultiplier));
         }
 
@@ -76,8 +77,13 @@ namespace Project147.Tests.EditMode.GameCore.Combat
 
         private static TowerUpgradeDefinition CreateUpgrade(int cost)
         {
+            return CreateUpgrade("debug-upgrade", cost);
+        }
+
+        private static TowerUpgradeDefinition CreateUpgrade(string id, int cost)
+        {
             return new TowerUpgradeDefinition(
-                "debug-upgrade",
+                id,
                 cost,
                 1.2f,
                 1.1f,

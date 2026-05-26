@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Project147.GameCore.Abilities;
 using Project147.GameCore.Choices;
 using Project147.GameCore.Combat;
@@ -114,6 +115,7 @@ namespace Project147.UnityPresentation.Debug
         private bool sellMode;
         private bool retargetMode;
         private int selectedLevelLayoutIndex;
+        private GridCoordinate? inspectedTowerCoordinate;
         private int completedWaves;
         private int waveStartBaseHealth;
         private WaveDefinition currentWaveDefinition;
@@ -170,6 +172,8 @@ namespace Project147.UnityPresentation.Debug
 
             if (placedTowers.Contains(coordinate))
             {
+                inspectedTowerCoordinate = coordinate;
+
                 if (sellMode)
                 {
                     TrySellTower(coordinate);
@@ -306,6 +310,7 @@ namespace Project147.UnityPresentation.Debug
             lost = false;
             sellMode = false;
             retargetMode = false;
+            inspectedTowerCoordinate = null;
             completedWaves = 0;
             waveStartBaseHealth = currentBase.CurrentHealth;
             currentWaveDefinition = null;
@@ -501,13 +506,11 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
-            var refund = towerSaleCalculator.CalculateRefund(
-                tower.State,
-                SelectedTowerUpgrade,
-                TowerSellRefundMultiplier);
+            var refund = towerSaleCalculator.CalculateRefund(tower.State, TowerSellRefundMultiplier);
             wallet = wallet.Add(refund);
             towers.Remove(tower);
             placedTowers.Remove(coordinate);
+            inspectedTowerCoordinate = null;
 
             if (tower.GameObject != null)
             {
@@ -1595,8 +1598,9 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 12, top, 260, 24), status);
             DrawEventFeed(left + 296, 16);
             DrawSessionProgressPanel(left + 668, 16);
+            DrawInspectedTowerPanel(left + 668, 188);
             DrawWaveIntelPanel(left + 296, 232);
-            DrawRunChoicePanel(left + 296, 356);
+            DrawRunChoicePanel(left + 296, 410);
             DrawRunSummaryPanel(left + 296, 232);
         }
 
@@ -1702,13 +1706,17 @@ namespace Project147.UnityPresentation.Debug
                 config.BurrowerAlienId,
                 config.RegeneratorAlienId);
 
-            GUI.Box(new Rect(left, top, 360, 112), "Next Wave");
+            GUI.Box(new Rect(left, top, 360, 156), "Next Wave");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Wave {intel.WaveNumber}: {intel.TotalAliens} aliens  Reward {intel.ClearReward}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Threat: {intel.ThreatRating}/5");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Types: {BuildWaveIntelEntriesText(intel)}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Tags: {BuildWaveIntelTagsText(intel)}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 336, 22), BuildWaveCounterHintsText(intel));
         }
 
         private void DrawRunSummaryPanel(int left, int top)
@@ -1757,6 +1765,32 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 12, top, 236, 22), BuildProgressStatusText());
         }
 
+        private void DrawInspectedTowerPanel(int left, int top)
+        {
+            if (!inspectedTowerCoordinate.HasValue)
+            {
+                return;
+            }
+
+            var tower = FindRuntimeTower(inspectedTowerCoordinate.Value);
+
+            if (tower == null)
+            {
+                inspectedTowerCoordinate = null;
+                return;
+            }
+
+            GUI.Box(new Rect(left, top, 260, 134), "Tower Detail");
+            top += 28;
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Cell: {tower.Coordinate}  Level: {tower.State.Level}/{config.MaxTowerLevel}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Targeting: {tower.State.TargetingMode}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Invested: {tower.State.TotalSpend}  Upgrades: {tower.State.UpgradeHistory.Count}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 236, 44), BuildTowerUpgradeHistoryText(tower.State));
+        }
+
         private void DrawEventFeed(int left, int top)
         {
             if (eventFeed == null)
@@ -1795,6 +1829,13 @@ namespace Project147.UnityPresentation.Debug
         private static string BuildRunChoiceButtonText(RunChoiceDefinition choice)
         {
             return $"{choice.Label}: {FormatRunChoiceEffect(choice)}";
+        }
+
+        private static string BuildTowerUpgradeHistoryText(TowerState tower)
+        {
+            return tower.UpgradeHistory.Count == 0
+                ? "Paths: none"
+                : $"Paths: {string.Join(", ", tower.UpgradeHistory)}";
         }
 
         private static string FormatRunChoiceEffect(RunChoiceDefinition choice)
@@ -1912,6 +1953,40 @@ namespace Project147.UnityPresentation.Debug
             return intel.Tags.Count == 0
                 ? "Basic"
                 : string.Join(", ", intel.Tags);
+        }
+
+        private static string BuildWaveCounterHintsText(WaveIntelSummary intel)
+        {
+            var hints = new List<string>();
+
+            if (intel.Tags.Contains("Shielded"))
+            {
+                hints.Add("energy vs shields");
+            }
+
+            if (intel.Tags.Contains("Regenerator"))
+            {
+                hints.Add("poison pressure");
+            }
+
+            if (intel.Tags.Contains("Burrower"))
+            {
+                hints.Add("path depth");
+            }
+
+            if (intel.Tags.Contains("Armoured"))
+            {
+                hints.Add("explosive or crits");
+            }
+
+            if (intel.Tags.Contains("Boss"))
+            {
+                hints.Add("upgrade focus");
+            }
+
+            return hints.Count == 0
+                ? "Counters: standard"
+                : $"Counters: {string.Join(", ", hints)}";
         }
 
         private string BuildProgressStatusText()

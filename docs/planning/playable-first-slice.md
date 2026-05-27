@@ -66,6 +66,7 @@ For the active next-task list, see `current-roadmap.md`.
 - The debug scene shows fake rewarded-ad offers after some wave clears, with claim/skip buttons and per-run limits.
 - Alien-side upgrade choices now cover health, speed, resistance, dodge, shields and regeneration in pure GameCore.
 - The debug scene shows a prototype alien-side planning panel for squad, spawn order, upgrades and automated defence preview.
+- The debug scene can start a first alien-side test run from a fresh board.
 - The slice ends in victory after all waves or defeat when the base reaches zero health.
 
 ## How To Run
@@ -97,10 +98,13 @@ For the active next-task list, see `current-roadmap.md`.
 25. Confirm Overcharge draws short yellow rings around towers.
 26. Confirm the `Analytics`, `Audio` and `Fake ads` counts update in the left HUD.
 27. Confirm the `Alien Side Prototype` panel shows squad, order, upgrades and automated defence counts.
-28. On victory or defeat, read the run summary panel.
-29. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
-30. Stop and restart Play mode to confirm saved progress loads.
-31. Use `Reset Save` to clear debug campaign progress when you want a fresh campaign.
+28. From a fresh board, click `Run Alien Test` and confirm auto defence towers appear and the alien squad starts.
+29. Confirm defence abilities are disabled during the alien test run.
+30. Confirm the alien test ends as `Alien Victory` if the base is destroyed or `Defence Held` if the squad is stopped.
+31. On victory or defeat, read the run summary panel.
+32. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
+33. Stop and restart Play mode to confirm saved progress loads.
+34. Use `Reset Save` to clear debug campaign progress when you want a fresh campaign.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -158,7 +162,8 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - There are no live ads, purchase SDKs, subscriptions or backend accounts.
 - Fake rewarded-ad offers are debug-only and do not play real ads.
 - Placeholder audio hooks are recorded for testing, but there are no real sound effects yet.
-- Alien-side planning is visible but not yet playable as a separate run mode.
+- Alien-side test runs are debug-only and use a fixed starter squad, fixed upgrades and automated defence.
+- Alien-side squad and upgrade choices are not yet directly editable in the scene.
 - Reward choices are debug-tuned and not final progression design.
 - The tower discount reward only affects the next placed tower, not upgrades.
 - Selling refunds 75% of tower and upgrade spend in the debug slice.

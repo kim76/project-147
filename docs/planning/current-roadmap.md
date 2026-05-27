@@ -54,6 +54,7 @@ The first playable slice currently has:
 - Tested tower unlock-state foundation.
 - Tested automated defence planner for future alien-side runs.
 - Debug scene shows an alien-side prototype panel with squad, spawn order, upgrades and automated defence preview.
+- Debug scene can run a first alien-side test against an automated defence setup.
 
 ## Morning Verification
 
@@ -186,10 +187,11 @@ Done:
 - Add a tested automated defence planner.
 - Add debug config methods for a starter alien-side squad, spawn order and upgrade plan.
 - Show alien-side planning state in the debug scene.
+- Add a debug alien test run that places automated defence towers and sends the starter alien squad.
 
 Next:
 
-- Turn the prototype panel into an actual alien-side run start flow.
+- Add direct alien-side controls for choosing squad entries and upgrades.
 - Reuse existing tower, targeting and damage rules rather than building a separate game.
 
 ### 7. More Special Abilities

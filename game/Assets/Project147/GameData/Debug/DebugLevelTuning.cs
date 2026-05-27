@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Project147.GameCore.Level;
 using UnityEngine;
 
@@ -85,73 +84,26 @@ namespace Project147.GameData.Debug
             string regeneratorAlienId,
             string bossAlienId)
         {
-            if (completedWaves < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(completedWaves), "Completed waves cannot be negative.");
-            }
-
-            if (runTotalWaves <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(runTotalWaves), "Run total waves must be greater than zero.");
-            }
-
-            if (string.IsNullOrWhiteSpace(bossAlienId))
-            {
-                throw new ArgumentException("Boss alien id is required.", nameof(bossAlienId));
-            }
-
-            if (string.IsNullOrWhiteSpace(shieldedAlienId))
-            {
-                throw new ArgumentException("Shielded alien id is required.", nameof(shieldedAlienId));
-            }
-
-            if (string.IsNullOrWhiteSpace(burrowerAlienId))
-            {
-                throw new ArgumentException("Burrower alien id is required.", nameof(burrowerAlienId));
-            }
-
-            if (string.IsNullOrWhiteSpace(regeneratorAlienId))
-            {
-                throw new ArgumentException("Regenerator alien id is required.", nameof(regeneratorAlienId));
-            }
-
-            var totalAliens = startingWaveAlienCount + completedWaves * extraAliensPerWave;
-            var hasBoss = completedWaves == runTotalWaves - 1;
-            var fastAliens = completedWaves <= 0 ? 0 : Math.Max(1, totalAliens / 4);
-            var armouredAliens = completedWaves < 2 ? 0 : Math.Max(1, totalAliens / 5);
-            var shieldedAliens = completedWaves < 3 ? 0 : Math.Max(1, totalAliens / 6);
-            var burrowerAliens = completedWaves < 2 ? 0 : Math.Max(1, totalAliens / 6);
-            var regeneratorAliens = completedWaves < 3 ? 0 : Math.Max(1, totalAliens / 7);
-            var bossAliens = hasBoss ? 1 : 0;
-            var basicAliens = totalAliens
-                - fastAliens
-                - armouredAliens
-                - shieldedAliens
-                - burrowerAliens
-                - regeneratorAliens
-                - bossAliens;
-            var groups = new List<WaveSpawnGroup>();
-
-            AddGroup(groups, basicAlienId, basicAliens);
-            AddGroup(groups, fastAlienId, fastAliens);
-            AddGroup(groups, armouredAlienId, armouredAliens);
-            AddGroup(groups, shieldedAlienId, shieldedAliens);
-            AddGroup(groups, burrowerAlienId, burrowerAliens);
-            AddGroup(groups, regeneratorAlienId, regeneratorAliens);
-            AddGroup(groups, bossAlienId, bossAliens);
-
-            return new WaveDefinition(
-                new WaveComposition(groups),
-                secondsBetweenSpawns,
-                waveClearScrapReward);
+            return CreateWaveTuningDefinition().CreateWaveDefinition(
+                completedWaves,
+                runTotalWaves,
+                new WaveAlienRoster(
+                    basicAlienId,
+                    fastAlienId,
+                    armouredAlienId,
+                    shieldedAlienId,
+                    burrowerAlienId,
+                    regeneratorAlienId,
+                    bossAlienId));
         }
 
-        private static void AddGroup(ICollection<WaveSpawnGroup> groups, string alienId, int count)
+        public LevelWaveTuningDefinition CreateWaveTuningDefinition()
         {
-            if (count > 0)
-            {
-                groups.Add(new WaveSpawnGroup(alienId, count));
-            }
+            return new LevelWaveTuningDefinition(
+                startingWaveAlienCount,
+                extraAliensPerWave,
+                secondsBetweenSpawns,
+                waveClearScrapReward);
         }
     }
 }

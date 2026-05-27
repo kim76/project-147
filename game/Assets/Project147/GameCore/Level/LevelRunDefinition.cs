@@ -10,6 +10,23 @@ namespace Project147.GameCore.Level
             int baseHealth,
             int totalWaves,
             int perfectWaveScrapBonus)
+            : this(
+                layout,
+                startingCurrency,
+                baseHealth,
+                totalWaves,
+                perfectWaveScrapBonus,
+                new LevelWaveTuningDefinition(4, 2, 0.8f, 25))
+        {
+        }
+
+        public LevelRunDefinition(
+            LevelLayoutDefinition layout,
+            int startingCurrency,
+            int baseHealth,
+            int totalWaves,
+            int perfectWaveScrapBonus,
+            LevelWaveTuningDefinition waveTuning)
         {
             if (layout == null)
             {
@@ -41,6 +58,7 @@ namespace Project147.GameCore.Level
             BaseHealth = baseHealth;
             TotalWaves = totalWaves;
             PerfectWaveScrapBonus = perfectWaveScrapBonus;
+            WaveTuning = waveTuning ?? throw new ArgumentNullException(nameof(waveTuning));
         }
 
         public LevelLayoutDefinition Layout { get; }
@@ -52,5 +70,12 @@ namespace Project147.GameCore.Level
         public int TotalWaves { get; }
 
         public int PerfectWaveScrapBonus { get; }
+
+        public LevelWaveTuningDefinition WaveTuning { get; }
+
+        public WaveDefinition CreateWaveDefinition(int completedWaves, WaveAlienRoster roster)
+        {
+            return WaveTuning.CreateWaveDefinition(completedWaves, TotalWaves, roster);
+        }
     }
 }

@@ -713,7 +713,7 @@ namespace Project147.UnityPresentation.Debug
             HidePlacementPreviewIfAny();
             runModifiers = runModifiers.StartWave();
             waveStartBaseHealth = currentBase.CurrentHealth;
-            currentWaveDefinition = config.CreateWaveDefinition(completedWaves, SelectedLevel.TotalWaves);
+            currentWaveDefinition = config.CreateWaveDefinition(SelectedLevel, completedWaves);
             waveSpawnState = new WaveSpawnState(currentWaveDefinition);
             ShowCombatBanner($"Wave {completedWaves + 1}");
             RecordEvent($"Wave {completedWaves + 1} started: {BuildWaveSummary(currentWaveDefinition)}.");
@@ -1242,6 +1242,7 @@ namespace Project147.UnityPresentation.Debug
 
                 ApplySplashDamage(tower, effectiveTowerDefinition, alien, attack.Damage);
                 ShowShotFeedback(tower.Coordinate, alien);
+                ShowDamageFeedback(alien.GameObject.transform.localPosition, attack.Damage);
             }
         }
 
@@ -1287,6 +1288,7 @@ namespace Project147.UnityPresentation.Debug
 
                 alien.State = result.Target;
                 FlashAlien(alien);
+                ShowDamageFeedback(alien.GameObject.transform.localPosition, result.Damage);
                 hitCount++;
             }
 
@@ -1668,6 +1670,56 @@ namespace Project147.UnityPresentation.Debug
             {
                 FlashAlien(alien);
             }
+        }
+
+        private void ShowDamageFeedback(Vector3 position, DamageResult damage)
+        {
+            var textObject = new GameObject("Debug Damage Text");
+            textObject.transform.SetParent(transform, false);
+            textObject.transform.localPosition = new Vector3(position.x, 1.05f, position.z - 0.28f);
+            textObject.transform.localRotation = Quaternion.Euler(62, 0, 0);
+
+            var text = textObject.AddComponent<TextMesh>();
+            text.anchor = TextAnchor.MiddleCenter;
+            text.alignment = TextAlignment.Center;
+            text.characterSize = 0.13f;
+            text.fontSize = 56;
+            text.text = BuildDamageFeedbackText(damage);
+            text.color = SelectDamageFeedbackColour(damage);
+
+            shotObjects.Add(textObject);
+            Destroy(textObject, 0.45f);
+        }
+
+        private static string BuildDamageFeedbackText(DamageResult damage)
+        {
+            if (damage.WasDodged)
+            {
+                return "DODGE";
+            }
+
+            var amount = Mathf.CeilToInt(damage.FinalAmount);
+            return damage.WasCritical ? $"CRIT {amount}" : amount.ToString();
+        }
+
+        private static Color SelectDamageFeedbackColour(DamageResult damage)
+        {
+            if (damage.WasDodged)
+            {
+                return new Color(0.72f, 0.82f, 1f, 1f);
+            }
+
+            if (damage.WasCritical)
+            {
+                return new Color(1f, 0.92f, 0.18f, 1f);
+            }
+
+            if (damage.Resistance > 0)
+            {
+                return new Color(0.92f, 0.68f, 0.46f, 1f);
+            }
+
+            return new Color(1f, 1f, 1f, 1f);
         }
 
         private void ShowSplashFeedback(Vector3 impactPosition, float radiusCells)
@@ -2334,7 +2386,7 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
-            var nextWave = config.CreateWaveDefinition(completedWaves, SelectedLevel.TotalWaves);
+            var nextWave = config.CreateWaveDefinition(SelectedLevel, completedWaves);
             var intel = waveIntelBuilder.Build(
                 completedWaves,
                 nextWave,

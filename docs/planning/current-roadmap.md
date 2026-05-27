@@ -19,6 +19,7 @@ The first playable slice currently has:
 - Actual tower upgrade spend tracking for selling and inspection.
 - Multiple selectable debug level layouts.
 - Level-specific starting scrap, base health, wave count and perfect-wave bonus.
+- Level-specific wave count, spawn pace and clear-reward tuning.
 - Selectable three-tower debug loadout presets before a run starts.
 - Tested 1x/2x/3x game speed control.
 - Active-wave pause/resume without Unity global time scale.
@@ -47,6 +48,7 @@ The first playable slice currently has:
 - Health, shield and status markers on active aliens.
 - Upgrade pips on upgraded towers.
 - Simple wave-start, wave-clear, victory and defeat banners.
+- Floating debug damage, critical-hit and dodge feedback.
 - Tested tower unlock-state foundation.
 
 ## Morning Verification
@@ -144,11 +146,11 @@ Done:
 - Add three selectable debug layouts.
 - Wire level switching into the debug scene before a run starts.
 - Add level-specific starting scrap, base health and wave count.
+- Add level-specific wave tuning for spawn counts, spawn pace and clear rewards.
 
 Next:
 
-- Add layout-specific wave tuning.
-- Add level completion stars per layout.
+- Add level completion stars per layout to a real campaign screen later.
 
 ### 5. Campaign Progression
 
@@ -200,9 +202,13 @@ Next:
 
 Goal: make the prototype easier to read and more fun to play.
 
+Done:
+
+- Add floating debug damage, critical-hit and dodge feedback.
+
 Next:
 
-- Add clearer hit feedback.
+- Add more readable ability feedback.
 - Add placeholder sound hooks only after the visual feedback is readable.
 
 ### 9. Data Cleanup

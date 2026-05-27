@@ -253,6 +253,28 @@ namespace Project147.GameData.Debug
                 BossAlienId);
         }
 
+        public WaveDefinition CreateWaveDefinition(LevelRunDefinition run, int completedWaves)
+        {
+            if (run == null)
+            {
+                throw new ArgumentNullException(nameof(run));
+            }
+
+            return run.CreateWaveDefinition(completedWaves, CreateWaveAlienRoster());
+        }
+
+        public WaveAlienRoster CreateWaveAlienRoster()
+        {
+            return new WaveAlienRoster(
+                BasicAlienId,
+                FastAlienId,
+                ArmouredAlienId,
+                ShieldedAlienId,
+                BurrowerAlienId,
+                RegeneratorAlienId,
+                BossAlienId);
+        }
+
         public LevelLayoutDefinition CreateLevelLayout()
         {
             return CreateLevelLayouts()[0];
@@ -279,19 +301,22 @@ namespace Project147.GameData.Debug
                     StartingCurrency,
                     BaseHealth,
                     TotalWaves,
-                    PerfectWaveScrapBonus),
+                    PerfectWaveScrapBonus,
+                    level.CreateWaveTuningDefinition()),
                 new LevelRunDefinition(
                     layouts[1],
                     StartingCurrency,
                     BaseHealth,
                     TotalWaves + 1,
-                    PerfectWaveScrapBonus + 5),
+                    PerfectWaveScrapBonus + 5,
+                    new LevelWaveTuningDefinition(5, 2, 0.72f, 30)),
                 new LevelRunDefinition(
                     layouts[2],
                     StartingCurrency + 40,
                     Math.Max(1, BaseHealth - 2),
                     TotalWaves,
-                    PerfectWaveScrapBonus)
+                    PerfectWaveScrapBonus,
+                    new LevelWaveTuningDefinition(4, 3, 0.76f, 25))
             };
         }
 

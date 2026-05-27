@@ -128,7 +128,36 @@ namespace Project147.Tests.EditMode.GameData.Debug
             Assert.That(levels.All(level => level.StartingCurrency >= 0), Is.True);
             Assert.That(levels.All(level => level.BaseHealth > 0), Is.True);
             Assert.That(levels.All(level => level.TotalWaves > 0), Is.True);
+            Assert.That(levels.All(level => level.WaveTuning != null), Is.True);
             Assert.That(levels.Select(level => level.TotalWaves).Distinct().Count(), Is.GreaterThan(1));
+            Assert.That(levels.Select(level => level.WaveTuning.StartingWaveAlienCount).Distinct().Count(), Is.GreaterThan(1));
+            Assert.That(levels.Select(level => level.WaveTuning.SecondsBetweenSpawns).Distinct().Count(), Is.GreaterThan(1));
+        }
+
+        [Test]
+        public void CreateWaveDefinition_WhenRunIsProvided_UsesRunSpecificWaveTuning()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+            var levels = config.CreateLevelDefinitions();
+
+            var relayWave = config.CreateWaveDefinition(levels[0], 1);
+            var switchbackWave = config.CreateWaveDefinition(levels[1], 1);
+            var twinLaneWave = config.CreateWaveDefinition(levels[2], 1);
+
+            Assert.That(relayWave.SecondsBetweenSpawns, Is.Not.EqualTo(switchbackWave.SecondsBetweenSpawns));
+            Assert.That(twinLaneWave.AlienCount, Is.GreaterThan(relayWave.AlienCount));
+        }
+
+        [Test]
+        public void CreateWaveAlienRoster_ReturnsDebugAlienIds()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var roster = config.CreateWaveAlienRoster();
+
+            Assert.That(roster.BasicAlienId, Is.EqualTo(config.BasicAlienId));
+            Assert.That(roster.FastAlienId, Is.EqualTo(config.FastAlienId));
+            Assert.That(roster.BossAlienId, Is.EqualTo(config.BossAlienId));
         }
 
         [Test]

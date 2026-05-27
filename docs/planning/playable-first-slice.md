@@ -13,6 +13,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Player places towers between waves.
 - Player can switch between three debug level layouts before placing towers.
 - Each debug level can have its own starting scrap, base health, wave count and perfect-wave bonus.
+- Each debug level can have its own wave size, spawn pace and clear reward tuning.
 - Player can switch between three pre-run debug tower loadout presets before placing towers.
 - Player can switch between the three tower types inside the selected loadout before placing.
 - Player can switch between four tower upgrade paths before upgrading; upgrade path is separate from upgrade count.
@@ -38,6 +39,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Later waves spawn upgraded aliens, capped by the debug config.
 - Towers select targets, fire on cooldown, damage aliens and apply slow or poison effects.
 - Tower shots draw a short line and briefly flash the alien.
+- Tower hits show floating debug damage, critical-hit or dodge text.
 - Active aliens show simple health, shield and status markers.
 - Upgraded towers show simple upgrade pips.
 - Wave start, wave clear, victory and defeat show short debug banners.
@@ -71,26 +73,28 @@ For the active next-task list, see `current-roadmap.md`.
 4. Press Play.
 5. Switch between unlocked level layouts before placing a tower if you want a different board.
 6. Confirm the selected level changes the resource and wave numbers shown in the HUD.
-7. Switch tower loadout before placing a tower if you want a different three-tower preset.
-8. Place towers by clicking open cells.
-9. Select an upgrade path, then click an existing tower between waves to upgrade it.
-10. Read the `Next Wave` panel, then press `Start Wave` in the debug HUD.
-11. After a non-final wave, choose one reward from the reward panel.
-12. Continue placing or upgrading towers between waves. If you picked the construction credit, the next tower cost is reduced.
-13. Toggle `Sell Mode`, click an existing tower, and confirm scrap increases.
-14. Toggle `Target`, click an existing tower, and confirm the event feed shows the new targeting mode.
-15. Click `Speed` to cycle between 1x, 2x and 3x wave speed.
-16. During a wave, click `Pause`, then `Resume`.
-17. If you picked `Overclock`, the next wave gets boosted tower damage.
-18. If you picked `Rapid Loader`, the next wave gets boosted tower fire rate.
-19. Use `Freeze Pulse`, `Orbital Strike`, `Shield Burst` or `Overcharge` during active waves when their cooldowns are ready.
-20. Confirm `Overcharge` changes the modifier line to show active wave damage and fire-rate boosts.
-21. After a wave clear, claim or skip any `Fake Rewarded Ad` panel that appears.
-22. Confirm the `Analytics` and `Fake ads` counts update in the left HUD.
-23. On victory or defeat, read the run summary panel.
-24. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
-25. Stop and restart Play mode to confirm saved progress loads.
-26. Use `Reset Save` to clear debug campaign progress when you want a fresh campaign.
+7. Switch levels and confirm the `Next Wave` panel can change enemy counts or clear reward.
+8. Switch tower loadout before placing a tower if you want a different three-tower preset.
+9. Place towers by clicking open cells.
+10. Select an upgrade path, then click an existing tower between waves to upgrade it.
+11. Read the `Next Wave` panel, then press `Start Wave` in the debug HUD.
+12. Confirm tower hits show floating damage, critical or dodge text.
+13. After a non-final wave, choose one reward from the reward panel.
+14. Continue placing or upgrading towers between waves. If you picked the construction credit, the next tower cost is reduced.
+15. Toggle `Sell Mode`, click an existing tower, and confirm scrap increases.
+16. Toggle `Target`, click an existing tower, and confirm the event feed shows the new targeting mode.
+17. Click `Speed` to cycle between 1x, 2x and 3x wave speed.
+18. During a wave, click `Pause`, then `Resume`.
+19. If you picked `Overclock`, the next wave gets boosted tower damage.
+20. If you picked `Rapid Loader`, the next wave gets boosted tower fire rate.
+21. Use `Freeze Pulse`, `Orbital Strike`, `Shield Burst` or `Overcharge` during active waves when their cooldowns are ready.
+22. Confirm `Overcharge` changes the modifier line to show active wave damage and fire-rate boosts.
+23. After a wave clear, claim or skip any `Fake Rewarded Ad` panel that appears.
+24. Confirm the `Analytics` and `Fake ads` counts update in the left HUD.
+25. On victory or defeat, read the run summary panel.
+26. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
+27. Stop and restart Play mode to confirm saved progress loads.
+28. Use `Reset Save` to clear debug campaign progress when you want a fresh campaign.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -120,6 +124,7 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Small yellow pips: tower upgrade level markers.
 - Cyan pulse ring: Freeze Pulse ability.
 - Orange strike ring: Orbital Strike ability.
+- White/yellow/blue text: damage, critical-hit or dodge feedback.
 
 ## Deliberate Limits
 

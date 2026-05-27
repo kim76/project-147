@@ -47,6 +47,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Orbital Strike can be triggered during a wave to damage all active aliens.
 - Shield Burst can be triggered during a wave to add temporary base shield.
 - Tower Overcharge can be triggered during a wave to boost tower damage and fire rate for that wave.
+- Shield Burst and Tower Overcharge draw short debug rings when activated.
 - Status effects expire automatically.
 - Killed aliens award scrap.
 - Clearing waves awards bonus scrap.
@@ -61,6 +62,7 @@ For the active next-task list, see `current-roadmap.md`.
 - Campaign progress is saved locally after completed runs and loaded when the debug scene starts.
 - Analytics events and rewarded-ad opportunities are defined as tested catalogues, but no live SDKs are wired in.
 - Local analytics recording and rewarded-ad offer limits are testable without connecting external services.
+- Placeholder audio events are defined as a tested catalogue and recorded locally, but no real clips play yet.
 - The debug scene shows fake rewarded-ad offers after some wave clears, with claim/skip buttons and per-run limits.
 - Alien-side upgrade choices now cover health, speed, resistance, dodge, shields and regeneration in pure GameCore.
 - The slice ends in victory after all waves or defeat when the base reaches zero health.
@@ -90,11 +92,13 @@ For the active next-task list, see `current-roadmap.md`.
 21. Use `Freeze Pulse`, `Orbital Strike`, `Shield Burst` or `Overcharge` during active waves when their cooldowns are ready.
 22. Confirm `Overcharge` changes the modifier line to show active wave damage and fire-rate boosts.
 23. After a wave clear, claim or skip any `Fake Rewarded Ad` panel that appears.
-24. Confirm the `Analytics` and `Fake ads` counts update in the left HUD.
-25. On victory or defeat, read the run summary panel.
-26. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
-27. Stop and restart Play mode to confirm saved progress loads.
-28. Use `Reset Save` to clear debug campaign progress when you want a fresh campaign.
+24. Confirm Shield Burst draws a short blue ring near the base.
+25. Confirm Overcharge draws short yellow rings around towers.
+26. Confirm the `Analytics`, `Audio` and `Fake ads` counts update in the left HUD.
+27. On victory or defeat, read the run summary panel.
+28. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
+29. Stop and restart Play mode to confirm saved progress loads.
+30. Use `Reset Save` to clear debug campaign progress when you want a fresh campaign.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 
@@ -124,6 +128,8 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - Small yellow pips: tower upgrade level markers.
 - Cyan pulse ring: Freeze Pulse ability.
 - Orange strike ring: Orbital Strike ability.
+- Blue base ring: Shield Burst ability.
+- Yellow tower rings: Tower Overcharge ability.
 - White/yellow/blue text: damage, critical-hit or dodge feedback.
 
 ## Deliberate Limits
@@ -149,6 +155,7 @@ The scene creator also creates or reuses `Assets/Project147/GameData/Debug/Debug
 - There is no final art.
 - There are no live ads, purchase SDKs, subscriptions or backend accounts.
 - Fake rewarded-ad offers are debug-only and do not play real ads.
+- Placeholder audio hooks are recorded for testing, but there are no real sound effects yet.
 - Alien-side upgrade choices are modelled but not yet exposed in the debug scene.
 - Reward choices are debug-tuned and not final progression design.
 - The tower discount reward only affects the next placed tower, not upgrades.

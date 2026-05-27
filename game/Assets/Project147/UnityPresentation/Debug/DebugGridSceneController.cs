@@ -8,6 +8,7 @@ using Project147.GameCore.Grid;
 using Project147.GameCore.Level;
 using Project147.GameData.Debug;
 using Project147.PlatformServices.Analytics;
+using Project147.PlatformServices.Audio;
 using Project147.PlatformServices.Monetisation;
 using Project147.PlatformServices.Save;
 using UnityEngine;
@@ -102,6 +103,7 @@ namespace Project147.UnityPresentation.Debug
         private AttackResolver attackResolver;
         private SplashDamageResolver splashDamageResolver;
         private InMemoryAnalyticsRecorder analyticsRecorder;
+        private InMemoryAudioEventRecorder audioRecorder;
         private RewardedAdOfferTracker rewardedAdOfferTracker;
         private PlayerAbilityState freezePulseState;
         private PlayerAbilityState orbitalStrikeState;
@@ -259,6 +261,7 @@ namespace Project147.UnityPresentation.Debug
             RecordEvent(discountApplied > 0
                 ? $"Placed {SelectedTower.Id} at {coordinate}. Discount {discountApplied}. Scrap: {wallet.Balance}."
                 : $"Placed {SelectedTower.Id} at {coordinate}. Scrap: {wallet.Balance}.");
+            PlayAudio(Project147AudioEvents.TowerPlaced);
             TrackAnalytics(
                 "tower_placed",
                 new Dictionary<string, string>
@@ -372,6 +375,7 @@ namespace Project147.UnityPresentation.Debug
             pendingRewardedAdScrapAmount = 0;
             rewardedAdOfferTracker = new RewardedAdOfferTracker();
             analyticsRecorder = new InMemoryAnalyticsRecorder(new Project147AnalyticsCatalog().CreateGameplayEvents());
+            audioRecorder = new InMemoryAudioEventRecorder(new Project147AudioCatalog().CreateGameplayEvents());
             combatBannerText = null;
             combatBannerSeconds = 0;
             RebuildTiles();
@@ -453,6 +457,7 @@ namespace Project147.UnityPresentation.Debug
             towerOverchargeState = new PlayerAbilityState(config.CreateTowerOverchargeAbilityDefinition());
             towerUpgradeLoadout = new TowerUpgradeLoadout(config.CreateTowerUpgradeDefinitions());
             analyticsRecorder = new InMemoryAnalyticsRecorder(new Project147AnalyticsCatalog().CreateGameplayEvents());
+            audioRecorder = new InMemoryAudioEventRecorder(new Project147AudioCatalog().CreateGameplayEvents());
             rewardedAdOfferTracker = new RewardedAdOfferTracker();
             campaignProgressStore = CreateCampaignProgressStore();
             campaignProgress = LoadCampaignProgress();
@@ -633,6 +638,7 @@ namespace Project147.UnityPresentation.Debug
             UpdateTowerObject(tower);
             HidePlacementPreviewIfAny();
             RecordEvent($"Upgraded tower at {coordinate} with {selectedUpgrade.Id} to level {tower.State.Level}.");
+            PlayAudio(Project147AudioEvents.TowerUpgraded);
             TrackAnalytics(
                 "tower_upgraded",
                 new Dictionary<string, string>
@@ -669,6 +675,7 @@ namespace Project147.UnityPresentation.Debug
             RebuildTiles();
             HidePlacementPreviewIfAny();
             RecordEvent($"Sold tower at {coordinate}. +{refund} scrap.");
+            PlayAudio(Project147AudioEvents.TowerSold);
             TrackAnalytics(
                 "tower_sold",
                 new Dictionary<string, string>
@@ -717,6 +724,7 @@ namespace Project147.UnityPresentation.Debug
             waveSpawnState = new WaveSpawnState(currentWaveDefinition);
             ShowCombatBanner($"Wave {completedWaves + 1}");
             RecordEvent($"Wave {completedWaves + 1} started: {BuildWaveSummary(currentWaveDefinition)}.");
+            PlayAudio(Project147AudioEvents.WaveStarted);
             TrackAnalytics(
                 "wave_started",
                 new Dictionary<string, string>
@@ -781,6 +789,7 @@ namespace Project147.UnityPresentation.Debug
 
             ShowFreezePulseFeedback();
             RecordEvent($"Freeze Pulse slowed {results.Count} alien(s).");
+            PlayAudio(Project147AudioEvents.AbilityFreezePulse);
             TrackAbilityUsed(freezePulseState.Definition.Id);
         }
 
@@ -838,6 +847,7 @@ namespace Project147.UnityPresentation.Debug
             }
 
             RecordEvent($"Orbital Strike hit {results.Count} alien(s).");
+            PlayAudio(Project147AudioEvents.AbilityOrbitalStrike);
             TrackAbilityUsed(orbitalStrikeState.Definition.Id);
         }
 
@@ -863,7 +873,9 @@ namespace Project147.UnityPresentation.Debug
             currentBase = baseShieldBurstResolver.Resolve(shieldBurstState.Definition, currentBase);
             shieldBurstState = shieldBurstState.Activate();
             runSummary = runSummary.RecordShieldBurstUsed();
+            ShowShieldBurstFeedback();
             RecordEvent($"Shield Burst added {shieldBurstState.Definition.BaseShieldAmount} base shield.");
+            PlayAudio(Project147AudioEvents.AbilityShieldBurst);
             TrackAbilityUsed(shieldBurstState.Definition.Id);
         }
 
@@ -895,8 +907,10 @@ namespace Project147.UnityPresentation.Debug
             runModifiers = towerOverchargeResolver.Resolve(towerOverchargeState.Definition, runModifiers);
             towerOverchargeState = towerOverchargeState.Activate();
             runSummary = runSummary.RecordTowerOverchargeUsed();
+            ShowTowerOverchargeFeedback();
             RecordEvent(
                 $"Tower Overcharge: +{towerOverchargeState.Definition.TowerDamagePercent}% damage, +{towerOverchargeState.Definition.TowerFireRatePercent}% rate this wave.");
+            PlayAudio(Project147AudioEvents.AbilityTowerOvercharge);
             TrackAbilityUsed(towerOverchargeState.Definition.Id);
         }
 
@@ -921,6 +935,7 @@ namespace Project147.UnityPresentation.Debug
             runSummary = runSummary.RecordRewardChosen();
             pendingRunChoices = new List<RunChoiceDefinition>();
             RecordEvent($"Chose {choice.Label}: {FormatRunChoiceEffect(choice)}.");
+            PlayAudio(Project147AudioEvents.RewardSelected);
             TrackAnalytics(
                 "reward_choice_selected",
                 new Dictionary<string, string>
@@ -941,6 +956,7 @@ namespace Project147.UnityPresentation.Debug
             wallet = wallet.Add(pendingRewardedAdScrapAmount);
             rewardedAdOfferTracker = rewardedAdOfferTracker.RecordOffer(pendingRewardedAdOpportunity);
             RecordEvent($"Fake rewarded ad claimed: +{pendingRewardedAdScrapAmount} scrap.");
+            PlayAudio(Project147AudioEvents.RewardSelected);
             ClearPendingRewardedAdOffer();
         }
 
@@ -1041,6 +1057,7 @@ namespace Project147.UnityPresentation.Debug
                     wallet = wallet.Add(reward.Amount);
                     runSummary = runSummary.RecordAlienDestroyed(reward.Amount);
                     RecordEvent($"{FormatAlienLabel(alien.State.Definition.Id)} destroyed. +{reward.Amount} scrap.");
+                    PlayAudio(Project147AudioEvents.AlienDestroyed);
                     continue;
                 }
 
@@ -1054,6 +1071,7 @@ namespace Project147.UnityPresentation.Debug
                     Destroy(alien.GameObject);
                     activeAliens.RemoveAt(index);
                     RecordEvent($"{FormatAlienLabel(alien.State.Definition.Id)} leaked. Base: {currentBase.CurrentHealth}/{currentBase.MaxHealth}.");
+                    PlayAudio(Project147AudioEvents.AlienLeaked);
 
                     if (currentBase.IsDestroyed && !lost)
                     {
@@ -1063,6 +1081,7 @@ namespace Project147.UnityPresentation.Debug
                         ApplyCompletedRunProgress();
                         ShowCombatBanner("Defeat");
                         RecordEvent("Defeat. Base destroyed.");
+                        PlayAudio(Project147AudioEvents.RunDefeat);
                         TrackLevelCompleted();
                     }
                 }
@@ -1243,6 +1262,12 @@ namespace Project147.UnityPresentation.Debug
                 ApplySplashDamage(tower, effectiveTowerDefinition, alien, attack.Damage);
                 ShowShotFeedback(tower.Coordinate, alien);
                 ShowDamageFeedback(alien.GameObject.transform.localPosition, attack.Damage);
+                PlayAudio(Project147AudioEvents.TowerShot);
+
+                if (!attack.Damage.WasDodged && attack.Damage.FinalAmount > 0)
+                {
+                    PlayAudio(Project147AudioEvents.AlienHit);
+                }
             }
         }
 
@@ -1299,6 +1324,7 @@ namespace Project147.UnityPresentation.Debug
 
             ShowSplashFeedback(impactPosition, definition.SplashRadius);
             RecordEvent($"{definition.Id} splash hit {hitCount} alien(s).");
+            PlayAudio(Project147AudioEvents.AlienHit);
         }
 
         private List<TargetCandidate> BuildTargetCandidates(RuntimeTower tower)
@@ -1371,6 +1397,7 @@ namespace Project147.UnityPresentation.Debug
             RecordEvent(wasPerfectWave
                 ? $"Wave cleared perfectly. +{reward.Amount} scrap."
                 : $"Wave cleared. +{reward.Amount} scrap.");
+            PlayAudio(Project147AudioEvents.WaveCleared);
             TrackAnalytics(
                 "wave_cleared",
                 new Dictionary<string, string>
@@ -1392,6 +1419,7 @@ namespace Project147.UnityPresentation.Debug
                 ApplyCompletedRunProgress();
                 ShowCombatBanner(lastRunUnlockedLevel ? "Level Unlocked" : "Victory");
                 RecordEvent("Victory. All waves cleared.");
+                PlayAudio(Project147AudioEvents.RunVictory);
                 TrackLevelCompleted();
                 return;
             }
@@ -1809,6 +1837,70 @@ namespace Project147.UnityPresentation.Debug
 
             shotObjects.Add(strike);
             Destroy(strike, 0.16f);
+        }
+
+        private void ShowShieldBurstFeedback()
+        {
+            var centre = ToWorldPosition(ToGridCoordinate(goal), 0.74f);
+            ShowDebugRing(
+                "Debug Shield Burst",
+                centre,
+                cellSize * 0.82f,
+                new Color(0.22f, 0.76f, 1f, 0.96f),
+                64,
+                0.09f,
+                0.22f);
+        }
+
+        private void ShowTowerOverchargeFeedback()
+        {
+            foreach (var tower in towers)
+            {
+                var centre = tower.GameObject == null
+                    ? ToWorldPosition(tower.Coordinate, 0.74f)
+                    : tower.GameObject.transform.localPosition;
+                centre.y = 0.74f;
+
+                ShowDebugRing(
+                    "Debug Tower Overcharge",
+                    centre,
+                    cellSize * 0.52f,
+                    new Color(1f, 0.86f, 0.16f, 0.97f),
+                    48,
+                    0.07f,
+                    0.2f);
+            }
+        }
+
+        private void ShowDebugRing(
+            string name,
+            Vector3 centre,
+            float radius,
+            Color colour,
+            int segments,
+            float widthMultiplier,
+            float lifetimeSeconds)
+        {
+            var ring = new GameObject(name);
+            ring.transform.SetParent(transform, false);
+
+            var line = ring.AddComponent<LineRenderer>();
+            line.loop = true;
+            line.useWorldSpace = false;
+            line.positionCount = segments;
+            line.widthMultiplier = widthMultiplier;
+            line.material = DebugActorVisualFactory.CreateDebugMaterial(colour);
+
+            for (var index = 0; index < line.positionCount; index++)
+            {
+                var radians = index / (float)line.positionCount * Mathf.PI * 2;
+                var x = centre.x + Mathf.Cos(radians) * radius;
+                var z = centre.z + Mathf.Sin(radians) * radius;
+                line.SetPosition(index, new Vector3(x, centre.y, z));
+            }
+
+            shotObjects.Add(ring);
+            Destroy(ring, lifetimeSeconds);
         }
 
         private void FlashAlien(RuntimeAlien alien)
@@ -2313,7 +2405,11 @@ namespace Project147.UnityPresentation.Debug
 
         private string BuildInstrumentationStatusText()
         {
-            return $"Analytics: {analyticsRecorder.Records.Count}  Fake ads: {rewardedAdOfferTracker.TotalOffers}";
+            var analyticsCount = analyticsRecorder == null ? 0 : analyticsRecorder.Records.Count;
+            var audioCount = audioRecorder == null ? 0 : audioRecorder.Records.Count;
+            var fakeAdCount = rewardedAdOfferTracker == null ? 0 : rewardedAdOfferTracker.TotalOffers;
+
+            return $"Analytics: {analyticsCount}  Audio: {audioCount}  Fake ads: {fakeAdCount}";
         }
 
         private int BuildSessionProgressPanelTop()
@@ -2577,6 +2673,23 @@ namespace Project147.UnityPresentation.Debug
             catch (System.Exception exception)
             {
                 UnityEngine.Debug.LogWarning($"Analytics event rejected: {exception.Message}");
+            }
+        }
+
+        private void PlayAudio(string eventId)
+        {
+            if (audioRecorder == null)
+            {
+                return;
+            }
+
+            try
+            {
+                audioRecorder.Play(eventId);
+            }
+            catch (System.Exception exception)
+            {
+                UnityEngine.Debug.LogWarning($"Audio event rejected: {exception.Message}");
             }
         }
 

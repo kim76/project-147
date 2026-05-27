@@ -43,12 +43,14 @@ The first playable slice currently has:
 - Tested local analytics recorder that validates required event properties.
 - Tested rewarded-ad offer tracker that enforces per-run offer limits.
 - Debug scene records local analytics event counts.
+- Debug scene records placeholder audio event counts without real audio clips.
 - Debug scene can show fake rewarded-ad offers after wave clears without a live ad SDK.
 - First-pass code-native visuals for towers and aliens.
 - Health, shield and status markers on active aliens.
 - Upgrade pips on upgraded towers.
 - Simple wave-start, wave-clear, victory and defeat banners.
 - Floating debug damage, critical-hit and dodge feedback.
+- Readable Shield Burst and Tower Overcharge debug feedback rings.
 - Tested tower unlock-state foundation.
 
 ## Morning Verification
@@ -72,14 +74,16 @@ After pulling/opening the latest work:
 15. Sell an upgraded tower and confirm the refund reflects actual spend.
 16. During a wave, use Shield Burst and confirm base shield increases.
 17. During a wave with at least one tower, use Tower Overcharge and confirm the modifier line shows active-wave damage and fire-rate boosts.
-18. Start later waves and confirm trait text, threat rating, counter hints and `Regenerator` appear in next-wave intel.
-19. Confirm active aliens show health bars and shielded aliens show shield bars.
-20. Confirm poisoned or slowed aliens show a small status marker.
-21. Upgrade towers and confirm upgraded towers show visible pips.
-22. Confirm wave start, wave clear, victory and defeat banners appear.
-23. Confirm green halo regenerator aliens appear.
-24. Confirm burrowers are still not shot immediately at spawn.
-25. Confirm the final boss wave still completes into victory or defeat.
+18. Confirm Shield Burst and Tower Overcharge draw short blue/yellow feedback rings.
+19. Confirm the `Audio` count in the left HUD increases during placement, combat, rewards and abilities.
+20. Start later waves and confirm trait text, threat rating, counter hints and `Regenerator` appear in next-wave intel.
+21. Confirm active aliens show health bars and shielded aliens show shield bars.
+22. Confirm poisoned or slowed aliens show a small status marker.
+23. Upgrade towers and confirm upgraded towers show visible pips.
+24. Confirm wave start, wave clear, victory and defeat banners appear.
+25. Confirm green halo regenerator aliens appear.
+26. Confirm burrowers are still not shot immediately at spawn.
+27. Confirm the final boss wave still completes into victory or defeat.
 
 ## Next Slice Candidates
 
@@ -100,7 +104,7 @@ Done:
 Next:
 
 - Make upgrade paths tower-specific when the generic paths start feeling too broad.
-- Add visual upgrade markers to placed towers.
+- Add tower-specific visuals when the placeholder pips stop being useful.
 
 ### 2. Better Alien Progression
 
@@ -205,11 +209,14 @@ Goal: make the prototype easier to read and more fun to play.
 Done:
 
 - Add floating debug damage, critical-hit and dodge feedback.
+- Add readable Shield Burst and Tower Overcharge debug feedback.
+- Add tested placeholder audio event catalogue and local recorder.
+- Record placeholder audio hooks from debug-scene gameplay actions.
 
 Next:
 
-- Add more readable ability feedback.
-- Add placeholder sound hooks only after the visual feedback is readable.
+- Replace placeholder audio records with real local audio clips later.
+- Add impact polish only after the debug loop stays understandable.
 
 ### 9. Data Cleanup
 

@@ -456,14 +456,43 @@ namespace Project147.GameData.Debug
 
         public AlienSquadLoadout CreateAlienSideSquadLoadout()
         {
-            return new AlienSquadLoadout(
-                100,
-                new[]
-                {
-                    new AlienSquadEntry(BasicAlienId, 3, 10),
-                    new AlienSquadEntry(FastAlienId, 2, 15),
-                    new AlienSquadEntry(ArmouredAlienId, 1, 25)
-                });
+            return CreateAlienSideSquadLoadoutPlans()[0].Loadout;
+        }
+
+        public IReadOnlyList<AlienSquadLoadoutPlan> CreateAlienSideSquadLoadoutPlans()
+        {
+            return new[]
+            {
+                new AlienSquadLoadoutPlan(
+                    "debug-alien-squad-balanced",
+                    new AlienSquadLoadout(
+                        100,
+                        new[]
+                        {
+                            new AlienSquadEntry(BasicAlienId, 3, 10),
+                            new AlienSquadEntry(FastAlienId, 2, 15),
+                            new AlienSquadEntry(ArmouredAlienId, 1, 25)
+                        })),
+                new AlienSquadLoadoutPlan(
+                    "debug-alien-squad-swarm",
+                    new AlienSquadLoadout(
+                        100,
+                        new[]
+                        {
+                            new AlienSquadEntry(BasicAlienId, 6, 10),
+                            new AlienSquadEntry(FastAlienId, 2, 15)
+                        })),
+                new AlienSquadLoadoutPlan(
+                    "debug-alien-squad-heavy",
+                    new AlienSquadLoadout(
+                        100,
+                        new[]
+                        {
+                            new AlienSquadEntry(ArmouredAlienId, 2, 25),
+                            new AlienSquadEntry(ShieldedAlienId, 1, 30),
+                            new AlienSquadEntry(FastAlienId, 1, 15)
+                        }))
+            };
         }
 
         public AlienSpawnOrderPlan CreateAlienSideSpawnOrderPlan()
@@ -473,16 +502,44 @@ namespace Project147.GameData.Debug
 
         public AlienUpgradeChoicePlan CreateAlienSideUpgradeChoicePlan()
         {
+            return CreateAlienSideUpgradePlanPresets()[0].Plan;
+        }
+
+        public IReadOnlyList<AlienUpgradePlanPreset> CreateAlienSideUpgradePlanPresets()
+        {
             var choices = CreateAlienUpgradeChoiceDefinitions();
 
-            return new AlienUpgradeChoicePlan(
-                7,
-                new[]
-                {
-                    choices[0],
-                    choices[1],
-                    choices[2]
-                });
+            return new[]
+            {
+                new AlienUpgradePlanPreset(
+                    "debug-alien-upgrades-balanced",
+                    new AlienUpgradeChoicePlan(
+                        7,
+                        new[]
+                        {
+                            choices[0],
+                            choices[1],
+                            choices[2]
+                        })),
+                new AlienUpgradePlanPreset(
+                    "debug-alien-upgrades-tough",
+                    new AlienUpgradeChoicePlan(
+                        7,
+                        new[]
+                        {
+                            choices[0],
+                            choices[3]
+                        })),
+                new AlienUpgradePlanPreset(
+                    "debug-alien-upgrades-weird",
+                    new AlienUpgradeChoicePlan(
+                        7,
+                        new[]
+                        {
+                            choices[4],
+                            choices[5]
+                        }))
+            };
         }
 
         public AlienDefinition CreateAlienDefinition()

@@ -114,6 +114,8 @@ namespace Project147.UnityPresentation.Debug
         private TowerLoadout towerLoadout;
         private TowerLoadoutPlanSet towerLoadoutPlans;
         private TowerUpgradeLoadout towerUpgradeLoadout;
+        private AlienSquadLoadoutPlanSet alienSquadLoadoutPlans;
+        private AlienUpgradePlanPresetSet alienUpgradePlanPresets;
         private RewardCalculator rewardCalculator;
         private BaseState currentBase;
         private CurrencyWallet wallet;
@@ -457,6 +459,8 @@ namespace Project147.UnityPresentation.Debug
             towerUnlockState = config.CreateInitialTowerUnlockState();
             towerLoadoutPlans = new TowerLoadoutPlanSet(config.CreateTowerLoadoutPlans(towerUnlockState));
             towerLoadout = towerLoadoutPlans.SelectedPlan.CreateLoadout();
+            alienSquadLoadoutPlans = new AlienSquadLoadoutPlanSet(config.CreateAlienSideSquadLoadoutPlans());
+            alienUpgradePlanPresets = new AlienUpgradePlanPresetSet(config.CreateAlienSideUpgradePlanPresets());
             freezePulseState = new PlayerAbilityState(config.CreateFreezePulseAbilityDefinition());
             orbitalStrikeState = new PlayerAbilityState(config.CreateOrbitalStrikeAbilityDefinition());
             shieldBurstState = new PlayerAbilityState(config.CreateShieldBurstAbilityDefinition());
@@ -578,6 +582,34 @@ namespace Project147.UnityPresentation.Debug
             towerUpgradeLoadout = towerUpgradeLoadout.SelectNext();
             HidePlacementPreviewIfAny();
             RecordEvent($"Selected upgrade: {SelectedTowerUpgrade.Id}.");
+        }
+
+        private void SelectPreviousAlienSquadPlan()
+        {
+            alienSquadLoadoutPlans = alienSquadLoadoutPlans.SelectPrevious();
+            ResetSlice();
+            RecordEvent($"Selected alien squad: {alienSquadLoadoutPlans.SelectedPlan.Id}.");
+        }
+
+        private void SelectNextAlienSquadPlan()
+        {
+            alienSquadLoadoutPlans = alienSquadLoadoutPlans.SelectNext();
+            ResetSlice();
+            RecordEvent($"Selected alien squad: {alienSquadLoadoutPlans.SelectedPlan.Id}.");
+        }
+
+        private void SelectPreviousAlienUpgradePreset()
+        {
+            alienUpgradePlanPresets = alienUpgradePlanPresets.SelectPrevious();
+            ResetSlice();
+            RecordEvent($"Selected alien upgrades: {alienUpgradePlanPresets.SelectedPreset.Id}.");
+        }
+
+        private void SelectNextAlienUpgradePreset()
+        {
+            alienUpgradePlanPresets = alienUpgradePlanPresets.SelectNext();
+            ResetSlice();
+            RecordEvent($"Selected alien upgrades: {alienUpgradePlanPresets.SelectedPreset.Id}.");
         }
 
         private void SelectPreviousLevelLayout()
@@ -774,11 +806,11 @@ namespace Project147.UnityPresentation.Debug
             }
 
             wallet = new CurrencyWallet(Mathf.Max(0, SelectedLevel.StartingCurrency - defencePlan.TotalCost));
-            alienPrototypeUpgradePlan = config.CreateAlienSideUpgradeChoicePlan();
+            alienPrototypeUpgradePlan = alienUpgradePlanPresets.SelectedPlan;
             alienPrototypeRunActive = true;
             completedWaves = 0;
             waveStartBaseHealth = currentBase.CurrentHealth;
-            currentWaveDefinition = CreateAlienPrototypeWaveDefinition(config.CreateAlienSideSquadLoadout());
+            currentWaveDefinition = CreateAlienPrototypeWaveDefinition(alienSquadLoadoutPlans.SelectedLoadout);
             waveSpawnState = new WaveSpawnState(currentWaveDefinition);
             waveActive = true;
             won = false;
@@ -2518,7 +2550,7 @@ namespace Project147.UnityPresentation.Debug
                 return 608;
             }
 
-            return BuildAlienSidePrototypePanelTop() + 198;
+            return BuildAlienSidePrototypePanelTop() + 294;
         }
 
         private int BuildAlienSidePrototypePanelTop()
@@ -2683,30 +2715,72 @@ namespace Project147.UnityPresentation.Debug
 
         private void DrawAlienSidePrototypePanel(int left, int top)
         {
-            if (config == null || towerLoadout == null || automatedDefencePlanner == null)
+            if (config == null
+                || towerLoadout == null
+                || automatedDefencePlanner == null
+                || alienSquadLoadoutPlans == null
+                || alienUpgradePlanPresets == null)
             {
                 return;
             }
 
-            var squad = config.CreateAlienSideSquadLoadout();
-            var order = config.CreateAlienSideSpawnOrderPlan();
-            var upgrades = config.CreateAlienSideUpgradeChoicePlan();
+            var squad = alienSquadLoadoutPlans.SelectedLoadout;
+            var order = AlienSpawnOrderPlan.FromLoadout(squad);
+            var upgrades = alienUpgradePlanPresets.SelectedPlan;
             var defencePlan = BuildAutomatedDefencePreviewPlan();
 
-            GUI.Box(new Rect(left, top, 260, 184), "Alien Side Prototype");
+            GUI.Box(new Rect(left, top, 260, 280), "Alien Side Prototype");
             top += 28;
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Squad plan: {alienSquadLoadoutPlans.SelectedPlan.Id}");
+            top += 24;
+
+            var previousEnabled = GUI.enabled;
+            GUI.enabled = CanStartAlienPrototypeRun;
+
+            if (GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
+            {
+                SelectPreviousAlienSquadPlan();
+            }
+
+            if (GUI.Button(new Rect(left + 74, top, 54, 24), ">"))
+            {
+                SelectNextAlienSquadPlan();
+            }
+
+            GUI.enabled = previousEnabled;
+            GUI.Label(new Rect(left + 144, top + 2, 104, 22), $"{alienSquadLoadoutPlans.SelectedIndex + 1}/{alienSquadLoadoutPlans.Plans.Count}");
+            top += 30;
             GUI.Label(new Rect(left + 12, top, 236, 22), $"Squad: {squad.TotalAliens} aliens  {squad.TotalCost}/{squad.Budget}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 236, 22), FormatAlienSquadEntries(squad));
             top += 22;
             GUI.Label(new Rect(left + 12, top, 236, 22), $"Order: {order.Count} planned spawns");
+            top += 24;
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Upgrade plan: {alienUpgradePlanPresets.SelectedPreset.Id}");
+            top += 24;
+
+            previousEnabled = GUI.enabled;
+            GUI.enabled = CanStartAlienPrototypeRun;
+
+            if (GUI.Button(new Rect(left + 12, top, 54, 24), "<"))
+            {
+                SelectPreviousAlienUpgradePreset();
+            }
+
+            if (GUI.Button(new Rect(left + 74, top, 54, 24), ">"))
+            {
+                SelectNextAlienUpgradePreset();
+            }
+
+            GUI.enabled = previousEnabled;
+            GUI.Label(new Rect(left + 144, top + 2, 104, 22), $"{alienUpgradePlanPresets.SelectedIndex + 1}/{alienUpgradePlanPresets.Presets.Count}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 236, 22), $"Upgrades: {upgrades.Choices.Count} picks  {upgrades.TotalCost}/{upgrades.Budget}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 236, 22), BuildAutomatedDefencePreviewText(defencePlan));
             top += 28;
 
-            var previousEnabled = GUI.enabled;
+            previousEnabled = GUI.enabled;
             GUI.enabled = CanStartAlienPrototypeRun;
 
             if (GUI.Button(new Rect(left + 12, top, 150, 24), "Run Alien Test"))

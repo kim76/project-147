@@ -369,6 +369,20 @@ namespace Project147.Tests.EditMode.GameData.Debug
         }
 
         [Test]
+        public void CreateAlienSideSquadLoadoutPlans_ReturnsSelectableSquadPlans()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var plans = config.CreateAlienSideSquadLoadoutPlans();
+
+            Assert.That(plans.Count, Is.EqualTo(3));
+            Assert.That(plans.Any(plan => plan.Id == "debug-alien-squad-balanced"), Is.True);
+            Assert.That(plans.Any(plan => plan.Id == "debug-alien-squad-swarm"), Is.True);
+            Assert.That(plans.Any(plan => plan.Id == "debug-alien-squad-heavy"), Is.True);
+            Assert.That(plans.All(plan => plan.Loadout.IsWithinBudget), Is.True);
+        }
+
+        [Test]
         public void CreateAlienSideSpawnOrderPlan_ExpandsSquadEntries()
         {
             var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
@@ -390,6 +404,20 @@ namespace Project147.Tests.EditMode.GameData.Debug
             Assert.That(plan.Budget, Is.EqualTo(7));
             Assert.That(plan.Choices, Has.Count.EqualTo(3));
             Assert.That(plan.IsWithinBudget, Is.True);
+        }
+
+        [Test]
+        public void CreateAlienSideUpgradePlanPresets_ReturnsSelectableUpgradePlans()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var presets = config.CreateAlienSideUpgradePlanPresets();
+
+            Assert.That(presets.Count, Is.EqualTo(3));
+            Assert.That(presets.Any(preset => preset.Id == "debug-alien-upgrades-balanced"), Is.True);
+            Assert.That(presets.Any(preset => preset.Id == "debug-alien-upgrades-tough"), Is.True);
+            Assert.That(presets.Any(preset => preset.Id == "debug-alien-upgrades-weird"), Is.True);
+            Assert.That(presets.All(preset => preset.Plan.IsWithinBudget), Is.True);
         }
     }
 }

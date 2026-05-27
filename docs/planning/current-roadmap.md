@@ -56,6 +56,7 @@ The first playable slice currently has:
 - Debug scene shows an alien-side prototype panel with squad, spawn order, upgrades and automated defence preview.
 - Debug scene can run a first alien-side test against an automated defence setup.
 - Debug scene supports selectable alien squad and alien upgrade presets before an alien test run.
+- Alien-side test runs now produce a scored summary with base damage, leaks, stopped aliens and stars.
 
 ## Morning Verification
 
@@ -191,6 +192,8 @@ Done:
 - Add a debug alien test run that places automated defence towers and sends the starter alien squad.
 - Add tested alien squad and upgrade preset sets.
 - Wire selectable alien squad and upgrade presets into the debug alien test.
+- Add a tested alien-side run summary and score model.
+- Show alien-side test results in the debug run summary panel.
 
 Next:
 

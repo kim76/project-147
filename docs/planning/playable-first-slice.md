@@ -68,6 +68,7 @@ For the active next-task list, see `current-roadmap.md`.
 - The debug scene shows a prototype alien-side planning panel for squad, spawn order, upgrades and automated defence preview.
 - The debug scene can start a first alien-side test run from a fresh board.
 - Alien-side tests can use selectable squad and upgrade presets.
+- Alien-side tests show a scored result summary with base damage, leaks, stopped aliens and stars.
 - The slice ends in victory after all waves or defeat when the base reaches zero health.
 
 ## How To Run
@@ -103,10 +104,11 @@ For the active next-task list, see `current-roadmap.md`.
 29. From a fresh board, click `Run Alien Test` and confirm auto defence towers appear and the selected alien squad starts.
 30. Confirm defence abilities are disabled during the alien test run.
 31. Confirm the alien test ends as `Alien Victory` if the base is destroyed or `Defence Held` if the squad is stopped.
-32. On victory or defeat, read the run summary panel.
-33. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
-34. Stop and restart Play mode to confirm saved progress loads.
-35. Use `Reset Save` to clear debug campaign progress when you want a fresh campaign.
+32. Confirm the alien test summary shows outcome, stars, score, base damage, leaks and stopped aliens.
+33. On victory or defeat, read the run summary panel.
+34. Check the `Session Progress` panel, then press `Restart` to confirm session progress remains visible.
+35. Stop and restart Play mode to confirm saved progress loads.
+36. Use `Reset Save` to clear debug campaign progress when you want a fresh campaign.
 
 The scene creator also creates or reuses `Assets/Project147/GameData/Debug/DebugFirstSliceConfig.asset`. Tune first-slice values there instead of editing the controller.
 

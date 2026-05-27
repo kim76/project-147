@@ -130,6 +130,12 @@ namespace Project147.UnityPresentation.Debug
         private GamePauseState gamePause;
         private LevelEventFeed eventFeed;
         private AlienUpgradeChoicePlan alienPrototypeUpgradePlan;
+        private AlienRunSummaryState alienPrototypeSummary;
+        private string alienPrototypeSquadPlanId;
+        private string alienPrototypeUpgradePlanId;
+        private int alienPrototypeStartingBaseHealth;
+        private int alienPrototypeSquadSize;
+        private int alienPrototypeDefenceTowerCount;
         private bool waveActive;
         private bool won;
         private bool lost;
@@ -365,6 +371,12 @@ namespace Project147.UnityPresentation.Debug
             towerOverchargeState = new PlayerAbilityState(config.CreateTowerOverchargeAbilityDefinition());
             eventFeed = new LevelEventFeed(EventFeedCapacity).Add("Ready. Place towers, then start wave.");
             alienPrototypeUpgradePlan = null;
+            alienPrototypeSummary = null;
+            alienPrototypeSquadPlanId = null;
+            alienPrototypeUpgradePlanId = null;
+            alienPrototypeStartingBaseHealth = 0;
+            alienPrototypeSquadSize = 0;
+            alienPrototypeDefenceTowerCount = 0;
             waveActive = false;
             won = false;
             lost = false;
@@ -797,6 +809,8 @@ namespace Project147.UnityPresentation.Debug
             gamePause = new GamePauseState();
 
             var defencePlan = BuildAutomatedDefencePreviewPlan();
+            var squadPlan = alienSquadLoadoutPlans.SelectedPlan;
+            var upgradePreset = alienUpgradePlanPresets.SelectedPreset;
 
             foreach (var placement in defencePlan.Placements)
             {
@@ -806,11 +820,17 @@ namespace Project147.UnityPresentation.Debug
             }
 
             wallet = new CurrencyWallet(Mathf.Max(0, SelectedLevel.StartingCurrency - defencePlan.TotalCost));
-            alienPrototypeUpgradePlan = alienUpgradePlanPresets.SelectedPlan;
+            alienPrototypeUpgradePlan = upgradePreset.Plan;
+            alienPrototypeSummary = null;
+            alienPrototypeSquadPlanId = squadPlan.Id;
+            alienPrototypeUpgradePlanId = upgradePreset.Id;
+            alienPrototypeStartingBaseHealth = currentBase.CurrentHealth;
+            alienPrototypeSquadSize = squadPlan.Loadout.TotalAliens;
+            alienPrototypeDefenceTowerCount = defencePlan.Placements.Count;
             alienPrototypeRunActive = true;
             completedWaves = 0;
             waveStartBaseHealth = currentBase.CurrentHealth;
-            currentWaveDefinition = CreateAlienPrototypeWaveDefinition(alienSquadLoadoutPlans.SelectedLoadout);
+            currentWaveDefinition = CreateAlienPrototypeWaveDefinition(squadPlan.Loadout);
             waveSpawnState = new WaveSpawnState(currentWaveDefinition);
             waveActive = true;
             won = false;
@@ -1173,9 +1193,10 @@ namespace Project147.UnityPresentation.Debug
                         if (alienPrototypeRunActive)
                         {
                             won = true;
+                            alienPrototypeSummary = CreateAlienPrototypeSummary(AlienRunOutcome.AlienVictory);
                             runSummary = runSummary.Complete(RunOutcome.Victory);
                             ShowCombatBanner("Alien Victory");
-                            RecordEvent("Alien prototype succeeded. Base destroyed.");
+                            RecordEvent($"Alien prototype succeeded. Score {alienPrototypeSummary.Score}.");
                             PlayAudio(Project147AudioEvents.RunVictory);
                         }
                         else
@@ -1500,9 +1521,10 @@ namespace Project147.UnityPresentation.Debug
                 currentWaveDefinition = null;
                 waveSpawnState = null;
                 lost = true;
+                alienPrototypeSummary = CreateAlienPrototypeSummary(AlienRunOutcome.DefenceHeld);
                 runSummary = runSummary.RecordWaveCleared(0, false).Complete(RunOutcome.Defeat);
                 ShowCombatBanner("Defence Held");
-                RecordEvent("Alien prototype failed. Defence destroyed the squad.");
+                RecordEvent($"Alien prototype failed. Score {alienPrototypeSummary.Score}.");
                 PlayAudio(Project147AudioEvents.RunDefeat);
                 return;
             }
@@ -2545,11 +2567,6 @@ namespace Project147.UnityPresentation.Debug
 
         private int BuildSessionProgressPanelTop()
         {
-            if (won || lost)
-            {
-                return 608;
-            }
-
             return BuildAlienSidePrototypePanelTop() + 294;
         }
 
@@ -2557,7 +2574,7 @@ namespace Project147.UnityPresentation.Debug
         {
             if (won || lost)
             {
-                return 444;
+                return alienPrototypeSummary == null ? 448 : 470;
             }
 
             var top = HasPendingRunChoice ? 592 : 444;
@@ -2661,6 +2678,12 @@ namespace Project147.UnityPresentation.Debug
                 return;
             }
 
+            if (alienPrototypeSummary != null)
+            {
+                DrawAlienPrototypeSummaryPanel(left, top);
+                return;
+            }
+
             GUI.Box(new Rect(left, top, 360, 202), "Run Summary");
             top += 28;
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Outcome: {runSummary.Outcome}");
@@ -2674,6 +2697,21 @@ namespace Project147.UnityPresentation.Debug
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Scrap earned: {runSummary.ScrapEarned}  Rewards: {runSummary.RewardsChosen}");
             top += 22;
             GUI.Label(new Rect(left + 12, top, 336, 22), $"Abilities: Freeze {runSummary.FreezePulseUses}  Strike {runSummary.OrbitalStrikeUses}  Shield {runSummary.ShieldBurstUses}  Charge {runSummary.TowerOverchargeUses}");
+        }
+
+        private void DrawAlienPrototypeSummaryPanel(int left, int top)
+        {
+            GUI.Box(new Rect(left, top, 360, 224), "Alien Test Summary");
+            top += 28;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Outcome: {alienPrototypeSummary.Outcome}  Stars: {alienPrototypeSummary.StarRating}/3");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Score: {alienPrototypeSummary.Score}  Base damage: {alienPrototypeSummary.BaseDamageDealt}/{alienPrototypeSummary.StartingBaseHealth}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Squad: {FormatPlanId(alienPrototypeSummary.SquadPlanId)}  Upgrades: {FormatPlanId(alienPrototypeSummary.UpgradePlanId)}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Aliens: {alienPrototypeSummary.AliensLeaked}/{alienPrototypeSummary.SquadSize} leaked  {alienPrototypeSummary.AliensStopped} stopped");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 336, 22), $"Auto defence towers: {alienPrototypeSummary.DefenceTowerCount}");
         }
 
         private void DrawSessionProgressPanel(int left, int top)
@@ -2731,7 +2769,7 @@ namespace Project147.UnityPresentation.Debug
 
             GUI.Box(new Rect(left, top, 260, 280), "Alien Side Prototype");
             top += 28;
-            GUI.Label(new Rect(left + 12, top, 236, 22), $"Squad plan: {alienSquadLoadoutPlans.SelectedPlan.Id}");
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Squad plan: {FormatPlanId(alienSquadLoadoutPlans.SelectedPlan.Id)}");
             top += 24;
 
             var previousEnabled = GUI.enabled;
@@ -2756,7 +2794,7 @@ namespace Project147.UnityPresentation.Debug
             top += 22;
             GUI.Label(new Rect(left + 12, top, 236, 22), $"Order: {order.Count} planned spawns");
             top += 24;
-            GUI.Label(new Rect(left + 12, top, 236, 22), $"Upgrade plan: {alienUpgradePlanPresets.SelectedPreset.Id}");
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Upgrade plan: {FormatPlanId(alienUpgradePlanPresets.SelectedPreset.Id)}");
             top += 24;
 
             previousEnabled = GUI.enabled;
@@ -3070,6 +3108,20 @@ namespace Project147.UnityPresentation.Debug
             return new WaveDefinition(new WaveComposition(groups), 0.58f, 0);
         }
 
+        private AlienRunSummaryState CreateAlienPrototypeSummary(AlienRunOutcome outcome)
+        {
+            return new AlienRunSummaryState(
+                outcome,
+                alienPrototypeSquadPlanId,
+                alienPrototypeUpgradePlanId,
+                alienPrototypeSquadSize,
+                runSummary.AliensLeaked,
+                runSummary.AliensDestroyed,
+                alienPrototypeStartingBaseHealth,
+                currentBase.CurrentHealth,
+                alienPrototypeDefenceTowerCount);
+        }
+
         private static string BuildRunChoiceButtonText(RunChoiceDefinition choice)
         {
             return $"{choice.Label}: {FormatRunChoiceEffect(choice)}";
@@ -3270,6 +3322,30 @@ namespace Project147.UnityPresentation.Debug
                 : levelId;
 
             return $"Level progress: {label}";
+        }
+
+        private static string FormatPlanId(string planId)
+        {
+            const string squadPrefix = "debug-alien-squad-";
+            const string upgradePrefix = "debug-alien-upgrades-";
+            const string debugPrefix = "debug-";
+
+            if (planId == null)
+            {
+                return null;
+            }
+
+            if (planId.StartsWith(squadPrefix))
+            {
+                return planId.Substring(squadPrefix.Length);
+            }
+
+            if (planId.StartsWith(upgradePrefix))
+            {
+                return planId.Substring(upgradePrefix.Length);
+            }
+
+            return planId.StartsWith(debugPrefix) ? planId.Substring(debugPrefix.Length) : planId;
         }
 
         private string BuildWaveSummary(WaveDefinition wave)

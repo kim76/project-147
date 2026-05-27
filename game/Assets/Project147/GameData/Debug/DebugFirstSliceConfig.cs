@@ -454,6 +454,37 @@ namespace Project147.GameData.Debug
             return alienUpgrade.CreateChoiceDefinitions();
         }
 
+        public AlienSquadLoadout CreateAlienSideSquadLoadout()
+        {
+            return new AlienSquadLoadout(
+                100,
+                new[]
+                {
+                    new AlienSquadEntry(BasicAlienId, 3, 10),
+                    new AlienSquadEntry(FastAlienId, 2, 15),
+                    new AlienSquadEntry(ArmouredAlienId, 1, 25)
+                });
+        }
+
+        public AlienSpawnOrderPlan CreateAlienSideSpawnOrderPlan()
+        {
+            return AlienSpawnOrderPlan.FromLoadout(CreateAlienSideSquadLoadout());
+        }
+
+        public AlienUpgradeChoicePlan CreateAlienSideUpgradeChoicePlan()
+        {
+            var choices = CreateAlienUpgradeChoiceDefinitions();
+
+            return new AlienUpgradeChoicePlan(
+                7,
+                new[]
+                {
+                    choices[0],
+                    choices[1],
+                    choices[2]
+                });
+        }
+
         public AlienDefinition CreateAlienDefinition()
         {
             return CreateAlienDefinition(0);

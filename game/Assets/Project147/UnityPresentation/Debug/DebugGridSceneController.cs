@@ -99,6 +99,7 @@ namespace Project147.UnityPresentation.Debug
         private readonly TowerTargetSelector targetSelector = new TowerTargetSelector();
         private readonly TowerSaleCalculator towerSaleCalculator = new TowerSaleCalculator();
         private readonly Project147RewardedAdCatalog rewardedAdCatalog = new Project147RewardedAdCatalog();
+        private AutomatedDefencePlanner automatedDefencePlanner;
         private TowerPlacementValidator placementValidator;
         private AttackResolver attackResolver;
         private SplashDamageResolver splashDamageResolver;
@@ -443,6 +444,7 @@ namespace Project147.UnityPresentation.Debug
             }
 
             placementValidator = new TowerPlacementValidator(pathfinder);
+            automatedDefencePlanner = new AutomatedDefencePlanner(pathfinder, placementValidator);
             var damageResolver = new DamageResolver();
             attackResolver = new AttackResolver(damageResolver);
             splashDamageResolver = new SplashDamageResolver(damageResolver);
@@ -2310,6 +2312,7 @@ namespace Project147.UnityPresentation.Debug
             DrawRunChoicePanel(left + 296, 444);
             DrawRewardedAdOfferPanel(left + 296, HasPendingRunChoice ? 592 : 444);
             DrawRunSummaryPanel(left + 296, 232);
+            DrawAlienSidePrototypePanel(left + 296, BuildAlienSidePrototypePanelTop());
             DrawSessionProgressPanel(left + 296, BuildSessionProgressPanelTop());
             DrawInspectedTowerPanel(left + 296, BuildInspectedTowerPanelTop());
             DrawCombatBanner();
@@ -2413,6 +2416,16 @@ namespace Project147.UnityPresentation.Debug
         }
 
         private int BuildSessionProgressPanelTop()
+        {
+            if (won || lost)
+            {
+                return 608;
+            }
+
+            return BuildAlienSidePrototypePanelTop() + 164;
+        }
+
+        private int BuildAlienSidePrototypePanelTop()
         {
             if (won || lost)
             {
@@ -2570,6 +2583,62 @@ namespace Project147.UnityPresentation.Debug
             }
 
             GUI.enabled = previousEnabled;
+        }
+
+        private void DrawAlienSidePrototypePanel(int left, int top)
+        {
+            if (config == null || towerLoadout == null || automatedDefencePlanner == null)
+            {
+                return;
+            }
+
+            var squad = config.CreateAlienSideSquadLoadout();
+            var order = config.CreateAlienSideSpawnOrderPlan();
+            var upgrades = config.CreateAlienSideUpgradeChoicePlan();
+            var defencePlan = BuildAutomatedDefencePreviewPlan();
+
+            GUI.Box(new Rect(left, top, 260, 150), "Alien Side Prototype");
+            top += 28;
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Squad: {squad.TotalAliens} aliens  {squad.TotalCost}/{squad.Budget}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 236, 22), FormatAlienSquadEntries(squad));
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Order: {order.Count} planned spawns");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 236, 22), $"Upgrades: {upgrades.Choices.Count} picks  {upgrades.TotalCost}/{upgrades.Budget}");
+            top += 22;
+            GUI.Label(new Rect(left + 12, top, 236, 22), BuildAutomatedDefencePreviewText(defencePlan));
+        }
+
+        private AutomatedDefencePlan BuildAutomatedDefencePreviewPlan()
+        {
+            var budget = SelectedLevel.StartingCurrency;
+            var grid = CreateGrid(new GridBounds(width, height));
+
+            return automatedDefencePlanner.CreatePlan(
+                grid,
+                ToGridCoordinate(spawn),
+                ToGridCoordinate(goal),
+                towerLoadout.Towers,
+                budget,
+                towerLoadout.Towers.Count);
+        }
+
+        private static string FormatAlienSquadEntries(AlienSquadLoadout squad)
+        {
+            var entries = new List<string>();
+
+            foreach (var entry in squad.Entries)
+            {
+                entries.Add($"{FormatAlienLabel(entry.AlienId)} x{entry.Count}");
+            }
+
+            return string.Join(", ", entries);
+        }
+
+        private static string BuildAutomatedDefencePreviewText(AutomatedDefencePlan plan)
+        {
+            return $"Auto defence: {plan.Placements.Count} towers  {plan.TotalCost}/{plan.Budget}";
         }
 
         private void DrawInspectedTowerPanel(int left, int top)

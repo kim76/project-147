@@ -352,5 +352,44 @@ namespace Project147.Tests.EditMode.GameData.Debug
             Assert.That(choices.Any(choice => choice.Id == "debug-alien-choice-regeneration"), Is.True);
             Assert.That(choices.All(choice => choice.Cost > 0), Is.True);
         }
+
+        [Test]
+        public void CreateAlienSideSquadLoadout_ReturnsBudgetedSquad()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var loadout = config.CreateAlienSideSquadLoadout();
+
+            Assert.That(loadout.Budget, Is.EqualTo(100));
+            Assert.That(loadout.TotalAliens, Is.EqualTo(6));
+            Assert.That(loadout.IsWithinBudget, Is.True);
+            Assert.That(loadout.Entries.Any(entry => entry.AlienId == config.BasicAlienId), Is.True);
+            Assert.That(loadout.Entries.Any(entry => entry.AlienId == config.FastAlienId), Is.True);
+            Assert.That(loadout.Entries.Any(entry => entry.AlienId == config.ArmouredAlienId), Is.True);
+        }
+
+        [Test]
+        public void CreateAlienSideSpawnOrderPlan_ExpandsSquadEntries()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var loadout = config.CreateAlienSideSquadLoadout();
+            var plan = config.CreateAlienSideSpawnOrderPlan();
+
+            Assert.That(plan.Count, Is.EqualTo(loadout.TotalAliens));
+            Assert.That(plan.AlienIds[0], Is.EqualTo(config.BasicAlienId));
+        }
+
+        [Test]
+        public void CreateAlienSideUpgradeChoicePlan_ReturnsWithinBudgetPlan()
+        {
+            var config = ScriptableObject.CreateInstance<DebugFirstSliceConfig>();
+
+            var plan = config.CreateAlienSideUpgradeChoicePlan();
+
+            Assert.That(plan.Budget, Is.EqualTo(7));
+            Assert.That(plan.Choices, Has.Count.EqualTo(3));
+            Assert.That(plan.IsWithinBudget, Is.True);
+        }
     }
 }

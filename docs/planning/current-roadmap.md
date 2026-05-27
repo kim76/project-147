@@ -52,6 +52,8 @@ The first playable slice currently has:
 - Floating debug damage, critical-hit and dodge feedback.
 - Readable Shield Burst and Tower Overcharge debug feedback rings.
 - Tested tower unlock-state foundation.
+- Tested automated defence planner for future alien-side runs.
+- Debug scene shows an alien-side prototype panel with squad, spawn order, upgrades and automated defence preview.
 
 ## Morning Verification
 
@@ -181,10 +183,13 @@ Done:
 - Add a tested budgeted alien squad loadout model.
 - Add a tested alien spawn-order planning model.
 - Add a tested alien upgrade choice plan model.
+- Add a tested automated defence planner.
+- Add debug config methods for a starter alien-side squad, spawn order and upgrade plan.
+- Show alien-side planning state in the debug scene.
 
 Next:
 
-- Add a simple automated defence opponent.
+- Turn the prototype panel into an actual alien-side run start flow.
 - Reuse existing tower, targeting and damage rules rather than building a separate game.
 
 ### 7. More Special Abilities
